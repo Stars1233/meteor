@@ -323,6 +323,10 @@ export default defineConfig({
             link: "/packages/hot-module-replacement",
           },
           {
+            text: "roles",
+            link: "/packages/roles",
+          },
+          {
             text: "less",
             link: "/packages/less",
           },
@@ -374,13 +378,22 @@ export default defineConfig({
             link: "/packages/packages-listing",
             text: "Maintained Packages",
           },
+          {
+            link: "packages/community-packages",
+            text: "Community Packages",
+          },
         ],
         collapsed: true,
       },
       {
         text: "Community Packages",
         link: "/community-packages/index",
-        items: [],
+        items: [
+          {
+            text: "Meteor RPC",
+            link: "/community-packages/meteor-rpc",
+          },
+        ],
         collapsed: true,
       },
       {
