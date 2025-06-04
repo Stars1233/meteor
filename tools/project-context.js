@@ -272,6 +272,7 @@ Object.assign(ProjectContext.prototype, {
     self.packageMapFile = null;
     self.platformList = null;
     self.cordovaPluginsFile = null;
+    self.modernLocalModules = null;
     self.appIdentifier = null;
     self.finishedUpgraders = null;
 
@@ -476,6 +477,15 @@ Object.assign(ProjectContext.prototype, {
       if (buildmessage.jobHasMessages())
         return;
 
+      // Read .meteor/platforms, creating it if necessary.
+      self.modernLocalModules = new exports.ModernLocalModules({
+        projectDir: self.projectDir
+      });
+      await self.modernLocalModules.init();
+
+      if (buildmessage.jobHasMessages())
+        return;
+
       // Read .meteor/.id, creating it if necessary.
       await self._ensureAppIdentifier();
       if (buildmessage.jobHasMessages())
@@ -535,10 +545,10 @@ Object.assign(ProjectContext.prototype, {
     var self = this;
     var watchSet = new watch.WatchSet;
     [self.releaseFile, self.projectConstraintsFile, self.packageMapFile,
-      self.platformList, self.cordovaPluginsFile].forEach(
+      self.platformList, self.cordovaPluginsFile, self.modernLocalModules].forEach(
       function (metadataFile) {
         metadataFile && watchSet.merge(metadataFile.watchSet);
-    });
+      });
 
     if (self.localCatalog) {
       watchSet.merge(self.localCatalog.packageLocationWatchSet);
@@ -1706,6 +1716,37 @@ Object.assign(exports.ReleaseFile.prototype, {
   }
 });
 
+
+// Represents .meteor/local/modern, used to store the intermediate results of
+// the different Meteor modules when running a modern bundler.
+exports.ModernLocalModules = function (options) {
+  var self = this;
+  buildmessage.assertInCapture();
+
+  self.modernDir = files.pathJoin(options.projectDir, '.meteor', 'local', 'modern');
+  self.modernMainClient = files.pathJoin(self.modernDir, 'client', 'main.js');
+  self.modernMainServer = files.pathJoin(self.modernDir, 'server', 'main.js');
+  self.modernTestClient = files.pathJoin(self.modernDir, 'client', 'test.js');
+  self.modernTestServer = files.pathJoin(self.modernDir, 'server', 'test.js');
+  self.watchSet = null;
+};
+
+Object.assign(exports.ModernLocalModules.prototype, {
+  init: async function() {
+    const self = this;
+    await self._readFile();
+  },
+  _readFile: function () {
+    var self = this;
+    buildmessage.assertInCapture();
+
+    self.watchSet = new watch.WatchSet;
+    watch.readAndWatchFile(self.watchSet, self.modernMainClient);
+    watch.readAndWatchFile(self.watchSet, self.modernMainServer);
+    watch.readAndWatchFile(self.watchSet, self.modernTestClient);
+    watch.readAndWatchFile(self.watchSet, self.modernTestServer);
+  },
+});
 
 // Represents .meteor/.finished-upgraders.
 // This is only used in a few places, so we don't cache its value in memory;
