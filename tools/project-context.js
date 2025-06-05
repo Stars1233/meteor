@@ -1730,10 +1730,10 @@ exports.ModernLocalModules = function (options) {
   buildmessage.assertInCapture();
 
   self.modernDir = files.pathJoin(options.projectDir, '.meteor', 'local', 'modern');
-  self.modernMainClient = files.pathJoin(self.modernDir, 'client', 'main.js');
-  self.modernMainServer = files.pathJoin(self.modernDir, 'server', 'main.js');
-  self.modernTestClient = files.pathJoin(self.modernDir, 'client', 'test.js');
-  self.modernTestServer = files.pathJoin(self.modernDir, 'server', 'test.js');
+  self.modernMainClient = files.pathJoin(self.modernDir, 'main-client.js');
+  self.modernMainServer = files.pathJoin(self.modernDir, 'main-server.js');
+  self.modernTestClient = files.pathJoin(self.modernDir, 'test-client.js');
+  self.modernTestServer = files.pathJoin(self.modernDir, 'test-server.js');
   self.watchSet = null;
 };
 
