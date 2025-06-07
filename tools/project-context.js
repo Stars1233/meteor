@@ -1723,6 +1723,11 @@ Object.assign(exports.ReleaseFile.prototype, {
 });
 
 
+
+// TODO(modern): Review support for .meteor/local/modern
+// to hold intermediate bundler results. dot contexts are
+// hidden and commonly ignored by tools that scan directories
+
 // Represents .meteor/local/modern, used to store the intermediate results of
 // the different Meteor modules when running a modern bundler.
 exports.ModernLocalModules = function (options) {

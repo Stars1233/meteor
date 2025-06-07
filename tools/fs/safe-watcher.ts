@@ -138,6 +138,9 @@ function shouldIgnorePath(absPath: string): boolean {
   const cwd = toPosixPath(process.cwd());
   const isWithinCwd = absPath.startsWith(cwd);
 
+  // TODO(modern): Review support for .meteor/local/modern
+  // to hold intermediate bundler results. dot contexts are
+  // hidden and commonly ignored by tools that scan directories
   if (isWithinCwd && absPath.includes(`.meteor/local/modern`)) {
     return false;
   }
