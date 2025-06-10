@@ -504,6 +504,7 @@ Object.assign(ProjectContext.prototype, {
         appDirectory: self.projectDir,
       });
       self.meteorConfig._ensureInitialized();
+      global.ensureMeteorConfigInitialized = () => self.meteorConfig._ensureInitialized();
 
       if (buildmessage.jobHasMessages()) {
         return;

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 
 /**
  * Returns the current working directory of the Meteor application.
@@ -48,6 +49,24 @@ export function getMeteorAppEntrypoints() {
 }
 
 /**
+ * Retrieves the initial entry points for the Meteor application from the package.json.
+ * @returns {Object} An object containing the main and test entry points for client and server.
+ * @returns {string|undefined} mainClient - The client main module path.
+ * @returns {string|undefined} mainServer - The server main module path.
+ * @returns {string|undefined} testClient - The client test module path.
+ * @returns {string|undefined} testServer - The server test module path.
+ */
+export function getMeteorInitialAppEntrypoints() {
+  const meteorConfig = getMeteorAppPackageJson()?.meteor;
+  return {
+    mainClient: meteorConfig?.mainModule?.client,
+    mainServer: meteorConfig?.mainModule?.server,
+    testClient: meteorConfig?.testModule?.client || meteorConfig?.testModule,
+    testServer: meteorConfig?.testModule?.server || meteorConfig?.testModule,
+  };
+}
+
+/**
  * Sets the Meteor application entry points in environment variables.
  * @param {Object} options - The entry points configuration object.
  * @param {string} [options.mainClient] - The client main module path.
@@ -68,6 +87,7 @@ export function setMeteorAppEntrypoints({ mainClient, mainServer, testClient, te
   if (testServer) {
     process.env.METEOR_CONFIG_TEST_SERVER = testServer;
   }
+  global.ensureMeteorConfigInitialized?.();
 }
 
 /**
@@ -83,7 +103,7 @@ export function setMeteorAppIgnore(ignore) {
  * Checks if the current Meteor command is 'run'.
  * @returns {boolean} True if the current command is 'run', false otherwise.
  */
-export function isMeteorAppRunCommand() {
+export function isMeteorAppRun() {
   return Package?.meteor?.global?.currentCommand?.name === 'run';
 }
 
@@ -91,8 +111,17 @@ export function isMeteorAppRunCommand() {
  * Checks if the current Meteor command is 'build'.
  * @returns {boolean} True if the current command is 'build', false otherwise.
  */
-export function isMeteorAppRunBuild() {
+export function isMeteorAppBuild() {
   return Package?.meteor?.global?.currentCommand?.name === 'build';
+}
+
+/**
+ * Checks if the current Meteor command is 'test'.
+ * @returns {boolean} True if the current command is 'test', false otherwise.
+ */
+export function isMeteorAppTest() {
+  return Package?.meteor?.global?.currentCommand?.name === 'test'
+    || Package?.meteor?.global?.currentCommand?.name === 'test-packages';
 }
 
 /**
@@ -112,6 +141,40 @@ export function isMeteorAppProduction() {
 }
 
 /**
+ * Checks if the Meteor application is running in debug mode.
+ * @returns {boolean} True if the application is in debug mode, false otherwise.
+ */
+export function isMeteorAppDebug() {
+  return Package.meteor?.Meteor.isDebug || (
+    !!process.env.NODE_INSPECTOR_IPC ||
+    !!process.env.VSCODE_INSPECTOR_OPTIONS ||
+    Object.keys(global.currentCommand?.options || {}).some(function(_arg) {
+      return ['inspect', 'debug', 'brk'].includes(_arg);
+    })
+  );
+}
+
+/**
+ * Adds environment suffix to a filename based on development or production mode.
+ * @param {string} filename - The filename to add the suffix to.
+ * @returns {string} The filename with '.dev' or '.prod' added before the extension.
+ */
+export function addEnvSuffixToFilename(filename) {
+  if (!filename) return filename;
+
+  const suffix = isMeteorAppDevelopment() ? '.dev' : '.prod';
+  const lastDotIndex = filename.lastIndexOf('.');
+
+  if (lastDotIndex === -1) {
+    // No extension, add suffix at the end
+    return `${filename}${suffix}`;
+  }
+
+  // Insert suffix before the extension
+  return `${filename.substring(0, lastDotIndex)}${suffix}${filename.substring(lastDotIndex)}`;
+}
+
+/**
  * Sets a custom script URL for the Meteor application in the environment variable.
  * @param {string} scriptUrl - The URL of the custom script.
  */
@@ -125,4 +188,93 @@ export function setMeteorAppCustomScriptUrl(scriptUrl) {
  */
 export function getMeteorAppPackages() {
   return Object.keys(Package?.meteor?.global?.packageVersionMap || {});
+}
+
+/**
+ * Gets all files and folders from the root level of the Meteor application.
+ * @param {Object} options - Options for getting files and folders.
+ * @param {boolean} [options.recursive=true] - Whether to scan directories recursively.
+ * @param {Array<string>} [options.ignore=[]] - Patterns to ignore (e.g., ['node_modules', '.git']).
+ * @param {boolean} [options.includeStats=false] - Whether to include file/folder stats in the result.
+ * @param {string} [options.startPath] - Custom start path (defaults to Meteor app root).
+ * @returns {Object} An object with 'files' and 'directories' arrays containing paths relative to the root.
+ */
+export function getMeteorAppFilesAndFolders(options = {}) {
+  const {
+    recursive = true,
+    ignore = ['node_modules', '.git', '.meteor/local'],
+    includeStats = false,
+    startPath = getMeteorAppDir()
+  } = options;
+
+  // Helper function to check if a path should be ignored
+  const shouldIgnore = (itemPath) => {
+    const relativePath = path.relative(getMeteorAppDir(), itemPath);
+    return ignore.some(pattern => {
+      if (pattern.endsWith('/**')) {
+        const dirPattern = pattern.slice(0, -3);
+        return relativePath === dirPattern || relativePath.startsWith(`${dirPattern}/`);
+      }
+      return relativePath === pattern || relativePath.startsWith(`${pattern}/`);
+    });
+  };
+
+  // Helper function to recursively scan directories
+  const scanDirectory = (dirPath) => {
+    const result = {
+      files: [],
+      directories: []
+    };
+
+    if (shouldIgnore(dirPath)) {
+      return result;
+    }
+
+    try {
+      const items = fs.readdirSync(dirPath);
+
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+
+        // Skip if the item should be ignored
+        if (shouldIgnore(itemPath)) {
+          continue;
+        }
+
+        try {
+          const stats = fs.statSync(itemPath);
+          const relativePath = path.relative(getMeteorAppDir(), itemPath);
+
+          if (stats.isDirectory()) {
+            // Add directory to the result
+            result.directories.push(
+              includeStats ? { path: relativePath, stats } : relativePath
+            );
+
+            // Recursively scan subdirectories if recursive option is true
+            if (recursive) {
+              const subResult = scanDirectory(itemPath);
+              result.files.push(...subResult.files);
+              result.directories.push(...subResult.directories);
+            }
+          } else if (stats.isFile()) {
+            // Add file to the result
+            result.files.push(
+              includeStats ? { path: relativePath, stats } : relativePath
+            );
+          }
+        } catch (error) {
+          // Skip items that can't be accessed
+          console.error(`Error accessing ${itemPath}: ${error.message}`);
+        }
+      }
+    } catch (error) {
+      console.error(`Error reading directory ${dirPath}: ${error.message}`);
+    }
+
+    return result;
+  };
+
+  // Start the scan from the specified path
+  return scanDirectory(startPath);
 }

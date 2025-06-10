@@ -1842,9 +1842,26 @@ main.registerCommand({
                  "MONGO_URL will NOT be reset.");
   }
 
-  const resetMeteorNmCachePromise = options['skip-cache'] ? Promise.resolve() : files.rm_recursive_async(
+  const resetMeteorNpmCachePromise = options['skip-cache'] ? Promise.resolve() : files.rm_recursive_async(
     files.pathJoin(options.appDir, "node_modules", ".cache", "meteor")
   );
+
+  const modernBundlerResourcesContexts = [
+    process.env.RSPACK_ASSETS_CONTEXT || "_rspack-assets",
+    process.env.RSPACK_BUNDLES_CONTEXT || "_rspack-bundles"
+  ];
+  const modernBundlerAppContexts = [
+    files.pathJoin(options.appDir, "node_modules", ".cache", "rspack"),
+    files.pathJoin(options.appDir, process.env.RSPACK_BUILD_CONTEXT || "_rspack"),
+    ...modernBundlerResourcesContexts.reduce((arr, context) => [
+      ...arr,
+      files.pathJoin(options.appDir, `public/${context}`),
+      files.pathJoin(options.appDir, `public/${context}`)
+    ], [])
+  ];
+  const resetModernBundlerPromises = modernBundlerAppContexts.map((contextPath) => files.rm_recursive_async(
+    contextPath
+  ));
 
   if (options.db) {
     // XXX detect the case where Meteor is running the app, but
@@ -1864,7 +1881,8 @@ main.registerCommand({
       files.rm_recursive_async(
         files.pathJoin(options.appDir, ".meteor", "local")
       ),
-      resetMeteorNmCachePromise,
+      resetMeteorNpmCachePromise,
+      ...resetModernBundlerPromises,
     ]);
 
     Console.info("Project reset.");
@@ -1882,7 +1900,8 @@ main.registerCommand({
     ...allExceptDb.map((_path) =>
       files.rm_recursive_async(files.pathJoin(options.appDir, _path))
     ),
-    resetMeteorNmCachePromise
+    resetMeteorNpmCachePromise,
+    ...resetModernBundlerPromises,
   ];
   await Promise.all(allRemovePromises);
   Console.info("Project reset.");

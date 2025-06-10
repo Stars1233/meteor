@@ -5,16 +5,29 @@ Package.describe({
 
 Package.registerBuildPlugin({
   name: 'rspack',
-  sources: ['rspack_plugin.js'],
-  use: ['modules@0.8.2', 'tools-core'],
+  sources: [
+    'lib/constants.js',
+    'lib/dependencies.js',
+    'lib/build-context.js',
+    'lib/processes.js',
+    'lib/config.js',
+    'rspack_plugin.js',
+  ],
+  npmDependencies: {
+    'webpack-merge': '6.0.1',
+  },
+  use: ['modules@0.8.2', 'ecmascript', 'tools-core'],
+});
+
+Npm.depends({
+  'http-proxy-middleware': '3.0.5',
 });
 
 Package.onUse(function (api) {
   api.use('ecmascript', ['client', 'server']);
-  api.use('tools-core');
+  api.use(['tools-core', 'webapp']);
 
   api.mainModule('rspack_server.js', 'server');
-  api.mainModule('rspack_client.js', 'client');
 });
 
 Package.onTest(function (api) {
