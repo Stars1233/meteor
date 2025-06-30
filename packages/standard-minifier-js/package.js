@@ -3,6 +3,7 @@ Package.describe({
   version: '3.1.0',
   summary: 'Standard javascript minifiers used with Meteor apps by default.',
   documentation: 'README.md',
+  devOnly: true,
 });
 
 Package.registerBuildPlugin({
