@@ -3,6 +3,7 @@ Package.describe({
   summary: "Define static page content in .html files",
   version: '1.4.0',
   git: 'https://github.com/meteor/meteor.git',
+  devOnly: true,
 });
 
 Package.registerBuildPlugin({
