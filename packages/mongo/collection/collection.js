@@ -62,7 +62,13 @@ Mongo.Collection = function Collection(name, options) {
   setupAutopublish(this, name, options);
 
   Mongo._collections.set(name, this);
+  
+  // Apply collection extensions
+  CollectionExtensions._applyExtensions(this, name, options);
 };
+
+// Apply static methods to the Collection constructor
+CollectionExtensions._applyStaticMethods(Mongo.Collection);
 
 Object.assign(Mongo.Collection.prototype, {
   _getFindSelector(args) {

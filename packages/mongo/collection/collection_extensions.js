@@ -1,0 +1,164 @@
+/**
+ * Collection Extensions System
+ * 
+ * Provides a clean way to extend Mongo.Collection functionality
+ * without monkey patching. Supports constructor extensions,
+ * prototype methods, and static methods.
+ */
+
+CollectionExtensions = {
+  _extensions: [],
+  _prototypeMethods: new Map(),
+  _staticMethods: new Map(),
+  
+  /**
+   * Add a constructor extension function
+   * Extension function is called with (name, options) and 'this' bound to collection instance
+   */
+  addExtension(extension) {
+    if (typeof extension !== 'function') {
+      throw new Error('Extension must be a function');
+    }
+    this._extensions.push(extension);
+  },
+  
+  /**
+   * Add a prototype method to all collection instances
+   * Method is bound to the collection instance
+   */
+  addPrototypeMethod(name, method) {
+    if (typeof name !== 'string' || !name) {
+      throw new Error('Prototype method name must be a non-empty string');
+    }
+    if (typeof method !== 'function') {
+      throw new Error('Prototype method must be a function');
+    }
+    
+    // Check for reserved names (reserved for future hook system)
+    const reservedNames = ['before', 'after', 'direct', 'hookOptions', '_hooks'];
+    if (reservedNames.includes(name)) {
+      throw new Error(`Method name '${name}' is reserved for future hook system`);
+    }
+    
+    this._prototypeMethods.set(name, method);
+  },
+
+  /**
+   * Backwards compatibility alias for lai:collection-extensions
+   * @deprecated Use addPrototypeMethod instead
+   */
+  addPrototype(name, method) {
+    return this.addPrototypeMethod(name, method);
+  },
+  
+  /**
+   * Add a static method to the Mongo.Collection constructor
+   */
+  addStaticMethod(name, method) {
+    if (typeof name !== 'string' || !name) {
+      throw new Error('Static method name must be a non-empty string');
+    }
+    if (typeof method !== 'function') {
+      throw new Error('Static method must be a function');
+    }
+    
+    this._staticMethods.set(name, method);
+  },
+  
+  /**
+   * Remove an extension (useful for testing)
+   */
+  removeExtension(extension) {
+    const index = this._extensions.indexOf(extension);
+    if (index > -1) {
+      this._extensions.splice(index, 1);
+    }
+  },
+  
+  /**
+   * Remove a prototype method
+   */
+  removePrototypeMethod(name) {
+    this._prototypeMethods.delete(name);
+  },
+
+  /**
+   * Backwards compatibility alias for lai:collection-extensions
+   * @deprecated Use removePrototypeMethod instead
+   */
+  removePrototype(name) {
+    return this.removePrototypeMethod(name);
+  },
+  
+  /**
+   * Remove a static method
+   */
+  removeStaticMethod(name) {
+    this._staticMethods.delete(name);
+  },
+  
+  /**
+   * Clear all extensions (useful for testing)
+   */
+  clearExtensions() {
+    this._extensions.length = 0;
+    this._prototypeMethods.clear();
+    this._staticMethods.clear();
+  },
+  
+  /**
+   * Get all registered extensions (useful for debugging)
+   */
+  getExtensions() {
+    return [...this._extensions];
+  },
+  
+  /**
+   * Get all registered prototype methods (useful for debugging)
+   */
+  getPrototypeMethods() {
+    return new Map(this._prototypeMethods);
+  },
+  
+  /**
+   * Get all registered static methods (useful for debugging)
+   */
+  getStaticMethods() {
+    return new Map(this._staticMethods);
+  },
+  
+
+  
+  /**
+   * Apply all extensions to a collection instance
+   * Called during collection construction
+   */
+  _applyExtensions(instance, name, options) {
+    // Apply constructor extensions
+    this._extensions.forEach(extension => {
+      try {
+        extension.call(instance, name, options);
+      } catch (error) {
+        // Provide helpful error context
+        throw new Error(`Extension failed for collection '${name}': ${error.message}`);
+      }
+    });
+    
+    // Apply prototype methods
+    this._prototypeMethods.forEach((method, methodName) => {
+      instance[methodName] = method.bind(instance);
+    });
+  },
+  
+  /**
+   * Apply static methods to the Mongo.Collection constructor
+   * Called during package initialization
+   */
+  _applyStaticMethods(CollectionConstructor) {
+    this._staticMethods.forEach((method, methodName) => {
+      CollectionConstructor[methodName] = method;
+    });
+  },
+  
+
+}; 
