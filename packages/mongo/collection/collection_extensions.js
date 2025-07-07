@@ -135,19 +135,19 @@ CollectionExtensions = {
    */
   _applyExtensions(instance, name, options) {
     // Apply constructor extensions
-    this._extensions.forEach(extension => {
+    for (const extension of this._extensions) {
       try {
         extension.call(instance, name, options);
       } catch (error) {
         // Provide helpful error context
         throw new Error(`Extension failed for collection '${name}': ${error.message}`);
       }
-    });
+    }
     
     // Apply prototype methods
-    this._prototypeMethods.forEach((method, methodName) => {
+    for (const [methodName, method] of this._prototypeMethods) {
       instance[methodName] = method.bind(instance);
-    });
+    }
   },
   
   /**
@@ -155,9 +155,9 @@ CollectionExtensions = {
    * Called during package initialization
    */
   _applyStaticMethods(CollectionConstructor) {
-    this._staticMethods.forEach((method, methodName) => {
+    for (const [methodName, method] of this._staticMethods) {
       CollectionConstructor[methodName] = method;
-    });
+    }
   },
   
 
