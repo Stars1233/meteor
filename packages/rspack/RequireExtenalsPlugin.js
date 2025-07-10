@@ -113,6 +113,7 @@ class RequireExternalsPlugin {
 
   _ensureGlobalThisModule() {
     const block = [
+      `/* Polyfill globalThis.module & exports */`,
       `if (typeof globalThis.module === 'undefined') {`,
       `  globalThis.module = { exports: {} };`,
       `}`,
@@ -126,7 +127,7 @@ class RequireExternalsPlugin {
       content = fs.readFileSync(this.filePath, 'utf-8');
       if (!content.includes(`typeof globalThis.module === 'undefined'`)) {
         // Prepend so it lives at the very top
-        fs.writeFileSync(this.filePath, content + block, 'utf-8');
+        fs.writeFileSync(this.filePath, content + '\n' + block, 'utf-8');
       }
     } else {
       // File doesn’t exist yet: create with just the block
