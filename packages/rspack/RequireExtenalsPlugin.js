@@ -12,7 +12,6 @@ const path = require('path');
 
 class RequireExternalsPlugin {
   constructor({
-    buildContext,
     filePath,
     // Externals can be:
     // - An array of strings: module name must be included in the array
@@ -26,17 +25,15 @@ class RequireExternalsPlugin {
   } = {}) {
     this.pluginName = 'RequireExternalsPlugin';
 
-    // Store the external map function
+    // Prepare externals
     this._externals = externals;
     this._externalMap = externalMap;
-    // Default prefix for backward compatibility
     this._defaultExternalPrefix = 'external ';
 
-    this._buildContext = buildContext;
-    this.fileRelPath = path.join(buildContext, filePath);
-    this.filePath = path.resolve(process.cwd(), this.fileRelPath);
+    // Prepare paths
+    this.filePath = path.resolve(process.cwd(), filePath);
     this.backRoot = '../'.repeat(
-      this.fileRelPath.replace(/^\.?\/+/, '').split('/').length - 1
+      filePath.replace(/^\.?\/+/, '').split('/').length - 1
     );
 
     // Initialize funcCount based on existing helpers in the file
@@ -82,7 +79,10 @@ class RequireExternalsPlugin {
     if (pkg.startsWith('"') && pkg.endsWith('"')) pkg = pkg.slice(1, -1);
 
     // If the extracted package name is a path, use the path as is
-    if (pkg && (path.isAbsolute(pkg) || pkg.startsWith('./') || pkg.startsWith('../'))) {
+    if (
+      pkg &&
+      (path.isAbsolute(pkg) || pkg.startsWith('./') || pkg.startsWith('../'))
+    ) {
       const module = this.moduleMeta.get(pkg);
       if (module) {
         return `${this.backRoot}${module.relativeRequest}`;

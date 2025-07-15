@@ -161,8 +161,7 @@ export default function (inMeteor = {}, argv = {}) {
               ? [new (safeRequire('@rspack/plugin-react-refresh'))()]
               : []),
             new RequireExternalsPlugin({
-              buildContext,
-              filePath: runPath,
+              filePath: path.join(buildContext, runPath),
               ...(Meteor.isBlazeEnabled && {
                 externals: /\.html$/,
                 externalMap: (module) => {
