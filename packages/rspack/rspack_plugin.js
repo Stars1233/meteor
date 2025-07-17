@@ -21,7 +21,6 @@ const {
 
 const {
   ensureRSPackInstalled,
-  ensureReactRefreshPluginInstalled
 } = require('./lib/dependencies');
 
 const {
@@ -65,9 +64,6 @@ setGlobalState(GLOBAL_STATE_KEYS.INITIAL_ENTRYPONTS, getMeteorAppEntrypoints());
 try {
   // Ensure RSPack is installed
   await ensureRSPackInstalled();
-
-  // Check for React and install React Refresh Plugin if needed
-  await ensureReactRefreshPluginInstalled();
 
   // Ensure the RSPack build context directory exists
   ensureRSPackBuildContextExists();
