@@ -17,6 +17,9 @@ const {
   installNpmDependency,
   checkNpmDependencyVersion,
 } = require('meteor/tools-core/lib/npm');
+const {
+  joinWithAnd,
+} = require('meteor/tools-core/lib/string');
 
 const {
   DEFAULT_RSPACK_VERSION,
@@ -57,20 +60,18 @@ export async function ensureRSPackInstalled() {
     }));
 
   if (!isRSPackInstalled) {
+    const rspackDependencies = [
+      `@rspack/cli@${DEFAULT_RSPACK_VERSION}`,
+      `@rspack/core@${DEFAULT_RSPACK_VERSION}`,
+      `@meteorjs/rspack@${DEFAULT_METEOR_RSPACK_VERSION}`,
+    ];
     logProgress(
-      `RSPack not found. Installing @rspack/cli@${DEFAULT_RSPACK_VERSION}...`
+      `RSPack not found. Installing ${joinWithAnd(rspackDependencies)}...`,
     );
-    const success = await installNpmDependency(
-      [
-        `@rspack/cli@${DEFAULT_RSPACK_VERSION}`,
-        `@rspack/core@${DEFAULT_RSPACK_VERSION}`,
-        `@meteorjs/rspack@${DEFAULT_METEOR_RSPACK_VERSION}`,
-      ],
-      {
-        cwd: appDir,
-        dev: true
-      }
-    );
+    const success = await installNpmDependency(rspackDependencies, {
+      cwd: appDir,
+      dev: true,
+    });
 
     if (!success) {
       throw new Error(

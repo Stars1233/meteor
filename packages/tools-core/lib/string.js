@@ -32,3 +32,27 @@ function shuffleArray(arr) {
 export function shuffleString(str) {
   return shuffleArray(str.split('')).join('');
 }
+
+/**
+ * Join an array of strings into a human-readable list.
+ *
+ * @param {string[]} items - The items to join.
+ * @param {object}   [opts]
+ * @param {string}   [opts.separator=', ']      - Separator between items (except last).
+ * @param {string}   [opts.lastSeparator=' and '] - Text to insert before the last item.
+ * @returns {string}
+ */
+export function joinWithAnd(
+  items,
+  { separator = ', ', lastSeparator = ' and ' } = {},
+) {
+  const len = items.length;
+  if (len === 0) return '';
+  if (len === 1) return items[0];
+  if (len === 2) return items[0] + lastSeparator + items[1];
+  return items
+    .slice(0, -1)
+    .reduce((acc, item, idx) => {
+      return acc + (idx === 0 ? '' : separator) + item;
+    }, '') + lastSeparator + items[len - 1];
+}
