@@ -13,7 +13,7 @@ export const DEFAULT_RSPACK_VERSION = '1.4.8';
  * Default Meteor RSPack version to install if not found
  * @constant {string}
  */
-export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.0';
+export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.1';
 
 /**
  * Global state keys used for storing and retrieving state across the application
