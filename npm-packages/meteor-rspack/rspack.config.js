@@ -65,7 +65,7 @@ function createSwcConfig({ isRun }) {
 
 // Watch options shared across both builds
 const watchOptions = {
-  ignored: ['**/main.html', '**/dist/**', '**/.meteor/local/**'],
+  ignored: ['**/.meteor/local/**', '**/dist/**'],
 };
 
 /**
@@ -202,7 +202,6 @@ export default function (inMeteor = {}, argv = {}) {
           writeToDisk: false,
         },
       },
-      experiments: { incremental: true },
     }),
   };
 
@@ -222,11 +221,6 @@ export default function (inMeteor = {}, argv = {}) {
     optimization: { usedExports: true },
     module: {
       rules: [
-        {
-          test: /\.meteor\/local/,
-          use: 'builtin:empty-loader',
-          sideEffects: false,
-        },
         createSwcConfig({ isRun }),
       ],
     },
@@ -252,7 +246,8 @@ export default function (inMeteor = {}, argv = {}) {
     watchOptions,
     devtool: isRun ? 'source-map' : 'hidden-source-map',
     ...(isRun &&
-      merge(createCacheStrategy(mode), { experiments: { incremental: true } })),
+      createCacheStrategy(mode)
+    ),
   };
 
   // Load and apply project-level overrides for the selected build
