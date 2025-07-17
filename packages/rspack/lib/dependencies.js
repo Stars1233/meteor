@@ -15,6 +15,7 @@ const { getMeteorAppDir } = require('meteor/tools-core/lib/meteor');
 const {
   checkNpmDependencyExists,
   installNpmDependency,
+  checkNpmDependencyVersion,
 } = require('meteor/tools-core/lib/npm');
 
 const {
@@ -37,12 +38,27 @@ export async function ensureRSPackInstalled() {
   const appDir = getMeteorAppDir();
   const isRSPackInstalled =
     (await checkNpmDependencyExists('@rspack/cli', { cwd: appDir })) &&
+    (await checkNpmDependencyVersion('@rspack/cli', {
+      cwd: appDir,
+      versionRequirement: DEFAULT_RSPACK_VERSION,
+      semverCondition: 'gte',
+    })) &&
     (await checkNpmDependencyExists('@rspack/core', { cwd: appDir })) &&
-    (await checkNpmDependencyExists('@meteorjs/rspack', { cwd: appDir }));
+    (await checkNpmDependencyVersion('@rspack/core', {
+      cwd: appDir,
+      versionRequirement: DEFAULT_RSPACK_VERSION,
+      semverCondition: 'gte',
+    })) &&
+    (await checkNpmDependencyExists('@meteorjs/rspack', { cwd: appDir })) &&
+    (await checkNpmDependencyVersion('@meteorjs/rspack', {
+      cwd: appDir,
+      versionRequirement: DEFAULT_METEOR_RSPACK_VERSION,
+      semverCondition: 'gte',
+    }));
 
   if (!isRSPackInstalled) {
     logProgress(
-      `RSPack not found. Installing @rspack/cli@${DEFAULT_RSPACK_VERSION}...`,
+      `RSPack not found. Installing @rspack/cli@${DEFAULT_RSPACK_VERSION}...`
     );
     const success = await installNpmDependency(
       [
@@ -52,13 +68,13 @@ export async function ensureRSPackInstalled() {
       ],
       {
         cwd: appDir,
-        dev: true,
-      },
+        dev: true
+      }
     );
 
     if (!success) {
       throw new Error(
-        'Failed to install RSPack. Please install it manually with: meteor npm install @rspack/cli',
+        'Failed to install RSPack. Please install it manually with: meteor npm install @rspack/cli'
       );
     }
 
