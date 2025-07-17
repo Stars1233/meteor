@@ -16,6 +16,11 @@ const {
   setGlobalState
 } = require('meteor/tools-core/lib/global-state');
 
+// Helper function to format milliseconds with comma separators
+function formatMilliseconds(ms) {
+  return ms.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
 /**
  * Sets up compilation tracking and callbacks
  * @returns {Object} Object containing compilation tracking state and callbacks

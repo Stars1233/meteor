@@ -24,7 +24,8 @@ const {
 } = require('./lib/dependencies');
 
 const {
-  ensureRSPackBuildContextExists
+  ensureRSPackBuildContextExists,
+  ensureRspackConfigExists,
 } = require('./lib/build-context');
 
 const {
@@ -67,6 +68,9 @@ try {
 
   // Ensure the RSPack build context directory exists
   ensureRSPackBuildContextExists();
+
+  // Ensure the rspack.config.js file exists at the project level
+  ensureRspackConfigExists();
 
   // Configure Meteor settings for RSPack
   configureMeteorForRSPack();

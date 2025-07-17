@@ -266,3 +266,41 @@ ${hmr}
 ${importContent}
 `;
 }
+
+/**
+ * Ensures the rspack.config.js file exists at the project level
+ * Creates the file if it doesn't exist with the required template
+ * @returns {string} Path to the rspack.config.js file
+ */
+export function ensureRspackConfigExists() {
+  const appDir = getMeteorAppDir();
+  const configPath = path.join(appDir, 'rspack.config.js');
+
+  const configTemplate = `import { defineConfig } from '@meteorjs/rspack';
+
+/**
+ * Rspack configuration for Meteor projects.
+ *
+ * Provides typed flags on the \`Meteor\` object, such as:
+ * - \`Meteor.isClient\` / \`Meteor.isServer\`
+ * - \`Meteor.isDevelopment\` / \`Meteor.isProduction\`
+ * - …and other flags available
+ *
+ * Use these flags to adjust your build settings based on environment.
+ */
+export default defineConfig(Meteor => {
+  return {};
+});
+`;
+
+  if (!fs.existsSync(configPath)) {
+    try {
+      fs.writeFileSync(configPath, configTemplate, 'utf8');
+    } catch (error) {
+      logError(`Failed to create rspack.config.js file: ${error.message}`);
+      throw error;
+    }
+  }
+
+  return configPath;
+}
