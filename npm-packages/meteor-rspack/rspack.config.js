@@ -5,8 +5,11 @@ import path from 'path';
 import { merge } from 'webpack-merge';
 
 import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
+import { getMeteorAppSwcConfig } from "./lib/swc.js";
 
 const require = createRequire(import.meta.url);
+
+console.log("getMeteorAppSwcConfig()", getMeteorAppSwcConfig());
 
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
@@ -42,24 +45,27 @@ function createCacheStrategy(mode) {
 
 // SWC loader rule (JSX/JS)
 function createSwcConfig({ isRun }) {
+  const defaultConfig = {
+    jsc: {
+      baseUrl: process.cwd(),
+      paths: { '/*': ['*'] },
+      parser: { syntax: 'ecmascript', jsx: true },
+      target: 'es2015',
+      transform: {
+        react: {
+          development: isRun,
+          refresh: isRun,
+        },
+      },
+    },
+  };
+  const customConfig = getMeteorAppSwcConfig() || {};
+  const swcConfig = merge(defaultConfig, customConfig);
   return {
     test: /\.[jt]sx?$/,
     exclude: /node_modules|\.meteor\/local/,
     loader: 'builtin:swc-loader',
-    options: {
-      jsc: {
-        baseUrl: process.cwd(),
-        paths: { '/*': ['*'] },
-        parser: { syntax: 'ecmascript', jsx: true },
-        target: 'es2015',
-        transform: {
-          react: {
-            development: isRun,
-            refresh: isRun,
-          },
-        },
-      },
-    },
+    options: swcConfig,
   };
 }
 
