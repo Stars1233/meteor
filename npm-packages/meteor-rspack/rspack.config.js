@@ -3,6 +3,7 @@ import fs from 'fs';
 import { createRequire } from 'module';
 import path from 'path';
 import { merge } from 'webpack-merge';
+import { inspect } from "node:util";
 
 import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
 import { getMeteorAppSwcConfig } from "./lib/swc.js";
@@ -182,6 +183,8 @@ export default function (inMeteor = {}, argv = {}) {
       : []),
   ];
 
+  const reactRefreshModule = isReactEnabled ? safeRequire('@rspack/plugin-react-refresh') : null;
+
   // Base client config
   let clientConfig = {
     name: 'meteor-client',
@@ -220,8 +223,8 @@ export default function (inMeteor = {}, argv = {}) {
     plugins: [
       ...(isRun
         ? [
-            ...(isReactEnabled
-              ? [new (safeRequire('@rspack/plugin-react-refresh'))()]
+            ...(isReactEnabled && reactRefreshModule
+              ? [new reactRefreshModule()]
               : []),
             new RequireExternalsPlugin({
               filePath: path.join(buildContext, runPath),
@@ -334,10 +337,11 @@ export default function (inMeteor = {}, argv = {}) {
     }
   }
 
-  // Return the appropriate configuration
-  if (isClient) {
-    return [clientConfig];
+  const config = isClient ? clientConfig : serverConfig;
+
+  if (Meteor.isDebug) {
+    console.log('Config:', inspect(config, { depth: null, colors: true }));
   }
-  // Meteor.isServer
-  return [serverConfig];
+
+  return [config];
 }
