@@ -3,23 +3,17 @@
  * @description Constants and global state keys for RSPack plugin
  */
 
-/**
- * Default RSPack version to install if not found
- * @constant {string}
- */
 export const DEFAULT_RSPACK_VERSION = '1.4.8';
 
-/**
- * Default Meteor RSPack version to install if not found
- * @constant {string}
- */
 export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.4';
 
-/**
- * Default RSPack React HMRversion to install if not found
- * @constant {string}
- */
 export const DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION = '1.4.3';
+
+export const DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION = '2.7.0';
+
+export const DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION = '5.0.0';
+
+export const DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION = '0.2.6';
 
 /**
  * Global state keys used for storing and retrieving state across the application
@@ -37,6 +31,8 @@ export const GLOBAL_STATE_KEYS = {
   SERVER_PROCESS: 'rspack.serverProcess',
   RSPACK_INSTALLATION_CHECKED: 'rspack.rspackInstallationChecked',
   RSPACK_REACT_INSTALLATION_CHECKED: 'rspack.rspackReactInstallationChecked',
+  COFFEESCRIPT_CHECKED: 'rspack.coffeescriptChecked',
+  RSPACK_COFFEESCRIPT_INSTALLATION_CHECKED: 'rspack.rspackCoffeescriptInstallationChecked',
   REACT_CHECKED: 'rspack.reactChecked',
   INITIAL_ENTRYPONTS: 'meteor.initialEntrypoints',
   CLIENT_FIRST_COMPILE: 'rspack.clientFirstCompile',

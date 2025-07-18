@@ -285,3 +285,11 @@ export function isMeteorBlazeProject() {
 export function isMeteorBlazeHotProject() {
   return getMeteorAppPackages().includes('blaze-hot');
 }
+
+/**
+ * Checks if the Meteor application is a Coffeescript project.
+ * @returns {boolean}
+ */
+export function isMeteorCoffeescriptProject() {
+  return getMeteorAppPackages().includes('coffeescript');
+}

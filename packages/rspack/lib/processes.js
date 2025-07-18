@@ -112,6 +112,7 @@ export function getRSPackEnv({ isClient, isServer }) {
     ['isTypescriptEnabled', isTypescriptEnabled],
     ['isTsxEnabled', isTsxEnabled],
     ['isJsxEnabled', isJsxEnabled],
+    ['isCoffeescriptEnabled', process.env.METEOR_COFFEESCRIPT_ENABLED],
   ];
   return pairs.flatMap(([key, val]) => [
     '--env',

@@ -71,6 +71,22 @@ function createSwcConfig({ isRun, isTypescriptEnabled, isJsxEnabled, isTsxEnable
   };
 }
 
+// Coffeescript rule
+function createCoffeescriptConfig({ swcConfig }) {
+  return {
+    test: /\.coffee$/,
+    use: [
+      {
+        loader: 'swc-loader',
+        options: swcConfig,
+      },
+      {
+        loader: 'coffee-loader',
+      },
+    ],
+  };
+}
+
 // Watch options shared across both builds
 const watchOptions = {
   ignored: ['**/.meteor/local/**', '**/dist/**'],
@@ -102,8 +118,12 @@ export default function (inMeteor = {}, argv = {}) {
   const mode = isProd ? 'production' : 'development';
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
-  const isJsxEnabled = Meteor.isJsxEnabled || false;
-  const isTsxEnabled = Meteor.isTsxEnabled || false;
+  const isJsxEnabled =
+    Meteor.isJsxEnabled || (!isTypescriptEnabled && isReactEnabled) || false;
+  const isTsxEnabled =
+    Meteor.isTsxEnabled || (isTypescriptEnabled && isReactEnabled) || false;
+
+  const isCoffeescriptEnabled = Meteor.isCoffeescriptEnabled || false;
 
   // Determine entry points
   const entryPath = Meteor.entryPath;
@@ -132,7 +152,7 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
-  const swcConfig = createSwcConfig({
+  const swcConfigRule = createSwcConfig({
     isRun,
     isTypescriptEnabled,
     isJsxEnabled,
@@ -142,7 +162,11 @@ export default function (inMeteor = {}, argv = {}) {
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : [])
   ];
+  const alias = {
+    '/': path.resolve(process.cwd()),
+  };
   const extensions = [
+    ...(isCoffeescriptEnabled ? ['.coffee'] : []),
     '.ts',
     '.tsx',
     '.js',
@@ -152,9 +176,11 @@ export default function (inMeteor = {}, argv = {}) {
     '.json',
     '.wasm',
   ];
-  const alias = {
-    '/': path.resolve(process.cwd()),
-  };
+  const extraRules = [
+    ...(isCoffeescriptEnabled
+      ? [createCoffeescriptConfig({ swcConfig: swcConfigRule?.options })]
+      : []),
+  ];
 
   // Base client config
   let clientConfig = {
@@ -177,7 +203,7 @@ export default function (inMeteor = {}, argv = {}) {
     },
     module: {
       rules: [
-        swcConfig,
+        swcConfigRule,
         ...(Meteor.isBlazeEnabled
           ? [
               {
@@ -186,6 +212,7 @@ export default function (inMeteor = {}, argv = {}) {
               },
             ]
           : []),
+        ...extraRules,
       ],
     },
     resolve: { extensions, alias },
@@ -256,7 +283,7 @@ export default function (inMeteor = {}, argv = {}) {
     },
     optimization: { usedExports: true },
     module: {
-      rules: [swcConfig],
+      rules: [swcConfigRule, ...extraRules],
     },
     resolve: {
       extensions,

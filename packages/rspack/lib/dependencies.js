@@ -11,7 +11,10 @@ const {
   logProgress,
   logSuccess,
 } = require('meteor/tools-core/lib/log');
-const { getMeteorAppDir } = require('meteor/tools-core/lib/meteor');
+const {
+  getMeteorAppDir,
+  isMeteorCoffeescriptProject,
+} = require('meteor/tools-core/lib/meteor');
 const {
   checkNpmDependencyExists,
   installNpmDependency,
@@ -153,4 +156,87 @@ export async function ensureRSPackReactInstalled() {
 
   // Mark as checked
   setGlobalState(GLOBAL_STATE_KEYS.RSPACK_REACT_INSTALLATION_CHECKED, true);
+}
+
+/**
+ * Checks if Coffeescript is installed and sets global state accordingly
+ * Sets global state and environment variables based on Coffeescript detection
+ * @returns {Promise<void>} A promise that resolves when the check is complete
+ */
+export async function checkCoffeescriptInstalled() {
+  // Skip if already checked
+  if (getGlobalState(GLOBAL_STATE_KEYS.COFFEESCRIPT_CHECKED, false)) {
+    return;
+  }
+
+  const appDir = getMeteorAppDir();
+  const isCoffescriptInstalled =
+    checkNpmDependencyExists('coffeescript', { cwd: appDir }) ||
+    isMeteorCoffeescriptProject();
+
+  if (isCoffescriptInstalled) {
+    // Set environment variable to indicate React is enabled
+    process.env.METEOR_COFFEESCRIPT_ENABLED = 'true';
+  } else {
+    process.env.METEOR_COFFEESCRIPT_ENABLED = 'false';
+  }
+
+  // Mark as checked
+  setGlobalState(GLOBAL_STATE_KEYS.COFFEESCRIPT_CHECKED, true);
+
+  return isCoffescriptInstalled;
+}
+
+export async function ensureRSPackCoffeescriptInstalled() {
+  // Skip if already checked
+  if (getGlobalState(GLOBAL_STATE_KEYS.RSPACK_COFFEESCRIPT_INSTALLATION_CHECKED, false)) {
+    return;
+  }
+
+  const appDir = getMeteorAppDir();
+  const isRSPackCoffeescriptInstalled =
+  checkNpmDependencyExists('coffeescript', { cwd: appDir }) &&
+  checkNpmDependencyVersion('coffeescript', {
+    cwd: appDir,
+    versionRequirement: DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION,
+    semverCondition: 'gte',
+  }) &&
+    checkNpmDependencyExists('coffee-loader', { cwd: appDir }) &&
+    checkNpmDependencyVersion('coffee-loader', {
+      cwd: appDir,
+      versionRequirement: DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION,
+      semverCondition: 'gte',
+    }) &&
+    checkNpmDependencyExists('swc-loader', { cwd: appDir }) &&
+    checkNpmDependencyVersion('swc-loader', {
+      cwd: appDir,
+      versionRequirement: DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION,
+      semverCondition: 'gte',
+    });
+
+  const rspackCoffeescriptDependencies = [
+    `coffeescript@${DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION}`,
+    `coffee-loader@${DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION}`,
+    `swc-loader@${DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION}`,
+  ];
+  if (!isRSPackCoffeescriptInstalled) {
+    logProgress(
+      `RSPack Coffeescript not found. Installing ${joinWithAnd(rspackCoffeescriptDependencies)}...`,
+    );
+    const success = await installNpmDependency(rspackCoffeescriptDependencies, {
+      cwd: appDir,
+      dev: true,
+    });
+
+    if (!success) {
+      throw new Error(
+        `Failed to install RSPack Coffeescript. Please install it manually with: meteor npm install -D ${joinWithAnd(rspackCoffeescriptDependencies)}`
+      );
+    }
+
+    logSuccess('RSPack Coffeescript installed successfully.');
+  }
+
+  // Mark as checked
+  setGlobalState(GLOBAL_STATE_KEYS.RSPACK_COFFEESCRIPT_INSTALLATION_CHECKED, true);
 }
