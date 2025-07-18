@@ -92,6 +92,83 @@ export namespace Mongo {
     getCollection<
         TCollection extends Collection<any, any> | undefined = Collection<NpmModuleMongodb.Document> | undefined
     >(name: string): TCollection;
+
+    // Collection Extensions API
+    /**
+     * Add a constructor extension function that runs when collections are created.
+     * @param extension Extension function called with (name, options) and 'this' bound to collection instance
+     */
+    addExtension(extension: (this: Collection<any, any>, name: string | null, options?: any) => void): void;
+
+    /**
+     * Add a prototype method to all collection instances.
+     * @param name The name of the method to add
+     * @param method The method function, bound to the collection instance
+     */
+    addPrototypeMethod(name: string, method: Function): void;
+
+    /**
+     * Backwards compatibility alias for lai:collection-extensions
+     * @param name The name of the method to add
+     * @param method The method function, bound to the collection instance
+     * @deprecated Use addPrototypeMethod instead
+     */
+    addPrototype(name: string, method: Function): void;
+
+    /**
+     * Add a static method to the Mongo.Collection constructor.
+     * @param name The name of the static method to add
+     * @param method The static method function
+     */
+    addStaticMethod(name: string, method: Function): void;
+
+    /**
+     * Remove a constructor extension (useful for testing).
+     * @param extension The extension function to remove
+     */
+    removeExtension(extension: Function): void;
+
+    /**
+     * Remove a prototype method from all collection instances.
+     * @param name The name of the method to remove
+     */
+    removePrototypeMethod(name: string): void;
+
+    /**
+     * Backwards compatibility alias for lai:collection-extensions
+     * @param name The name of the method to remove
+     * @deprecated Use removePrototypeMethod instead
+     */
+    removePrototype(name: string): void;
+
+    /**
+     * Remove a static method from the Mongo.Collection constructor.
+     * @param name The name of the static method to remove
+     */
+    removeStaticMethod(name: string): void;
+
+    /**
+     * Clear all extensions, prototype methods, and static methods (useful for testing).
+     */
+    clearExtensions(): void;
+
+    /**
+     * Get all registered constructor extensions (useful for debugging).
+     * @returns Array of registered extension functions
+     */
+    getExtensions(): Array<Function>;
+
+    /**
+     * Get all registered prototype methods (useful for debugging).
+     * @returns Map of method names to functions
+     */
+    getPrototypeMethods(): Map<string, Function>;
+
+    /**
+     * Get all registered static methods (useful for debugging).
+     * @returns Map of method names to functions
+     */
+    getStaticMethods(): Map<string, Function>;
   }
   interface Collection<T extends NpmModuleMongodb.Document, U = T> {
     allow<Fn extends Transform<T> = undefined>(options: {
@@ -478,6 +555,102 @@ export namespace Mongo {
     toHexString(): string;
     equals(otherID: ObjectID): boolean;
   }
+
+  /**
+   * Collection Extensions API
+   */
+  interface CollectionExtensions {
+    /**
+     * Add a constructor extension function that runs when collections are created.
+     * @param extension Extension function called with (name, options) and 'this' bound to collection instance
+     */
+    addExtension(extension: (this: Collection<any, any>, name: string | null, options?: any) => void): void;
+
+    /**
+     * Add a prototype method to all collection instances.
+     * @param name The name of the method to add
+     * @param method The method function, bound to the collection instance
+     */
+    addPrototypeMethod(name: string, method: Function): void;
+
+    /**
+     * Backwards compatibility alias for lai:collection-extensions
+     * @param name The name of the method to add
+     * @param method The method function, bound to the collection instance
+     * @deprecated Use addPrototypeMethod instead
+     */
+    addPrototype(name: string, method: Function): void;
+
+    /**
+     * Add a static method to the Mongo.Collection constructor.
+     * @param name The name of the static method to add
+     * @param method The static method function
+     */
+    addStaticMethod(name: string, method: Function): void;
+
+    /**
+     * Remove a constructor extension (useful for testing).
+     * @param extension The extension function to remove
+     */
+    removeExtension(extension: Function): void;
+
+    /**
+     * Remove a prototype method from all collection instances.
+     * @param name The name of the method to remove
+     */
+    removePrototypeMethod(name: string): void;
+
+    /**
+     * Backwards compatibility alias for lai:collection-extensions
+     * @param name The name of the method to remove
+     * @deprecated Use removePrototypeMethod instead
+     */
+    removePrototype(name: string): void;
+
+    /**
+     * Remove a static method from the Mongo.Collection constructor.
+     * @param name The name of the static method to remove
+     */
+    removeStaticMethod(name: string): void;
+
+    /**
+     * Clear all extensions, prototype methods, and static methods (useful for testing).
+     */
+    clearExtensions(): void;
+
+    /**
+     * Get all registered constructor extensions (useful for debugging).
+     * @returns Array of registered extension functions
+     */
+    getExtensions(): Array<Function>;
+
+    /**
+     * Get all registered prototype methods (useful for debugging).
+     * @returns Map of method names to functions
+     */
+    getPrototypeMethods(): Map<string, Function>;
+
+    /**
+     * Get all registered static methods (useful for debugging).
+     * @returns Map of method names to functions
+     */
+    getStaticMethods(): Map<string, Function>;
+  }
+
+  var CollectionExtensions: CollectionExtensions;
+
+  /**
+   * Retrieve a Meteor collection instance by name. Only collections defined with `new Mongo.Collection(...)` are available with this method.
+   * @param name Name of your collection as it was defined with `new Mongo.Collection()`.
+   * @returns The collection instance or undefined if not found
+   */
+  function getCollection<T extends Collection<any, any> | undefined = Collection<NpmModuleMongodb.Document> | undefined>(name: string): T;
+
+  /**
+   * A record of all defined Mongo.Collection instances, indexed by collection name.
+   * @internal
+   */
+  var _collections: Map<string, Collection<any, any>>;
 
   function setConnectionOptions(options: any): void;
 }
