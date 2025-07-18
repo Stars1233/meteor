@@ -152,6 +152,9 @@ export default function (inMeteor = {}, argv = {}) {
     '.json',
     '.wasm',
   ];
+  const alias = {
+    '/': path.resolve(process.cwd()),
+  };
 
   // Base client config
   let clientConfig = {
@@ -185,7 +188,7 @@ export default function (inMeteor = {}, argv = {}) {
           : []),
       ],
     },
-    resolve: { extensions },
+    resolve: { extensions, alias },
     externals,
     plugins: [
       ...(isRun
@@ -257,6 +260,7 @@ export default function (inMeteor = {}, argv = {}) {
     },
     resolve: {
       extensions,
+      alias,
       modules: ['node_modules', path.resolve(process.cwd())],
       conditionNames: ['import', 'require', 'node', 'default'],
     },
