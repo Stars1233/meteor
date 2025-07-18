@@ -44,12 +44,16 @@ function createCacheStrategy(mode) {
 }
 
 // SWC loader rule (JSX/JS)
-function createSwcConfig({ isRun }) {
+function createSwcConfig({ isRun, isTypeScriptEnabled, isJsxEnabled, isTsxEnabled }) {
   const defaultConfig = {
     jsc: {
       baseUrl: process.cwd(),
       paths: { '/*': ['*'] },
-      parser: { syntax: 'ecmascript', jsx: true },
+      parser: {
+        syntax: isTypeScriptEnabled ? 'typescript' : 'ecmascript',
+        ...(isTsxEnabled && { tsx: true }),
+        ...(isJsxEnabled && { jsx: true }),
+      },
       target: 'es2015',
       transform: {
         react: {
@@ -99,6 +103,10 @@ export default function (inMeteor = {}, argv = {}) {
   const isReactEnabled = Meteor.isReactEnabled;
   const mode = isProd ? 'production' : 'development';
 
+  const isTypeScriptEnabled = Meteor.isTypeScriptEnabled || false;
+  const isJsxEnabled = Meteor.isJsxEnabled || false;
+  const isTsxEnabled = Meteor.isTsxEnabled || false;
+
   // Determine entry points
   const entryPath = Meteor.entryPath;
 
@@ -126,6 +134,13 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
+  const swcConfig = createSwcConfig({
+    isRun,
+    isTypeScriptEnabled,
+    isJsxEnabled,
+    isTsxEnabled,
+  });
+
   // Base client config
   let clientConfig = {
     name: 'meteor-client',
@@ -147,7 +162,7 @@ export default function (inMeteor = {}, argv = {}) {
     },
     module: {
       rules: [
-        createSwcConfig({ isRun }),
+        swcConfig,
         ...(Meteor.isBlazeEnabled
           ? [
               {
@@ -226,9 +241,7 @@ export default function (inMeteor = {}, argv = {}) {
     },
     optimization: { usedExports: true },
     module: {
-      rules: [
-        createSwcConfig({ isRun }),
-      ],
+      rules: [swcConfig],
     },
     resolve: {
       extensions: ['.js', '.jsx', '.json'],

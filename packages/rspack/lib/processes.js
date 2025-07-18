@@ -25,6 +25,7 @@ const {
   isMeteorAppBuild,
   isMeteorBlazeProject,
   isMeteorBlazeHotProject,
+  getMeteorInitialAppEntrypoints,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -73,6 +74,13 @@ export function getRSPackEnv({ isClient, isServer }) {
       ? { role: FILE_ROLE.build }
       : { role: FILE_ROLE.run };
 
+  const initialEntrypoints = getMeteorInitialAppEntrypoints();
+  const entryKey = `${isMeteorAppTest() ? 'test' : 'main'}${isClient ? 'Client' : 'Server'}`;
+  const inputFilePath = initialEntrypoints[entryKey];
+  const isTypescriptEnabled = inputFilePath.endsWith('.ts') || inputFilePath.endsWith('.tsx');
+  const isTsxEnabled = inputFilePath.endsWith('.tsx');
+  const isJsxEnabled = inputFilePath.endsWith('.jsx');
+
   const pairs = [
     ['isDevelopment', isMeteorAppDevelopment()],
     ['isProduction', isMeteorAppProduction()],
@@ -101,6 +109,9 @@ export function getRSPackEnv({ isClient, isServer }) {
     ['isReactEnabled', process.env.METEOR_REACT_ENABLED],
     ['isBlazeEnabled', isMeteorBlazeProject()],
     ['isBlazeHotEnabled', isMeteorBlazeHotProject()],
+    ['isTypescriptEnabled', isTypescriptEnabled],
+    ['isTsxEnabled', isTsxEnabled],
+    ['isJsxEnabled', isJsxEnabled],
   ];
   return pairs.flatMap(([key, val]) => [
     '--env',
