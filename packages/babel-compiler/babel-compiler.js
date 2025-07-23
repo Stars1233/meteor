@@ -243,6 +243,30 @@ BCp.processOneFileForTarget = function (inputFile, source) {
     bare: !! fileOptions.bare
   };
 
+  // Check if the file is a Rspack output file
+  // If it is, bypass SWC/Babel and just read the file and its map file
+  // as the contents are already transpiled by Rspack.
+  if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)) {
+    try {
+      // Get the full path to the file
+      const fullPath = inputFile.getPathInPackage();
+      // Read the file directly
+      toBeAdded.data = source;
+
+      // Try to read the corresponding map file
+      const mapPath = fullPath + '.map';
+      if (fs.existsSync(mapPath)) {
+        const mapContent = fs.readFileSync(mapPath, 'utf8');
+        toBeAdded.sourceMap = JSON.parse(mapContent);
+      }
+
+      return toBeAdded;
+    } catch (e) {
+      // If there's an error reading the file or map, log it and continue with normal processing
+      console.error('Error reading Rspack file:', e);
+    }
+  }
+
   // If you need to exclude a specific file within a package from Babel
   // compilation, pass the { transpile: false } options to api.addFiles
   // when you add that file.

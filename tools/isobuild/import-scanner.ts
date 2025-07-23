@@ -27,6 +27,7 @@ import {
   writeFileAtomically,
   readFile,
 } from "../fs/files";
+import rspackHelpers from "../tool-env/rspack";
 
 const { SourceNode, SourceMapConsumer } = require("source-map");
 
@@ -998,10 +999,10 @@ export default class ImportScanner {
   ): Promise<Record<string, ImportInfo>> {
     const fileHash = file.hash instanceof Promise ? await file.hash : file.hash;
 
-    // TODO: ensure rspack output files are ignored completely for import scanner process
-    // if (file.sourcePath.includes("_rspack/main-server")) {
-    //   return {};
-    // }
+    // Ignore rspack output files
+    if (rspackHelpers.isRspackOutputFile(file.sourcePath)) {
+      return {};
+    }
 
     if (IMPORT_SCANNER_CACHE.has(fileHash)) {
       return IMPORT_SCANNER_CACHE.get(fileHash) as Record<string, ImportInfo>;

@@ -1860,20 +1860,9 @@ main.registerCommand({
     files.pathJoin(options.appDir, "node_modules", ".cache", "meteor")
   );
 
-  const modernBundlerResourcesContexts = [
-    process.env.RSPACK_ASSETS_CONTEXT || "_build-assets",
-    process.env.RSPACK_BUNDLES_CONTEXT || "_build-bundles"
-  ];
-  const modernBundlerAppContexts = [
-    files.pathJoin(options.appDir, "node_modules", ".cache", "rspack"),
-    files.pathJoin(options.appDir, process.env.RSPACK_BUILD_CONTEXT || "_build"),
-    ...modernBundlerResourcesContexts.reduce((arr, context) => [
-      ...arr,
-      files.pathJoin(options.appDir, `public/${context}`),
-      files.pathJoin(options.appDir, `public/${context}`)
-    ], [])
-  ];
-  const resetModernBundlerPromises = modernBundlerAppContexts.map((contextPath) => files.rm_recursive_async(
+  const rspackHelpers = require('../tool-env/rspack.js');
+  const rspackAppContexts = rspackHelpers.getRspackAppContexts(options.appDir);
+  const resetRspackPromises = rspackAppContexts.map((contextPath) => files.rm_recursive_async(
     contextPath
   ));
 
@@ -1896,7 +1885,7 @@ main.registerCommand({
         files.pathJoin(options.appDir, ".meteor", "local")
       ),
       resetMeteorNpmCachePromise,
-      ...resetModernBundlerPromises,
+      ...resetRspackPromises,
     ]);
 
     Console.info("Project reset.");
@@ -1915,7 +1904,7 @@ main.registerCommand({
       files.rm_recursive_async(files.pathJoin(options.appDir, _path))
     ),
     resetMeteorNpmCachePromise,
-    ...resetModernBundlerPromises,
+    ...resetRspackPromises,
   ];
   await Promise.all(allRemovePromises);
   Console.info("Project reset.");
@@ -2195,7 +2184,7 @@ testCommandOptions = {
     'extra-packages': { type: String },
 
     'exclude-archs': { type: String },
-    
+
     // Same as TINYTEST_FILTER
     filter: { type: String, short: 'f' },
   }
