@@ -181,20 +181,27 @@ Meteor.publish("chatRooms", function () {
 
 This is similar to `addPublication`, but it allows you to create an array of cursors, which can be useful for shared queries that need to return multiple collections or different queries.
 
-```typescript [server/chat.ts]
+::: code-group
+
+```typescript [server/with-meteor-rpc.ts]
 // server/main.ts
 import { createModule } from "meteor-rpc";
 import { ChatCollection } from "/imports/api/chat";
 import { UserCollection } from "/imports/api/user";
 import { z } from "zod";
 
-const server = createModule();
-server.addSharedPublication("chatRooms", z.string(), (userId) => {
-  return [ChatCollection.find({ userId }), UserCollection.find({ userId })];
-});
+const server = createModule().addSharedPublication(
+  "chatRooms",
+  z.string(),
+  (userId) => {
+    return [ChatCollection.find({ userId }), UserCollection.find({ userId })];
+  }
+);
 
 server.build();
-// is the same as
+```
+
+```typescript [server/without-meteor-rpc.ts]
 import { Meteor } from "meteor/meteor";
 import { ChatCollection } from "/imports/api/chat";
 import { UserCollection } from "/imports/api/user";
@@ -205,6 +212,8 @@ Meteor.publish("chatRooms", function (userId) {
   return [ChatCollection.find({ userId }), UserCollection.find({ userId })];
 });
 ```
+
+:::
 
 ### `module.addSubmodule`
 
