@@ -2,7 +2,6 @@
  * @module config
  * @description Functions for configuring Meteor for RSPack
  */
-import RSPACK_BUNDLES_CONTEXT from "./constants";
 import { getInitialEntrypoints } from "./build-context";
 
 const {

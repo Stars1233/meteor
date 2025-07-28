@@ -135,7 +135,7 @@ export function ensureModuleFilesExist() {
       getBuildFileContent({ isMain: true, isServer: true, ...env, role: FILE_ROLE.entry, ...mainServerFiles }),
     [getBuildFilePath({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output })]:
       getBuildFileContent({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output, ...mainServerFiles }),
-    /* Test module files for client and server */
+    /* Test module files when just test module or test module files for client and server are present */
     ...(isTestModule && {
       [getBuildFilePath({ isTest: true, isTestModule: true, ...commandRole })]:
         getBuildFileContent({ isTest: true, isTestModule: true, ...commandRole, ...testModuleFiles }),
