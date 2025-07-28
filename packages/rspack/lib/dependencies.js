@@ -109,9 +109,9 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
  */
 export async function ensureRSPackInstalled() {
   const dependencies = [
-    { name: '@rspack/cli', version: DEFAULT_RSPACK_VERSION, semverCondition: 'gte' },
-    { name: '@rspack/core', version: DEFAULT_RSPACK_VERSION, semverCondition: 'gte' },
-    { name: '@meteorjs/rspack', version: DEFAULT_METEOR_RSPACK_VERSION, semverCondition: 'gte' },
+    { name: '@rspack/cli', version: DEFAULT_RSPACK_VERSION, semverCondition: 'gte', dev: true },
+    { name: '@rspack/core', version: DEFAULT_RSPACK_VERSION, semverCondition: 'gte', dev: true },
+    { name: '@meteorjs/rspack', version: DEFAULT_METEOR_RSPACK_VERSION, semverCondition: 'gte', dev: true },
     { name: '@swc/helpers', version: DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION, semverCondition: 'gte', dev: false },
   ];
 
@@ -152,7 +152,7 @@ export async function checkReactInstalled() {
 
 export async function ensureRSPackReactInstalled() {
   const dependencies = [
-    { name: '@rspack/plugin-react-refresh', version: DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION, semverCondition: 'gte' }
+    { name: '@rspack/plugin-react-refresh', version: DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION, semverCondition: 'gte', dev: true }
   ];
 
   await ensureDependenciesInstalled(
@@ -193,9 +193,9 @@ export async function checkCoffeescriptInstalled() {
 
 export async function ensureRSPackCoffeescriptInstalled() {
   const dependencies = [
-    { name: 'coffeescript', version: DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION, semverCondition: 'gte' },
-    { name: 'coffee-loader', version: DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION, semverCondition: 'gte' },
-    { name: 'swc-loader', version: DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION, semverCondition: 'gte' }
+    { name: 'coffeescript', version: DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION, semverCondition: 'gte', dev: true },
+    { name: 'coffee-loader', version: DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION, semverCondition: 'gte', dev: true },
+    { name: 'swc-loader', version: DEFAULT_METEOR_RSPACK_SWC_LOADER_VERSION, semverCondition: 'gte', dev: true }
   ];
 
   await ensureDependenciesInstalled(
