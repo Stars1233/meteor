@@ -141,7 +141,7 @@ export default function (inMeteor = {}, argv = {}) {
 
   // Determine output directories
   const clientOutputDir = path.resolve(process.cwd(), 'public');
-  const serverOutputDir = path.resolve(process.cwd(), 'server');
+  const serverOutputDir = path.resolve(process.cwd(), 'private');
 
   // Determine context for bundles and assets
   const buildContext = Meteor.buildContext || '_build';
@@ -287,6 +287,12 @@ export default function (inMeteor = {}, argv = {}) {
     optimization: { usedExports: true },
     module: {
       rules: [swcConfigRule, ...extraRules],
+      parser: {
+        javascript: {
+          // Dynamic imports on the server are treated as bundled in the same chunk
+          dynamicImportMode: 'eager',
+        },
+      },
     },
     resolve: {
       extensions,
