@@ -84,15 +84,24 @@ export class Hook {
     return this.callbacks.size;
   }
 
-  // WARN: This method is for test compatibility only.
-  _asArray() {
+  /**
+   * Returns all registered callbacks as a new Array.
+   * This provides a snapshot of the current callbacks.
+   * @returns {Array<Function>} An array containing all registered callback functions.
+   */
+  asArray() {
     return Array.from(this.callbacks);
   }
 
-  // WARN: This method is for test compatibility only.
-  _fromArray(arr) {
+  /**
+   * Replaces the current set of registered callbacks with a new set derived from the given array.
+   *
+   * @param {Array<Function>} arr An array of callback functions to register with this hook.
+   * @throws {Error} If the provided argument `arr` is not an array.
+   */
+  fromArray(arr) {
     if (!Array.isArray(arr)) {
-      throw new Error("Method _fromArray expects an array");
+      throw new Error("Method fromArray expects an array");
     }
     this.callbacks = new Set(arr);
   }
