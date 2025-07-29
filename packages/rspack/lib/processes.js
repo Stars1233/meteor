@@ -82,9 +82,9 @@ export function getRSPackEnv({ isClient, isServer }) {
 
   const entryKey = `${isTest && isTestModule ? 'test' : 'main'}${isClient ? 'Client' : 'Server'}`;
   const inputFilePath = isTest && isTestModule ? initialEntrypoints.testModule : initialEntrypoints[entryKey];
-  const isTypescriptEnabled = inputFilePath.endsWith('.ts') || inputFilePath.endsWith('.tsx');
-  const isTsxEnabled = inputFilePath.endsWith('.tsx');
-  const isJsxEnabled = inputFilePath.endsWith('.jsx');
+  const isTypescriptEnabled = inputFilePath?.endsWith('.ts') || inputFilePath?.endsWith('.tsx');
+  const isTsxEnabled = inputFilePath?.endsWith('.tsx');
+  const isJsxEnabled = inputFilePath?.endsWith('.jsx');
 
   const swcExternalHelpers = checkNpmDependencyExists('@swc/helpers');
 
