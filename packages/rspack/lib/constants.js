@@ -5,7 +5,7 @@
 
 export const DEFAULT_RSPACK_VERSION = '1.4.8';
 
-export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.10';
+export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.11';
 
 export const DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION = '1.4.3';
 
@@ -39,6 +39,12 @@ export const GLOBAL_STATE_KEYS = {
   CLIENT_FIRST_COMPILE: 'rspack.clientFirstCompile',
   SERVER_FIRST_COMPILE: 'rspack.serverFirstCompile',
 };
+
+/**
+ * Default port for RSPack dev server
+ * @type {string|any|number}
+ */
+export const RSPACK_DEVSERVER_PORT = process.env.RSPACK_DEVSERVER_PORT || 8080;
 
 /**
  * Directory name for RSPack build context

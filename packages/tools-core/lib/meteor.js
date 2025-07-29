@@ -42,7 +42,6 @@ export function getMeteorAppConfigModern() {
  * @returns {boolean|undefined} The verbose flag or undefined if not found.
  */
 export function isMeteorAppConfigModernVerbose() {
-  console.log("--> (meteor.js-Line: 46)\n getMeteorAppConfigModern(): ", getMeteorAppConfigModern());
   return getMeteorAppConfigModern()?.verbose ||
     getMeteorAppConfigModern()?.transpiler?.verbose;
 }

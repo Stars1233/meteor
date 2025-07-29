@@ -3,6 +3,7 @@
  * @description Functions for managing RSPack processes
  */
 import { checkNpmDependencyExists } from 'meteor/tools-core/lib/npm';
+import { RSPACK_DEVSERVER_PORT } from "./constants";
 
 const {
   spawnProcess,
@@ -122,6 +123,7 @@ export function getRSPackEnv({ isClient, isServer }) {
     ['isJsxEnabled', isJsxEnabled],
     ['isCoffeescriptEnabled', process.env.METEOR_COFFEESCRIPT_ENABLED],
     ['swcExternalHelpers', swcExternalHelpers],
+    ['devServerPort', RSPACK_DEVSERVER_PORT],
   ];
   return pairs.flatMap(([key, val]) => [
     '--env',

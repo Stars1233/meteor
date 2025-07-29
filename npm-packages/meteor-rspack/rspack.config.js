@@ -268,7 +268,7 @@ export default function (inMeteor = {}, argv = {}) {
         hot: true,
         liveReload: true,
         ...(Meteor.isBlazeEnabled && { hot: false }),
-        port: 3005,
+        port: Meteor.devServerPort || 8080,
         devMiddleware: {
           writeToDisk: false,
         },
