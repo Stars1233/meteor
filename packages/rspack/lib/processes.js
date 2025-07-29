@@ -2,7 +2,7 @@
  * @module processes
  * @description Functions for managing RSPack processes
  */
-import { checkNpmDependencyExists } from "../../tools-core/lib/npm";
+import { checkNpmDependencyExists } from 'meteor/tools-core/lib/npm';
 
 const {
   spawnProcess,
@@ -11,7 +11,6 @@ const {
 } = require('meteor/tools-core/lib/process');
 
 const {
-  logProgress,
   logError,
   logInfo,
 } = require('meteor/tools-core/lib/log');
@@ -27,7 +26,7 @@ const {
   isMeteorBlazeProject,
   isMeteorBlazeHotProject,
   getMeteorInitialAppEntrypoints,
-  isMeteorAppTestModule,
+  isMeteorAppConfigModernVerbose,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -92,6 +91,7 @@ export function getRSPackEnv({ isClient, isServer }) {
     ['isDevelopment', isMeteorAppDevelopment()],
     ['isProduction', isMeteorAppProduction()],
     ['isDebug', isMeteorAppDebug()],
+    ['isVerbose', isMeteorAppConfigModernVerbose()],
     ['isTest', isMeteorAppTest()],
     ['isTestModule', isTestModule],
     ['isRun', isMeteorAppRun()],

@@ -63,7 +63,10 @@ export function initMeteorConfig(appDir) {
   }
   setMeteorConfig({
     ...(packageJson?.meteor || {}),
-    modern: normalizeModernConfig(modernForced || packageJson?.meteor?.modern || false),
+    modern: {
+      ...normalizeModernConfig(modernForced || packageJson?.meteor?.modern || false),
+      ...(packageJson?.meteor?.verbose || packageJson?.meteor?.modern?.verbose) && { verbose: true },
+    },
   });
   return meteorConfig;
 }

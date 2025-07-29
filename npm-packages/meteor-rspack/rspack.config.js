@@ -151,7 +151,7 @@ export default function (inMeteor = {}, argv = {}) {
   const bundlesContext = Meteor.bundlesContext || 'bundles';
   const assetsContext = Meteor.assetsContext || 'assets';
 
-  if (Meteor.isDebug) {
+  if (Meteor.isDebug || Meteor.isVerbose) {
     console.log('[i] Rspack mode:', mode);
     console.log('[i] Meteor flags:', Meteor);
   }
@@ -352,7 +352,7 @@ export default function (inMeteor = {}, argv = {}) {
 
   const config = isClient ? clientConfig : serverConfig;
 
-  if (Meteor.isDebug) {
+  if (Meteor.isDebug || Meteor.isVerbose) {
     console.log('Config:', inspect(config, { depth: null, colors: true }));
   }
 

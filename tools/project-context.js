@@ -1878,7 +1878,10 @@ export class MeteorConfig {
     // Updates config when package.json changes trigger rebuilds
     setMeteorConfig({
       ...(this._config || {}),
-      modern: normalizeModernConfig(modernForced || this._config?.modern || false),
+      modern: {
+        ...normalizeModernConfig(modernForced || this._config?.modern || false),
+        ...(this._config?.verbose || this._config?.modern?.verbose) && { verbose: true },
+      },
     });
 
     return this._config;

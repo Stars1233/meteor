@@ -13,6 +13,7 @@ const {
   isMeteorAppRun,
   isMeteorAppBuild,
   isMeteorAppDebug,
+  isMeteorAppConfigModernVerbose,
 } = require('meteor/tools-core/lib/meteor');
 
 const { logInfo } = require('meteor/tools-core/lib/log');
@@ -54,7 +55,7 @@ export function configureMeteorForRSPack() {
   const meteorAppIgnores = `${foldersToIgnore.join(' ')} ${filesToIgnore.join(' ')}`;
   setMeteorAppIgnore(meteorAppIgnores);
 
-  if (isMeteorAppDebug()) {
+  if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
     logInfo(`[i] Meteor app ignores: ${meteorAppIgnores}`);
   }
 
@@ -85,7 +86,7 @@ export function configureMeteorForRSPack() {
   // Set entry points in environment variables if they exist
   setMeteorAppEntrypoints(appEntrypoints);
 
-  if (isMeteorAppDebug()) {
+  if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
     logInfo(`[i] App entrypoints: ${JSON.stringify(appEntrypoints, null, 2)}`);
   }
 
@@ -97,7 +98,7 @@ export function configureMeteorForRSPack() {
     const customScriptUrl = `/__rspack__/${getBuildFilePath({ ...env, isMain: true, isClient: true, role: FILE_ROLE.output, onlyFilename: true })}`;
     setMeteorAppCustomScriptUrl(customScriptUrl);
 
-    if (isMeteorAppDebug()) {
+    if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
       logInfo(`[i] App custom script: ${customScriptUrl}`);
     }
   }

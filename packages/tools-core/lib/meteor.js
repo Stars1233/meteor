@@ -30,6 +30,24 @@ export function getMeteorAppConfig() {
 }
 
 /**
+ * Retrieves the modern configuration from the application's package.json.
+ * @returns {Object|undefined} The modern configuration object or undefined if not found.
+ */
+export function getMeteorAppConfigModern() {
+  return getMeteorAppConfig()?.modern;
+}
+
+/**
+ * Retrieves the verbose flag from the application's package.json.
+ * @returns {boolean|undefined} The verbose flag or undefined if not found.
+ */
+export function isMeteorAppConfigModernVerbose() {
+  console.log("--> (meteor.js-Line: 46)\n getMeteorAppConfigModern(): ", getMeteorAppConfigModern());
+  return getMeteorAppConfigModern()?.verbose ||
+    getMeteorAppConfigModern()?.transpiler?.verbose;
+}
+
+/**
  * Retrieves the entry points for the Meteor application from the configuration.
  * Uses Plugin.getMeteorConfig() if available, otherwise falls back to getMeteorAppConfig().
  * @returns {Object} An object containing the main and test entry points for client and server.
