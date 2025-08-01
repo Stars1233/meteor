@@ -167,7 +167,6 @@ export default function (inMeteor = {}, argv = {}) {
   const externals = [
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : []),
-    './imports/ui/layouts/body/template.body.js',
   ];
   const alias = {
     '/': path.resolve(process.cwd()),
@@ -204,7 +203,9 @@ export default function (inMeteor = {}, argv = {}) {
         }
         return request;
       },
+      isEagerImport: (module) => module.endsWith('.html')
     }),
+    enableGlobalPolyfill: isDevEnvironment,
   });
 
   const clientNameConfig = `[${isTest && 'test-' || ''}${isTestModule && 'module' || 'client'}-rspack]`;

@@ -22,12 +22,21 @@ export class RequireExternalsPlugin {
     // It can be used to customize how external modules are mapped to file paths
     // If not provided, the default behavior is to map the external module name.
     externalMap = null,
+    // Enable global polyfill for module and exports
+    // If true, globalThis.module and globalThis.exports will be defined if they don't exist
+    enableGlobalPolyfill = true,
+    // Check function to determine if an external import should be eager
+    // If provided, it will be called with the package name and should return true for eager imports
+    // If not provided or returns false, the import will be lazy (default behavior)
+    isEagerImport = null,
   } = {}) {
     this.pluginName = 'RequireExternalsPlugin';
 
     // Prepare externals
     this._externals = externals;
     this._externalMap = externalMap;
+    this._enableGlobalPolyfill = enableGlobalPolyfill;
+    this._isEagerImport = isEagerImport;
     this._defaultExternalPrefix = 'external ';
 
     // Prepare paths
@@ -130,8 +139,10 @@ export class RequireExternalsPlugin {
     }
 
     compiler.hooks.done.tap({ name: this.pluginName, stage: -10 }, (stats) => {
-      // 1) Ensure globalThis.module / exports block is present
-      this._ensureGlobalThisModule();
+      // 1) Ensure globalThis.module / exports block is present if enabled
+      if (this._enableGlobalPolyfill) {
+        this._ensureGlobalThisModule();
+      }
 
       // 2) Re-load existing requires from disk on every run
       const existing = this._readExistingRequires();
@@ -163,8 +174,13 @@ export class RequireExternalsPlugin {
         // Strip out any now-empty helper functions:
         //   function lazyExternalImportsX() {
         //   }
-        const emptyFnRe = /^function\s+lazyExternalImports\d+\s*\(\)\s*{\s*}\s*(\r?\n)?/gm;
-        content = content.replace(emptyFnRe, '');
+        // or
+        //   (function eagerExternalImportsX() {
+        //   })();
+        const emptyLazyFnRe = /^function\s+lazyExternalImports\d+\s*\(\)\s*{\s*}\s*(\r?\n)?/gm;
+        const emptyEagerFnRe = /^\(function\s+eagerExternalImports\d+\s*\(\)\s*{\s*}\s*\)\(\);\s*(\r?\n)?/gm;
+        content = content.replace(emptyLazyFnRe, '');
+        content = content.replace(emptyEagerFnRe, '');
 
         // Write the cleaned file back
         fs.writeFileSync(this.filePath, content, 'utf-8');
@@ -176,8 +192,10 @@ export class RequireExternalsPlugin {
         }
       }
 
-      // 3) Collect any new externals from this build
-      const newRequires = [];
+      // 3) Collect any new externals from this build and separate into eager and lazy
+      const newLazyRequires = [];
+      const newEagerRequires = [];
+
       for (const module of info.modules) {
         const name = module.name;
         const matchInfo = this._isExternalModule(name);
@@ -186,19 +204,39 @@ export class RequireExternalsPlugin {
         const pkg = this._extractPackageName(name, matchInfo);
         if (pkg && !existing.has(pkg)) {
           existing.add(pkg);
-          newRequires.push(`require('${pkg}')`);
+
+          // Check if this should be an eager import
+          if (this._isEagerImport && typeof this._isEagerImport === 'function' && this._isEagerImport(pkg)) {
+            newEagerRequires.push(`require('${pkg}')`);
+          } else {
+            // Default to lazy import
+            newLazyRequires.push(`require('${pkg}')`);
+          }
         }
       }
 
-      // 4) Append new imports if any
-      if (newRequires.length) {
+      // 4) Append new lazy imports if any
+      if (newLazyRequires.length) {
         const fnName = `lazyExternalImports${this._funcCount++}`;
-        const body = newRequires.map(req => `  ${req};`).join('\n');
+        const body = newLazyRequires.map(req => `  ${req};`).join('\n');
         const fnCode = `\nfunction ${fnName}() {\n${body}\n}\n`;
         try {
           fs.appendFileSync(this.filePath, fnCode);
         } catch (err) {
-          console.error(`Failed to append imports to ${this.filePath}:`, err);
+          console.error(`Failed to append lazy imports to ${this.filePath}:`, err);
+        }
+      }
+
+      // 5) Append new eager imports if any
+      if (newEagerRequires.length) {
+        const fnName = `eagerExternalImports${this._funcCount++}`;
+        const body = newEagerRequires.map(req => `  ${req};`).join('\n');
+        // Immediately invoked function for eager imports
+        const fnCode = `\n(function ${fnName}() {\n${body}\n})();\n`;
+        try {
+          fs.appendFileSync(this.filePath, fnCode);
+        } catch (err) {
+          console.error(`Failed to append eager imports to ${this.filePath}:`, err);
         }
       }
     });
@@ -209,9 +247,19 @@ export class RequireExternalsPlugin {
     if (fs.existsSync(this.filePath)) {
       try {
         const content = fs.readFileSync(this.filePath, 'utf-8');
-        const fnRe = /function\s+lazyExternalImports(\d+)\s*\(\)/g;
+        // Check for both lazy and eager external imports functions
+        const lazyFnRe = /function\s+lazyExternalImports(\d+)\s*\(\)/g;
+        const eagerFnRe = /function\s+eagerExternalImports(\d+)\s*\(\)/g;
+
         let match;
-        while ((match = fnRe.exec(content)) !== null) {
+        // Check lazy imports
+        while ((match = lazyFnRe.exec(content)) !== null) {
+          const n = parseInt(match[1], 10);
+          if (n > max) max = n;
+        }
+
+        // Check eager imports
+        while ((match = eagerFnRe.exec(content)) !== null) {
           const n = parseInt(match[1], 10);
           if (n > max) max = n;
         }

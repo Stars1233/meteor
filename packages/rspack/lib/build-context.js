@@ -16,6 +16,7 @@ const {
   isMeteorAppDevelopment,
   isMeteorAppRun,
   isMeteorAppBuild,
+  isMeteorBlazeProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -259,7 +260,7 @@ if (module.hot) {
     ? `/* Link to ☄️ Meteor ${capitalizeFirstLetter(side)} Entry */
 import '../../${config?.entryFile}';`
       : config?.outputFile &&
-        (role === FILE_ROLE.build || config?.isProduction ||
+        (role === FILE_ROLE.build || (config?.isProduction && !isMeteorBlazeProject()) ||
           (role === FILE_ROLE.run && (config?.isServer || config?.isTest)))
       ? `/* Link to ⚡ Rspack ${capitalizeFirstLetter(side)} App */
 import './${config?.outputFile || ''}';`
