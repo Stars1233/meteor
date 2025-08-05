@@ -201,15 +201,17 @@ changes the documents in a cursor will trigger a recomputation. To
 disable this behavior, pass `{reactive: false}` as an option to
 `find`.
 
-Note that when `fields` are specified, only changes to the included
+Note that when `projections` are specified, only changes to the included
 fields will trigger callbacks in `observe`, `observeChanges` and
 invalidations in reactive computations using this cursor. Careful use
-of `fields` allows for more fine-grained reactivity for computations
+of `projections` allows for more fine-grained reactivity for computations
 that don't depend on an entire document.
 
 On the client, there will be a period of time between when the page loads and
 when the published data arrives from the server during which your client-side
 collections will be empty.
+
+Note that `fields` has been deprecated and now updated to `projections`.
 
 {% apibox "Mongo.Collection#findOne" %}
 
