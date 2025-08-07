@@ -2,6 +2,7 @@ module.exports = {
   preset: 'jest-playwright-preset',
   rootDir: __dirname,
   testMatch: ["**/*.test.js"],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   verbose: true,
   // Increase timeout for CLI operations
   testTimeout: 60_000,
