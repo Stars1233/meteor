@@ -60,6 +60,7 @@ export async function setupMeteorApp(appName) {
  * @param {Object} options - Additional options
  * @param {string|RegExp} options.waitForOutput - Output pattern to wait for
  * @param {Object} options.waitOptions - Options for waitForMeteorOutput
+ * @param {string[]} options.commandOptions - Additional command line options for the run command (e.g. ['--production'])
  * @returns {Object} - The meteor process and output lines
  */
 export async function runMeteorApp(tempDir, port, options = {}) {
@@ -69,10 +70,16 @@ export async function runMeteorApp(tempDir, port, options = {}) {
   // Determine if we need to capture output
   const captureOutput = !!options.waitForOutput;
 
+  // Combine port option with any additional command options
+  const args = ['--port', port.toString()];
+  if (options.commandOptions && Array.isArray(options.commandOptions)) {
+    args.push(...options.commandOptions);
+  }
+
   // Run the meteor command
   const { meteorProcess, outputLines } = await runMeteorCommand(
     'run', 
-    ['--port', port.toString()], 
+    args, 
     tempDir,
     {},
     captureOutput

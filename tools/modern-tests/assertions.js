@@ -25,7 +25,7 @@ export async function assertMeteorReactApp(port) {
  * @param {number} port - Port where the app is running
  * @returns {Promise<void>}
  */
-export async function assertRspackScriptTag(port) {
+export async function assertRspackScriptTag(port, shoudlExist = true) {
   // Navigate to the app
   await page.goto(`http://localhost:${port}`);
 
@@ -36,5 +36,5 @@ export async function assertRspackScriptTag(port) {
 
   // Check if any script tag has __rspack__ in its path
   const hasRspackScript = scriptTags.some(src => src && src.includes('__rspack__'));
-  expect(hasRspackScript).toBe(true);
+  expect(hasRspackScript).toBe(shoudlExist);
 }

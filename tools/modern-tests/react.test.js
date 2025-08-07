@@ -142,7 +142,32 @@ describe('React App Bundling', () => {
       await assertMeteorReactApp(PORT);
 
       // Assert that the app is using Rspack
-      await assertRspackScriptTag(PORT);
+      await assertRspackScriptTag(PORT, true);
+
+      // Kill the meteor process
+      await killMeteorProcess(meteorProcess);
+
+      // Ensure any process on the port is killed
+      await killProcessByPort(PORT);
+      await killProcessByPort('8080');
+    });
+
+    test(`"meteor run --production" should run the app with Rspack in production`, async () => {
+      // Run the Meteor app and wait for "restarted at" output
+      const result = await runMeteorApp(tempDir, PORT, {
+        waitForOutput: "=> App running at:",
+        commandOptions: ['--production'],
+      });
+      meteorProcess = result.meteorProcess;
+
+      // Wait for a margin
+      await wait(500);
+
+      // Assert that the Meteor React app is running correctly
+      await assertMeteorReactApp(PORT);
+
+      // Assert that the app is using Rspack
+      await assertRspackScriptTag(PORT, false);
 
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
