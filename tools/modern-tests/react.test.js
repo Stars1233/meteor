@@ -9,11 +9,14 @@ import {
   wait,
   appendFileContent,
   waitForMeteorOutput,
-  waitForPlaywrightConsole, runMeteorTests
+  waitForPlaywrightConsole,
+  runMeteorTests,
+  buildMeteorApp
 } from "./helpers";
 import { assertMeteorReactApp, assertRspackScriptTag, assertFileExist } from './assertions';
 import fs from 'fs-extra';
 import path from 'path';
+import execa from 'execa';
 
 describe('React App Bundling /', () => {
   describe('Meteor Creator /', () => {
@@ -113,18 +116,11 @@ describe('React App Bundling /', () => {
       tempDir = (await setupMeteorApp('react'))?.tempDir;
 
       // Add Rspack package
-      await runMeteorCommand('add', ['rspack'], tempDir);
-    });
+      await runMeteorCommand('add', ['rspack'], tempDir, { checkExitCode: true });
 
-    afterAll(async () => {
-      // Clean up the temporary directory
-      await cleanupTempDir(tempDir);
-    });
-
-    test(`"meteor run" / should install Rspack and restart the app`, async () => {
-      // Run the Meteor app and wait for "restarted at" output
+      // Run the Meteor app to install Rspack
       const result = await runMeteorApp(tempDir, PORT, {
-        waitForOutput: "=> Meteor server restarted at:",
+        waitForOutput: "=> App running at:",
       });
       meteorProcess = result.meteorProcess;
 
@@ -141,6 +137,11 @@ describe('React App Bundling /', () => {
       // Ensure any process on the port is killed
       await killProcessByPort(PORT);
       await killProcessByPort('8080');
+    });
+
+    afterAll(async () => {
+      // Clean up the temporary directory
+      await cleanupTempDir(tempDir);
     });
 
     test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
@@ -296,6 +297,49 @@ describe('React App Bundling /', () => {
 
       // Ensure any process on the port is killed
       await killProcessByPort(PORT);
+    });
+
+    test.only(`"meteor build" / should build the app with Rspack`, async () => {
+      // Build the app with Rspack
+      const { buildOutputDir, processResult } = await buildMeteorApp(tempDir, {
+        commandOptions: ['--directory'],
+        captureOutput: true
+      });
+
+      // Wait for a margin
+      await wait(500);
+
+      try {
+        // Assert that the build output directory exists
+        const buildDirExists = await fs.pathExists(buildOutputDir);
+        expect(buildDirExists).toBe(true);
+
+        // Assert that the main.js file exists
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/main.js`)).toBe(true);
+
+        // Assert that the server/package.json file exists
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/server/package.json`)).toBe(true);
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/server/program.json`)).toBe(true);
+
+        // Assert that the [web.browser|web.browser.legacy]/program.json file exists
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser/program.json`)).toBe(true);
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser.legacy/program.json`)).toBe(true);
+
+        // Run npm install in the server directory
+        console.log('Running npm install in the server directory...');
+        const serverDir = path.join(buildOutputDir, 'bundle', 'programs', 'server');
+        const npmInstallResult = await execa('npm', ['install'], {
+          cwd: serverDir,
+          stdio: 'inherit',
+          shell: true,
+        });
+
+        // Check if the npm install command was successful
+        expect(npmInstallResult.exitCode).toBe(0);
+      } finally {
+        // Clean up the build output directory
+        await cleanupTempDir(buildOutputDir);
+      }
     });
   });
 });

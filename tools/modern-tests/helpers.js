@@ -81,8 +81,9 @@ export async function runMeteorApp(tempDir, port, options = {}) {
     'run', 
     args, 
     tempDir,
-    {},
-    captureOutput
+    {
+      captureOutput
+    }
   );
 
   // If a specific output pattern is requested, wait for it
@@ -158,16 +159,20 @@ export async function killProcessByPort(port) {
  * @param {string} command - The Meteor command to run (e.g., 'run', 'build', 'test')
  * @param {string[]} args - Additional arguments for the command
  * @param {string} cwd - Working directory where the command should be executed
- * @param {Object} options - Additional options for execa
- * @param {boolean} captureOutput - Whether to capture the command's output
- * @returns {Object} - The meteor process and output lines if capturing output
+ * @param {Object} options - Additional options
+ * @param {Object} options.execaOptions - Additional options for execa
+ * @param {boolean} options.captureOutput - Whether to capture the command's output
+ * @param {boolean} options.checkExitCode - Whether to automatically check the exit code and throw an error if it's not 0
+ * @returns {Object} - The meteor process and output lines if capturing output, and processResult if checkExitCode is true
  */
-export async function runMeteorCommand(command, args = [], cwd, options = {}, captureOutput = false) {
+export async function runMeteorCommand(command, args = [], cwd, options = {}) {
   console.log(`Running Meteor command: ${command} ${args.join(' ')}...`);
+
+  const { captureOutput = false, checkExitCode = false, execaOptions: extraExecaOptions = {} } = options;
 
   const execaOptions = {
     cwd,
-    ...options
+    ...extraExecaOptions
   };
 
   // If we're capturing output, set up stdio accordingly
@@ -197,7 +202,22 @@ export async function runMeteorCommand(command, args = [], cwd, options = {}, ca
     });
   }
 
-  return { meteorProcess, outputLines };
+  // If we're checking the exit code, wait for the process to complete and check it
+  let processResult;
+  if (checkExitCode) {
+    processResult = await new Promise((resolve) => {
+      meteorProcess.on('exit', (code) => {
+        resolve({ code, outputLines });
+      });
+    });
+
+    // Check if the command was successful
+    if (processResult.code !== 0) {
+      throw new Error(`Meteor command '${command}' failed with code ${processResult.code}${captureOutput ? `:\n${processResult.outputLines.join('\n')}` : ''}`);
+    }
+  }
+
+  return { meteorProcess, outputLines, processResult };
 }
 
 /**
@@ -205,7 +225,7 @@ export async function runMeteorCommand(command, args = [], cwd, options = {}, ca
  * @param {string} appName - Name of the new app
  * @param {string} example - Example to use (e.g., 'react', 'vue')
  * @param {Object} options - Additional options for execa
- * @returns {Object} - The path to the new app and the meteor process
+ * @returns {Object} - The path to the new app, the meteor process, and the process result
  */
 export async function createMeteorApp(appName, example, options = {}) {
   // Create a unique temporary directory that will be the app directory directly
@@ -232,9 +252,12 @@ export async function createMeteorApp(appName, example, options = {}) {
   args.push(tempAppName);
 
   // Run the command in the temporary directory
-  const { meteorProcess } = await runMeteorCommand(args[0], args.slice(1), os.tmpdir(), options);
+  const { meteorProcess, processResult } = await runMeteorCommand(args[0], args.slice(1), os.tmpdir(), {
+    execaOptions: options,
+    checkExitCode: true
+  });
 
-  return { tempDir, meteorProcess };
+  return { tempDir, meteorProcess, processResult };
 }
 
 /**
@@ -446,17 +469,20 @@ export async function runMeteorTests(tempDir, port, options = {}) {
   }
 
   // Run the meteor test command
-  const { meteorProcess, outputLines } = await runMeteorCommand(
+  const { meteorProcess, outputLines, processResult } = await runMeteorCommand(
     'test', 
     args, 
     tempDir,
     {
-      env: {
-        ...process.env,
-        TEST_BROWSER_DRIVER: 'playwright'
-      }
-    },
-    captureOutput
+      execaOptions: {
+        env: {
+          ...process.env,
+          TEST_BROWSER_DRIVER: 'playwright'
+        }
+      },
+      captureOutput,
+      checkExitCode: options.checkTestResults // Automatically check exit code if checkTestResults is true
+    }
   );
 
   // If a specific output pattern is requested, wait for it
@@ -468,26 +494,7 @@ export async function runMeteorTests(tempDir, port, options = {}) {
     );
   }
 
-  // If we're checking test results, wait for the process to complete and check for failures
-  if (options.checkTestResults) {
-    console.log('Waiting for Meteor tests to complete...');
-
-    // Create a promise that resolves when the process exits
-    const processResult = await new Promise((resolve) => {
-      meteorProcess.on('exit', (code) => {
-        resolve({ code, outputLines });
-      });
-    });
-
-    // Check for test failures in the output
-    const hasFailures = processResult.code !== 0;
-    if (hasFailures) {
-      // Throw an error with the failure messages, which will cause the Jest test to fail
-      throw new Error(`Meteor tests failed:\n${failureMessages.join('\n')}`);
-    }
-  }
-
-  return { meteorProcess, outputLines };
+  return { meteorProcess, outputLines, processResult };
 }
 
 /**
@@ -552,4 +559,47 @@ export async function waitForPlaywrightConsole(pattern, options = {}) {
     // Start checking
     checkForPattern();
   });
+}
+
+/**
+ * Helper function to build a Meteor app using 'meteor build'
+ * @param {string} tempDir - Path to the directory containing the app
+ * @param {Object} options - Additional options
+ * @param {string[]} options.commandOptions - Additional command line options for the build command
+ * @param {boolean} options.captureOutput - Whether to capture the command's output
+ * @returns {Object} - The build output directory and the meteor process result
+ */
+export async function buildMeteorApp(tempDir, options = {}) {
+  // Create a unique temporary directory for the build output
+  const randomSuffix = Math.random().toString(36).substring(2, 10);
+  const buildOutputDir = path.join(os.tmpdir(), `meteor-build-${randomSuffix}`);
+
+  console.log(`Building Meteor app from ${tempDir} to ${buildOutputDir}...`);
+
+  // Create the build output directory if it doesn't exist
+  if (!fs.existsSync(buildOutputDir)) {
+    await fs.mkdir(buildOutputDir, { recursive: true });
+  }
+
+  // Combine base options with any additional command options
+  const args = [buildOutputDir];
+  if (options.commandOptions && Array.isArray(options.commandOptions)) {
+    args.push(...options.commandOptions);
+  }
+
+  // Run the meteor build command with automatic exit code checking
+  const result = await runMeteorCommand(
+    'build', 
+    args, 
+    tempDir,
+    {
+      execaOptions: options.execaOptions || {},
+      captureOutput: options.captureOutput !== undefined ? options.captureOutput : true,
+      checkExitCode: true // Automatically check exit code
+    }
+  );
+
+  console.log(`Successfully built Meteor app to ${buildOutputDir}`);
+
+  return { buildOutputDir, processResult: result.processResult };
 }

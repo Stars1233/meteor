@@ -130,7 +130,7 @@ export function setMeteorAppEntrypoints({
       process.env.METEOR_CONFIG_TEST_SERVER = testServer;
     }
   }
-  global.ensureMeteorConfigInitialized?.();
+  global.reinitializeMeteorConfig?.();
 }
 
 /**

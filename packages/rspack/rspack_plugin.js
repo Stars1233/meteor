@@ -23,7 +23,8 @@ const {
   ensureRSPackInstalled,
   checkReactInstalled,
   ensureRSPackReactInstalled,
-  checkCoffeescriptInstalled, ensureRSPackCoffeescriptInstalled,
+  checkCoffeescriptInstalled,
+  ensureRSPackCoffeescriptInstalled,
 } = require('./lib/dependencies');
 
 const {

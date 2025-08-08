@@ -95,6 +95,7 @@ import {
 
 import Resolver from "./isobuild/resolver";
 import { addWatchRoot } from './fs/safe-watcher';
+import compiler from "./isobuild/compiler";
 
 const CAN_DELAY_LEGACY_BUILD = ! JSON.parse(
   process.env.METEOR_DISALLOW_DELAYED_LEGACY_BUILD || "false"
@@ -504,7 +505,17 @@ Object.assign(ProjectContext.prototype, {
         appDirectory: self.projectDir,
       });
       self.meteorConfig._ensureInitialized();
-      global.ensureMeteorConfigInitialized = () => self.meteorConfig._ensureInitialized();
+
+      // Reinitialize the config
+      // The new config object is marked to be reloaded,
+      // so it will be reloaded on the next build.
+      global.reinitializeMeteorConfig = () => {
+        self.meteorConfig._ensureInitialized();
+        self.meteorConfig._needReload = {};
+        _.each(compiler.ALL_ARCHES, function (arch) {
+          self.meteorConfig._needReload[arch] = true;
+        });
+      };
 
       if (buildmessage.jobHasMessages()) {
         return;
