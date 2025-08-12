@@ -9,7 +9,9 @@ The Meteor bundler is made up of key components that enhance your experience in 
 
 ## Quick start
 
-:::info Starting with Meteor 3.3 :::
+:::info
+Starting with Meteor 3.3
+:::
 
 Add this to your app’s `package.json`:
 
@@ -136,6 +138,20 @@ Most apps will benefit just by enabling `modern: true`. Most Meteor packages sho
 
 > Remember to turn off verbosity when you're done with optimizations.
 
+### Externalize SWC Helpers
+
+By default, SWC inlines transformation helpers (e.g. _extends, _objectSpread) into every file that uses them. While this ensures compatibility out of the box, it can lead to duplicated code across your bundles increasing bundle size.
+
+To centralize these helpers and keep your client builds lean, you can add the `@swc/helpers` in your app project.
+
+``` bash
+meteor npm install --save @swc/helpers
+```
+
+> This package is installed by default for new apps.
+
+Meteor’s build tool comes pre-configured to externalize SWC helpers for you, no extra setup or .swcrc tweaks are needed. As soon as you install @swc/helpers, Meteor’s SWC pipeline will automatically emit imports for shared helper functions rather than inlining them, ensuring your app ships each helper just once.
+
 ### Custom .swcrc
 
 You can use `.swcrc` config in the root of your project to describe specific [SWC plugins](https://github.com/swc-project/plugins) there, that will be applied to compile the entire files of your project.
@@ -185,7 +201,11 @@ Using as an extension, such as `config.swcrc`, won’t work.
 
 #### Nested Imports
 
-Nested imports are a Meteor-specific feature in its bundler, unlike standard bundlers. Meteor introduced them during a time when bundling standards were still evolving and experimented with its own approach. This feature comes from the [`reify` module](https://github.com/benjamn/reify/tree/main) and works with Babel transpilation. SWC doesn't support them since they were never standardized.
+Nested imports are a feature of Meteor’s bundler, not supported in standard bundlers. Meteor introduced them during a time when bundling standards were still evolving and experimented with its own approach. This feature comes from the [`reify` module](https://github.com/benjamn/reify/tree/main) and works with Babel transpilation. SWC doesn't support them since they were never standardized.
+
+:::warning
+Don't confuse nested imports with standardized dynamic imports using `import()` in module blocks, these are supported.  
+:::
 
 Example with a nested import:
 
@@ -208,7 +228,7 @@ if (condition) {
 
 For background, see: [Why nested import](https://github.com/benjamn/reify/blob/main/WHY_NEST_IMPORTS.md).
 
-With `"modern.transpiler": true`, if SWC finds one, it silently falls back to Babel (only shows in `"verbose": true`). Nested imports isn’t standard, most modern projects use other deferred loading methods. You might want to move imports to the top or use require instead, letting SWC handle the file and speeding up builds. Still, this decision is up to the devs, some Meteor devs use them for valid reasons.
+With `"modern.transpiler": true`, if SWC finds one, it silently falls back to Babel (only shows in `"verbose": true`). Nested imports isn’t standard, most modern projects use other deferred loading methods. Move imports to the top, or use require or dynamic imports. Let SWC handle the file and speeding up builds. Still, this decision is up to the devs, some Meteor devs use them for valid reasons.
 
 #### Import Aliases
 

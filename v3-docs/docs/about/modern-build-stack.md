@@ -16,7 +16,9 @@ For existing apps, you can enable one or both. If your app relies heavily on Met
 
 ### Meteor Bundler Optimizations
 
-:::info Starting with Meteor 3.3 :::
+:::info
+Starting with Meteor 3.3
+:::
 
 Add this to your app’s `package.json`:
 
@@ -32,7 +34,9 @@ This enables all Meteor bundler optimizations, with SWC adoption as the main hig
 
 ### Rspack Bundler Integration
 
-:::info Starting with Meteor 3.4 :::
+:::info
+Starting with Meteor 3.4
+:::
 
 Add this Atmosphere package to your app:
 
