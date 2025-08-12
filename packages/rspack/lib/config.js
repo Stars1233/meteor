@@ -1,6 +1,6 @@
 /**
  * @module config
- * @description Functions for configuring Meteor for RSPack
+ * @description Functions for configuring Meteor for Rspack
  */
 import { glob }  from 'glob';
 import path from 'path';
@@ -96,12 +96,12 @@ function getFileExtensionsToIgnore() {
 }
 
 /**
- * Configures Meteor settings for RSPack
+ * Configures Meteor settings for Rspack
  * Sets up file ignores, entry points, and custom script URL
  * Creates necessary module files and writes content to them
  * @returns {void}
  */
-export function configureMeteorForRSPack() {
+export function configureMeteorForRspack() {
   const initialEntrypoints = getInitialEntrypoints();
 
   // Ignore node_modules to prevent Meteor from processing them

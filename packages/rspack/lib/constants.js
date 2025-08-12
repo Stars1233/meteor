@@ -1,6 +1,6 @@
 /**
  * @module constants
- * @description Constants and global state keys for RSPack plugin
+ * @description Constants and global state keys for Rspack plugin
  */
 
 export const DEFAULT_RSPACK_VERSION = '1.4.8';
@@ -22,7 +22,7 @@ export const DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION = '0.5.17';
  * @constant {Object}
  * @property {string} CLIENT_PROCESS - Key for storing the client process
  * @property {string} SERVER_PROCESS - Key for storing the server process
- * @property {string} RSPACK_INSTALLATION_CHECKED - Key for tracking if RSPack installation was checked
+ * @property {string} RSPACK_INSTALLATION_CHECKED - Key for tracking if Rspack installation was checked
  * @property {string} IS_REACT_ENABLED - Key for tracking if React is enabled
  * @property {string} INITIAL_ENTRYPONTS - Key for storing initial entrypoints
  * @property {string} CLIENT_FIRST_COMPILE - Key for tracking client first compilation state
@@ -42,27 +42,27 @@ export const GLOBAL_STATE_KEYS = {
 };
 
 /**
- * Default port for RSPack dev server
+ * Default port for Rspack dev server
  * @type {string|any|number}
  */
 export const RSPACK_DEVSERVER_PORT = process.env.RSPACK_DEVSERVER_PORT || 8080;
 
 /**
- * Directory name for RSPack build context
+ * Directory name for Rspack build context
  * Can be overridden with RSPACK_BUILD_CONTEXT environment variable
  * @constant {string}
  */
 export const RSPACK_BUILD_CONTEXT = process.env.RSPACK_BUILD_CONTEXT || '_build';
 
 /**
- * Directory name for RSPack assets context
+ * Directory name for Rspack assets context
  * Can be overridden with RSPACK_ASSETS_CONTEXT environment variable
  * @constant {string}
  */
 export const RSPACK_ASSETS_CONTEXT = process.env.RSPACK_ASSETS_CONTEXT || '_build-assets';
 
 /**
- * Directory name for RSPack bundles context
+ * Directory name for Rspack bundles context
  * Can be overridden with RSPACK_ASSETS_CONTEXT environment variable
  * @constant {string}
  */

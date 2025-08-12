@@ -1,8 +1,8 @@
 /**
  * @module compilation-helpers
- * @description Helper functions for RSPack compilation tracking
+ * @description Helper functions for Rspack compilation tracking
  * 
- * This module provides utility functions for tracking RSPack compilations,
+ * This module provides utility functions for tracking Rspack compilations,
  * including setting up compilation tracking, waiting for first compilation,
  * and formatting time values.
  */
@@ -105,7 +105,7 @@ export function setupCompilationTracking() {
         this.timeoutId = setTimeout(() => {
           const maxMs = Math.max(clientTime, serverTime);
           console.log(
-            `| Total: ${formatMilliseconds(maxMs)} ms (RSPack ${
+            `| Total: ${formatMilliseconds(maxMs)} ms (Rspack ${
               this.initialCompilationOccurred ? 'Rebuild' : 'Build'
             } App)`
           );

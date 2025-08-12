@@ -1,6 +1,6 @@
 /**
  * @module processes
- * @description Functions for managing RSPack processes
+ * @description Functions for managing Rspack processes
  */
 import { checkNpmDependencyExists } from 'meteor/tools-core/lib/npm';
 import { RSPACK_DEVSERVER_PORT } from "./constants";
@@ -49,20 +49,20 @@ const {
 
 /**
  * Gets the appropriate config file name based on environment
- * @returns {string} The name of the RSPack config file
+ * @returns {string} The name of the Rspack config file
  */
 export function getConfigFileName() {
   return `${process.cwd()}/node_modules/@meteorjs/rspack/rspack.config.js`;
 }
 
 /**
- * Gets the appropriate RSPack environment variables
+ * Gets the appropriate Rspack environment variables
  * @param {Object} options - Options for environment variables
  * @param {boolean} options.isClient - Whether this is for client-side build
  * @param {boolean} options.isServer - Whether this is for server-side build
- * @returns {string[]} Array of command line arguments for RSPack
+ * @returns {string[]} Array of command line arguments for Rspack
  */
-export function getRSPackEnv({ isClient, isServer }) {
+export function getRspackEnv({ isClient, isServer }) {
   const RSPACK_BUILD_CONTEXT = require('./constants').RSPACK_BUILD_CONTEXT;
 
   const initialEntrypoints = getMeteorInitialAppEntrypoints();
@@ -132,12 +132,12 @@ export function getRSPackEnv({ isClient, isServer }) {
 }
 
 /**
- * Starts RSPack for client in serve mode
+ * Starts Rspack for client in serve mode
  * @param {Object} options - Options for client serve
  * @param {Function} options.onCompile - Callback function to be called when compilation is complete
  * @returns {Object} The client process object
  */
-export function startRSPackClientServe(options = {}) {
+export function startRspackClientServe(options = {}) {
   const { onCompile } = options;
   // Get the current client process from global state
   const clientProcess = getGlobalState(GLOBAL_STATE_KEYS.CLIENT_PROCESS, null);
@@ -151,10 +151,10 @@ export function startRSPackClientServe(options = {}) {
   const configFile = getConfigFileName();
   const newClientProcess = spawnProcess(
     'npx',
-    ['rspack', 'serve', '--config', configFile, ...getRSPackEnv({ isClient: true, isServer: false })], {
+    ['rspack', 'serve', '--config', configFile, ...getRspackEnv({ isClient: true, isServer: false })], {
       cwd: appDir,
       onStdout: (data) => {
-        logInfo(`[RSPack Client] ${data}`);
+        logInfo(`[Rspack Client] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
           onCompile(data);
         }
@@ -162,18 +162,18 @@ export function startRSPackClientServe(options = {}) {
       onStderr: (data) => {
         // Check if this is an EADDRINUSE error in development mode (which we want to completely ignore)
         if (isMeteorAppDevelopment() && data.includes('EADDRINUSE')) {
-          logError(`[RSPack Client Error] ${data}`);
+          logError(`[Rspack Client Error] ${data}`);
           return;
         }
         // Check if this is actually an informational message (like webpack-dev-server messages)
         if (data.includes('Loopback:') || data.includes('Project is running at:')) {
-          logInfo(`[RSPack Client] ${data}`);
+          logInfo(`[Rspack Client] ${data}`);
         } else {
-          logError(`[RSPack Client Error] ${data}`);
+          logError(`[Rspack Client Error] ${data}`);
         }
       },
       onError: (err) => {
-        logError(`RSPack Error: ${err.message}`);
+        logError(`Rspack Error: ${err.message}`);
       }
     });
 
@@ -184,12 +184,12 @@ export function startRSPackClientServe(options = {}) {
 }
 
 /**
- * Starts RSPack for server in build --watch mode
+ * Starts Rspack for server in build --watch mode
  * @param {Object} options - Options for server watch
  * @param {Function} options.onCompile - Callback function to be called when compilation is complete
  * @returns {Object} The server process object
  */
-export function startRSPackServerWatch(options = {}) {
+export function startRspackServerWatch(options = {}) {
   const { onCompile } = options;
   // Get the current server process from global state
   const serverProcess = getGlobalState(GLOBAL_STATE_KEYS.SERVER_PROCESS, null);
@@ -203,10 +203,10 @@ export function startRSPackServerWatch(options = {}) {
   const configFile = getConfigFileName();
   const newServerProcess = spawnProcess(
     'npx',
-    ['rspack', 'build', '--watch', '--config', configFile, ...getRSPackEnv({ isClient: false, isServer: true })], {
+    ['rspack', 'build', '--watch', '--config', configFile, ...getRspackEnv({ isClient: false, isServer: true })], {
     cwd: appDir,
     onStdout: (data) => {
-      logInfo(`[RSPack Server] ${data}`);
+      logInfo(`[Rspack Server] ${data}`);
       if (onCompile && data.trim().includes("compiled")) {
         onCompile(data);
       }
@@ -214,13 +214,13 @@ export function startRSPackServerWatch(options = {}) {
     onStderr: (data) => {
       // Check if this is actually an informational message (like webpack-dev-server messages)
       if (data.includes('Project is running at:')) {
-        logInfo(`[RSPack Server] ${data}`);
+        logInfo(`[Rspack Server] ${data}`);
       } else {
-        logError(`[RSPack Server Error] ${data}`);
+        logError(`[Rspack Server Error] ${data}`);
       }
     },
     onError: (err) => {
-      logError(`RSPack Error: ${err.message}`);
+      logError(`Rspack Error: ${err.message}`);
     }
   });
 
@@ -231,22 +231,22 @@ export function startRSPackServerWatch(options = {}) {
 }
 
 /**
- * Runs RSPack build for both client and server without watch mode
+ * Runs Rspack build for both client and server without watch mode
  * @param {Object} options - Options for the build
  * @param {boolean} options.isClient - Whether this is a client build
  * @param {boolean} options.isServer - Whether this is a server build
  * @param {boolean} options.isTestModule - Whether this is a test module
  * @param {Function} options.onCompile - Callback function to be called when compilation is complete
- * @param {boolean} options.watch - Whether to run RSPack in watch mode
+ * @param {boolean} options.watch - Whether to run Rspack in watch mode
  * @returns {Promise<void>} A promise that resolves when the build is complete
  * @throws {Error} If the build process fails
  */
-export async function runRSPackBuild({ isClient, isServer, isTestModule, onCompile, watch, label = 'Build' } = {}) {
+export async function runRspackBuild({ isClient, isServer, isTestModule, onCompile, watch, label = 'Build' } = {}) {
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
 
   const endpoint = isTestModule ? 'Module' : isClient ? 'Client' : 'Server';
-  // Use a promise to ensure Meteor waits until RSPack finishes
+  // Use a promise to ensure Meteor waits until Rspack finishes
   return new Promise((resolve, reject) => {
     spawnProcess(
       'npx',
@@ -256,12 +256,12 @@ export async function runRSPackBuild({ isClient, isServer, isTestModule, onCompi
         '--config',
         configFile,
         ...(watch && ['--watch']) || [],
-        ...getRSPackEnv({ isClient, isServer, isTestModule }),
+        ...getRspackEnv({ isClient, isServer, isTestModule }),
       ].filter(Boolean),
       {
       cwd: appDir,
       onStdout: (data) => {
-        logInfo(`[RSPack ${label} ${endpoint}] ${data}`);
+        logInfo(`[Rspack ${label} ${endpoint}] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
           onCompile(data);
         }
@@ -269,22 +269,22 @@ export async function runRSPackBuild({ isClient, isServer, isTestModule, onCompi
       onStderr: (data) => {
         // Check if this is actually an informational message (like webpack-dev-server messages)
         if (data.includes('Project is running at:')) {
-          logInfo(`[RSPack ${label} ${endpoint}] ${data}`);
+          logInfo(`[Rspack ${label} ${endpoint}] ${data}`);
         } else {
-          logError(`[RSPack ${label} Error ${endpoint}] ${data}`);
+          logError(`[Rspack ${label} Error ${endpoint}] ${data}`);
         }
       },
       onExit: (code) => {
         if (code === 0) {
           resolve();
         } else {
-          const error = new Error(`RSPack ${label} failed in ${endpoint} with exit code ${code}`);
+          const error = new Error(`Rspack ${label} failed in ${endpoint} with exit code ${code}`);
           logError(error.message);
           reject(error);
         }
       },
       onError: (err) => {
-        logError(`RSPack ${label} ${endpoint} error: ${err.message}`);
+        logError(`Rspack ${label} ${endpoint} error: ${err.message}`);
         reject(err);
       }
     });

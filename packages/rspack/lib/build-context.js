@@ -1,6 +1,6 @@
 /**
  * @module build-context
- * @description Functions for managing build context and module files for RSPack plugin
+ * @description Functions for managing build context and module files for Rspack plugin
  */
 
 const fs = require('fs');
@@ -53,12 +53,12 @@ export function getInitialEntrypoints() {
 }
 
 /**
- * Ensures the RSPack build context directory exists
+ * Ensures the Rspack build context directory exists
  * Creates the directory if it doesn't exist and adds it to .gitignore
  * @returns {string} Path to the build context directory
  * @throws {Error} If directory creation fails
  */
-export function ensureRSPackBuildContextExists() {
+export function ensureRspackBuildContextExists() {
   const appDir = getMeteorAppDir();
   const buildContextPath = path.join(appDir, RSPACK_BUILD_CONTEXT);
 
@@ -66,7 +66,7 @@ export function ensureRSPackBuildContextExists() {
     try {
       fs.mkdirSync(buildContextPath, { recursive: true });
     } catch (error) {
-      logError(`Failed to create RSPack build context directory: ${error.message}`);
+      logError(`Failed to create Rspack build context directory: ${error.message}`);
       throw error;
     }
   }
@@ -79,7 +79,7 @@ export function ensureRSPackBuildContextExists() {
       `public/${RSPACK_ASSETS_CONTEXT}`,
       `private/${RSPACK_ASSETS_CONTEXT}`,
     ],
-    'Meteor-RSPack build context directories',
+    'Meteor-Rspack build context directories',
   );
 
   return buildContextPath;

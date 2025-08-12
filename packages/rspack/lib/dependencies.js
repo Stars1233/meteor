@@ -1,6 +1,6 @@
 /**
  * @module dependencies
- * @description Functions for managing dependencies for RSPack plugin
+ * @description Functions for managing dependencies for Rspack plugin
  */
 import { DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION } from "./constants";
 
@@ -121,11 +121,11 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
 }
 
 /**
- * Checks if RSPack is installed, and installs it if not
+ * Checks if Rspack is installed, and installs it if not
  * @returns {Promise<void>} A promise that resolves when the check/installation is complete
- * @throws {Error} If RSPack installation fails
+ * @throws {Error} If Rspack installation fails
  */
-export async function ensureRSPackInstalled() {
+export async function ensureRspackInstalled() {
   const dependencies = [
     { name: '@rspack/cli', version: DEFAULT_RSPACK_VERSION, semverCondition: 'gte', dev: true },
     { name: '@rspack/core', version: DEFAULT_RSPACK_VERSION, semverCondition: 'gte', dev: true },
@@ -168,7 +168,7 @@ export function checkReactInstalled() {
   return isReactInstalled;
 }
 
-export async function ensureRSPackReactInstalled() {
+export async function ensureRspackReactInstalled() {
   const dependencies = [
     { name: '@rspack/plugin-react-refresh', version: DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION, semverCondition: 'gte', dev: true }
   ];
@@ -209,7 +209,7 @@ export function checkCoffeescriptInstalled() {
   return isCoffescriptInstalled;
 }
 
-export async function ensureRSPackCoffeescriptInstalled() {
+export async function ensureRspackCoffeescriptInstalled() {
   const dependencies = [
     { name: 'coffeescript', version: DEFAULT_METEOR_RSPACK_COFFEESCRIPT_VERSION, semverCondition: 'gte', dev: true },
     { name: 'coffee-loader', version: DEFAULT_METEOR_RSPACK_COFFEE_LOADER_VERSION, semverCondition: 'gte', dev: true },

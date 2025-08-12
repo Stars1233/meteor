@@ -1,13 +1,13 @@
 /**
  * @module rspack_plugin
- * @description RSPack Plugin for Meteor
+ * @description Rspack Plugin for Meteor
  *
- * This is the main entry point for the RSPack plugin. It orchestrates the integration
- * between RSPack and Meteor by:
- * 1. Ensuring RSPack and related dependencies are installed
+ * This is the main entry point for the Rspack plugin. It orchestrates the integration
+ * between Rspack and Meteor by:
+ * 1. Ensuring Rspack and related dependencies are installed
  * 2. Setting up the build context directory
- * 3. Configuring Meteor settings for RSPack
- * 4. Starting RSPack processes based on the Meteor command (run or build)
+ * 3. Configuring Meteor settings for Rspack
+ * 4. Starting Rspack processes based on the Meteor command (run or build)
  * 5. Handling cleanup when the plugin is stopped
  *
  * The plugin uses top-level await to ensure asynchronous operations complete
@@ -20,27 +20,27 @@ const {
 } = require('./lib/constants');
 
 const {
-  ensureRSPackInstalled,
+  ensureRspackInstalled,
   checkReactInstalled,
-  ensureRSPackReactInstalled,
+  ensureRspackReactInstalled,
   checkCoffeescriptInstalled,
-  ensureRSPackCoffeescriptInstalled,
+  ensureRspackCoffeescriptInstalled,
 } = require('./lib/dependencies');
 
 const {
-  ensureRSPackBuildContextExists,
+  ensureRspackBuildContextExists,
   ensureRspackConfigExists,
 } = require('./lib/build-context');
 
 const {
-  startRSPackClientServe,
-  startRSPackServerWatch,
-  runRSPackBuild,
+  startRspackClientServe,
+  startRspackServerWatch,
+  runRspackBuild,
   cleanup
 } = require('./lib/processes');
 
 const {
-  configureMeteorForRSPack
+  configureMeteorForRspack
 } = require('./lib/config');
 
 const {
@@ -72,26 +72,26 @@ setGlobalState(GLOBAL_STATE_KEYS.INITIAL_ENTRYPONTS, getMeteorAppEntrypoints());
 
 // Main entry point - using top-level await
 try {
-  // Ensure RSPack is installed
-  await ensureRSPackInstalled();
+  // Ensure Rspack is installed
+  await ensureRspackInstalled();
 
-  // Check if RSPack React is installed
+  // Check if Rspack React is installed
   if (checkReactInstalled()) {
-    await ensureRSPackReactInstalled();
+    await ensureRspackReactInstalled();
   }
 
   if (checkCoffeescriptInstalled()) {
-    await ensureRSPackCoffeescriptInstalled();
+    await ensureRspackCoffeescriptInstalled();
   }
 
-  // Ensure the RSPack build context directory exists
-  ensureRSPackBuildContextExists();
+  // Ensure the Rspack build context directory exists
+  ensureRspackBuildContextExists();
 
   // Ensure the rspack.config.js file exists at the project level
   ensureRspackConfigExists();
 
-  // Configure Meteor settings for RSPack
-  configureMeteorForRSPack();
+  // Configure Meteor settings for Rspack
+  configureMeteorForRspack();
 
   // Register cleanup handler
   process.on('exit', cleanup);
@@ -112,18 +112,18 @@ try {
       onCompileServer,
     } = setupCompilationTracking();
 
-    // For 'run' command, start RSPack in appropriate modes with distinct callbacks
+    // For 'run' command, start Rspack in appropriate modes with distinct callbacks
     if (isMeteorAppDevelopment()) {
-      startRSPackClientServe({ onCompile: onCompileClient });
-      startRSPackServerWatch({ onCompile: onCompileServer });
+      startRspackClientServe({ onCompile: onCompileClient });
+      startRspackServerWatch({ onCompile: onCompileServer });
     } else if (isMeteorAppProduction()) {
-      runRSPackBuild({
+      runRspackBuild({
         isClient: true,
         isServer: false,
         watch: true,
         onCompile: onCompileClient,
       });
-      runRSPackBuild({
+      runRspackBuild({
         isServer: true,
         isClient: false,
         watch: true,
@@ -147,7 +147,7 @@ try {
     } = setupCompilationTracking();
 
     if (initialEntrypoints?.testModule) {
-      runRSPackBuild({
+      runRspackBuild({
         isTestModule: true,
         isClient: false,
         isServer: true,
@@ -157,7 +157,7 @@ try {
       });
       await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise, { target: 'server' });
     } else if (initialEntrypoints?.testModule?.client || initialEntrypoints?.testModule?.server) {
-      runRSPackBuild({
+      runRspackBuild({
         isClient: true,
         isServer: false,
         watch: isMeteorAppTestWatch(),
@@ -165,7 +165,7 @@ try {
         label: 'Test',
       });
 
-      runRSPackBuild({
+      runRspackBuild({
         isServer: true,
         isClient: false,
         watch: isMeteorAppTestWatch(),
@@ -178,14 +178,14 @@ try {
     }
 
   } else if (isMeteorAppBuild()) {
-    // For 'build' command, run RSPack build without watch mode
+    // For 'build' command, run Rspack build without watch mode
     // Run client and server builds in parallel and wait for both to complete
     await Promise.all([
-      runRSPackBuild({ isClient: true, isServer: false }),
-      runRSPackBuild({ isServer: true, isClient: false }),
+      runRspackBuild({ isClient: true, isServer: false }),
+      runRspackBuild({ isServer: true, isClient: false }),
     ]);
   }
 } catch (error) {
-  logError(`RSPack plugin error: ${error.message}`);
+  logError(`Rspack plugin error: ${error.message}`);
   throw error;
 }
