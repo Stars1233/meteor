@@ -76,23 +76,23 @@ This file defines dynamic configurations, so you return the config from a resolv
 
 ```javascript
 import { defineConfig } from '@meteorjs/rspack';
+import { rspack } from '@rspack/core';
 import HtmlRspackPlugin from 'html-rspack-plugin';
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
 /**
  * Example: Using different plugins for client and server builds
  *
- * - For client: Generate `index.html` with HtmlRspackPlugin
+ * - For client: Load Lodash automatically with ProvidePlugin
  * - For server: Add Node.js polyfills with NodePolyfillPlugin
+ * - For both: Add progress plugin
  */
 export default defineConfig(Meteor => {
   return {
     plugins: [
-      Meteor.isClient && new HtmlRspackPlugin({
-        template: './private/template.html',
-        filename: path.join(process.cwd(), 'client/main.html'),
-      }),
-      Meteor.isServer && new NodePolyfillPlugin()
+      Meteor.isClient && new rspack.ProvidePlugin({ _: 'lodash' }),
+      Meteor.isServer && new NodePolyfillPlugin(),
+      new rspack.ProgressPlugin()
     ].filter(Boolean)
   };
 });
