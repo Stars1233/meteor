@@ -76,19 +76,25 @@ This file defines dynamic configurations, so you return the config from a resolv
 
 ```javascript
 import { defineConfig } from '@meteorjs/rspack';
+import HtmlRspackPlugin from 'html-rspack-plugin';
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
 /**
- * Rspack configuration for Meteor projects.
+ * Example: Using different plugins for client and server builds
  *
- * Provides typed flags on the `Meteor` object, such as:
- * - `Meteor.isClient` / `Meteor.isServer`
- * - `Meteor.isDevelopment` / `Meteor.isProduction`
- * - …and other flags available
- *
- * Use these flags to adjust your build settings based on environment.
+ * - For client: Generate `index.html` with HtmlRspackPlugin
+ * - For server: Add Node.js polyfills with NodePolyfillPlugin
  */
 export default defineConfig(Meteor => {
-  return {};
+  return {
+    plugins: [
+      Meteor.isClient && new HtmlRspackPlugin({
+        template: './private/template.html',
+        filename: path.join(process.cwd(), 'client/main.html'),
+      }),
+      Meteor.isServer && new NodePolyfillPlugin()
+    ].filter(Boolean)
+  };
 });
 ```
 
