@@ -90,11 +90,14 @@ export class RequireExternalsPlugin {
   _extractPackageName(name) {
     let pkg = name.slice(this._defaultExternalPrefix.length);
     if (pkg.startsWith('"') && pkg.endsWith('"')) pkg = pkg.slice(1, -1);
-
+    const depInfo = path.parse(name);
     // If the extracted package name is a path, use the path as is
     if (
       pkg &&
-      (path.isAbsolute(pkg) || pkg.startsWith('./') || pkg.startsWith('../'))
+      (path.isAbsolute(pkg) ||
+        pkg.startsWith('./') ||
+        pkg.startsWith('../') ||
+        !!depInfo.ext)
     ) {
       const module = this.externalsMeta.get(pkg);
       if (module) {
