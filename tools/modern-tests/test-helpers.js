@@ -157,7 +157,7 @@ export function testMeteorRspackBundler(options) {
       await cleanupTempDir(tempDir);
     });
 
-    test.only(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
+    test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at:",
@@ -239,7 +239,7 @@ export function testMeteorRspackBundler(options) {
       await killProcessByPort('8080');
     });
 
-    test.only(`"meteor run --production" / should run and rebuild the app with Rspack in production`, async () => {
+    test(`"meteor run --production" / should run and rebuild the app with Rspack in production`, async () => {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at:",
