@@ -180,7 +180,7 @@ export function isMeteorAppTestWatch() {
  * @returns {boolean} True if the application is in development mode, false otherwise.
  */
 export function isMeteorAppDevelopment() {
-  return Package.meteor?.Meteor.isDevelopment;
+  return Package.meteor?.Meteor.isDevelopment && !isMeteorAppBuild();
 }
 
 /**
@@ -188,7 +188,7 @@ export function isMeteorAppDevelopment() {
  * @returns {boolean} True if the application is in production mode, false otherwise.
  */
 export function isMeteorAppProduction() {
-  return Package.meteor?.Meteor.isProduction;
+  return Package.meteor?.Meteor.isProduction || isMeteorAppBuild();
 }
 
 /**

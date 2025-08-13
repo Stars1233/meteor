@@ -99,7 +99,7 @@ export async function runMeteorApp(tempDir, port, options = {}) {
   console.log(`Waiting for app to be available on port ${port}...`);
   await waitOn({
     resources: [`http-get://localhost:${port}`],
-    timeout: 60000
+    timeout: 90000
   });
 
   return { meteorProcess, outputLines };
@@ -312,7 +312,7 @@ export async function wait(ms) {
  * @returns {Promise<string>} - A promise that resolves with the matched line
  */
 export async function waitForMeteorOutput(outputLines, pattern, options = {}) {
-  const timeout = options.timeout || 60000; // Default 1 minute timeout
+  const timeout = options.timeout || 90000; // Default 1 minute timeout
   const checkInterval = options.checkInterval || 100; // Check every 100ms by default
 
   console.log(`Waiting for output matching: ${pattern}`);

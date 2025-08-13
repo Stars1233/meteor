@@ -105,7 +105,9 @@ export function testMeteorRspackBundler(options) {
       prodServer: "Hello from prod server",
       test: "Hello from test"
     },
-    customAssertions
+    customAssertions,
+    // Some existing tests may fail if this is not set
+    verbose = true,
   } = options;
 
   return () => {
@@ -122,6 +124,12 @@ export function testMeteorRspackBundler(options) {
 
       // Add Rspack package
       await runMeteorCommand('add', ['rspack'], tempDir, { checkExitCode: true });
+
+      // Set meteor.modern.verbose to true
+      if (verbose) {
+        await execa('npm', ['pkg', 'delete', 'meteor.modern'], { cwd: tempDir });
+        await execa('npm', ['pkg', 'set', 'meteor.modern.verbose=true'], { cwd: tempDir });
+      }
 
       // Run the Meteor app to install Rspack
       const result = await runMeteorApp(tempDir, port, {
@@ -188,6 +196,17 @@ export function testMeteorRspackBundler(options) {
         customMessages.devServer
       );
 
+      if (verbose) {
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isDevelopment:.*true.*/
+        );
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isRun:.*true.*/
+        );
+      }
+
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterRun) {
         await customAssertions.afterRun({ tempDir, port, meteorProcess, result });
@@ -245,6 +264,16 @@ export function testMeteorRspackBundler(options) {
         result.outputLines,
         customMessages.prodServer
       );
+      if (verbose) {
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isProduction:.*true.*/
+        );
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isRun:.*true.*/
+        );
+      }
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterRunProduction) {
@@ -286,6 +315,16 @@ export function testMeteorRspackBundler(options) {
         result.outputLines,
         customMessages.test
       );
+      if (verbose) {
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isDevelopment:.*true.*/
+        );
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isTest:.*true.*/
+        );
+      }
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterTest) {
@@ -314,6 +353,16 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(tempDir, '_build/test/test-entry.js');
       await assertFileExist(tempDir, '_build/test/test-rspack.js');
       await assertFileExist(tempDir, '_build/test/test-meteor.js');
+      if (verbose) {
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isDevelopment:.*true.*/
+        );
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isTest:.*true.*/
+        );
+      }
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterTestOnce) {
@@ -326,13 +375,24 @@ export function testMeteorRspackBundler(options) {
 
     test(`"meteor build" / should build the app with Rspack`, async () => {
       // Build the app with Rspack
-      const { buildOutputDir, processResult } = await buildMeteorApp(tempDir, {
+      const { buildOutputDir, processResult: result } = await buildMeteorApp(tempDir, {
         commandOptions: ['--directory'],
         captureOutput: true
       });
 
       // Wait for a margin
       await wait(500);
+
+      if (verbose) {
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isProduction:.*true.*/
+        );
+        await waitForMeteorOutput(
+          result.outputLines,
+          /.*isBuild:.*true.*/
+        );
+      }
 
       try {
         // Assert that the build output directory exists
@@ -364,7 +424,7 @@ export function testMeteorRspackBundler(options) {
 
         // Run custom assertions if provided
         if (customAssertions && customAssertions.afterBuild) {
-          await customAssertions.afterBuild({ tempDir, buildOutputDir, processResult });
+          await customAssertions.afterBuild({ tempDir, buildOutputDir, result });
         }
       } finally {
         // Clean up the build output directory
