@@ -23,12 +23,14 @@ describe('TypeScript App Bundling /', () => {
         await waitForTypeScriptErrorFree(result.outputLines);
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
+        // Check for HMR output as enabled by default
         await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/);
       },
       afterRunProduction: async ({ result }) => {
         await waitForTypeScriptEnvs(result.outputLines, { isTsxEnabled: true });
       },
       afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
+        // Check for HMR to not be enabled in production-like mode
         await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/, { negate: true });
       },
       afterTest: async ({ result }) => {
