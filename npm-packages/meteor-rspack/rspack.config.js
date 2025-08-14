@@ -77,7 +77,7 @@ function createSwcConfig({ isTypescriptEnabled, isJsxEnabled, isTsxEnabled, exte
 // Coffeescript rule
 function createCoffeescriptConfig({ swcConfig }) {
   return {
-    test: /\.coffee$/,
+    test: /\.coffee$/i,
     use: [
       {
         loader: 'swc-loader',
@@ -231,7 +231,7 @@ export default function (inMeteor = {}, argv = {}) {
         ...(Meteor.isBlazeEnabled
           ? [
               {
-                test: /\.html$/,
+                test: /\.html$/i,
                 loader: 'ignore-loader',
               },
             ]

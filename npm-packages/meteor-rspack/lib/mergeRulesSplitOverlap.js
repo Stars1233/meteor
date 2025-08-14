@@ -55,7 +55,7 @@ function ruleMatchesExt(rule, ext) {
  */
 function regexFromExts(exts) {
   const body = exts.map(e => e.replace(/^\./, '')).join('|');
-  return new RegExp(`\\.(${body})$`);
+  return new RegExp(`\\.(${body})$`, 'i');
 }
 
 /**
