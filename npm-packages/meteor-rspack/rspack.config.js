@@ -91,7 +91,7 @@ function createCoffeescriptConfig({ swcConfig }) {
 }
 
 // Watch options shared across both builds
-const watchOptions = {
+const defaultWatchOptions = {
   ignored: ['**/.meteor/local/**', '**/dist/**'],
 };
 
@@ -119,6 +119,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isRun = Meteor.isRun;
   const isReactEnabled = Meteor.isReactEnabled;
   const isTestModule = Meteor.isTestModule;
+  const isTestEager = Meteor.isTestEager;
   const swcExternalHelpers = Meteor.swcExternalHelpers;
   const mode = isProd ? 'production' : 'development';
 
@@ -151,6 +152,19 @@ export default function (inMeteor = {}, argv = {}) {
   const buildContext = Meteor.buildContext || '_build';
   const bundlesContext = Meteor.bundlesContext || 'bundles';
   const assetsContext = Meteor.assetsContext || 'assets';
+
+  // Set watch options
+  const watchOptions = {
+    ...defaultWatchOptions,
+    ...isTestEager && {
+      ignored: [
+        ...defaultWatchOptions.ignored,
+        '**/_build/**',
+        '**/.meteor/local/**',
+        '**/node_modules/**',
+      ],
+    },
+  };
 
   if (Meteor.isDebug || Meteor.isVerbose) {
     console.log('[i] Rspack mode:', mode);
@@ -282,7 +296,9 @@ export default function (inMeteor = {}, argv = {}) {
     name: serverNameConfig,
     target: 'node',
     mode,
-    entry: path.resolve(process.cwd(), buildContext, entryPath),
+    entry: isTestEager
+      ? "node_modules/@meteorjs/rspack/entries/eager-tests.js"
+      : path.resolve(process.cwd(), buildContext, entryPath),
     output: {
       path: serverOutputDir,
       filename: () => `../${buildContext}/${outputPath}`,
@@ -308,13 +324,20 @@ export default function (inMeteor = {}, argv = {}) {
     },
     externals,
     plugins: [
-      new DefinePlugin({
-        'Meteor.isClient': JSON.stringify(false),
-        'Meteor.isServer': JSON.stringify(true),
-        'Meteor.isTest': JSON.stringify(isTest),
-        'Meteor.isDevelopment': JSON.stringify(isDev),
-        'Meteor.isProduction': JSON.stringify(isProd),
-      }),
+      new DefinePlugin(
+        isTestModule || isTestEager
+          ? {
+              "Meteor.isTest": JSON.stringify(isTest),
+              "Meteor.isDevelopment": JSON.stringify(isDev),
+            }
+          : {
+              "Meteor.isClient": JSON.stringify(true),
+              "Meteor.isServer": JSON.stringify(false),
+              "Meteor.isTest": JSON.stringify(isTest),
+              "Meteor.isDevelopment": JSON.stringify(isDev),
+              "Meteor.isProduction": JSON.stringify(isProd),
+            }
+      ),
       new BannerPlugin({
         banner: bannerOutput,
         entryOnly: true,
@@ -323,7 +346,7 @@ export default function (inMeteor = {}, argv = {}) {
     ],
     watchOptions,
     devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
-    ...((isDevEnvironment || isTest) &&
+    ...((isDevEnvironment || isTest && !isTestEager) &&
       createCacheStrategy(mode)
     ),
   };
