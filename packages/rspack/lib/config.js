@@ -162,7 +162,11 @@ export function configureMeteorForRspack() {
   const mainClientModule = getBuildFilePath({ isMain: true, ...env, ...commandRole, isClient: true });
   const mainServerModule = getBuildFilePath({ isMain: true, ...env, ...commandRole, isServer: true });
   const testClientModule = getBuildFilePath({ isTest: true, ...env, ...commandRole, isClient: true });
-  const isTestModule = initialEntrypoints.testModule != null;
+  const isTestEager =
+    initialEntrypoints.testModule == null &&
+    initialEntrypoints.testClient == null &&
+    initialEntrypoints.testServer == null;
+  const isTestModule = initialEntrypoints.testModule != null || isTestEager;
   const testServerModule = getBuildFilePath({ isTest: true, ...env, ...commandRole, isTestModule, isServer: true });
 
   const appEntrypoints = {

@@ -146,17 +146,7 @@ try {
       onCompileServer,
     } = setupCompilationTracking();
 
-    if (initialEntrypoints?.testModule) {
-      runRspackBuild({
-        isTestModule: true,
-        isClient: false,
-        isServer: true,
-        watch: isMeteorAppTestWatch(),
-        onCompile: onCompileServer,
-        label: 'Test',
-      });
-      await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise, { target: 'server' });
-    } else if (initialEntrypoints?.testModule?.client || initialEntrypoints?.testModule?.server) {
+    if (initialEntrypoints?.testModule?.client || initialEntrypoints?.testModule?.server) {
       runRspackBuild({
         isClient: true,
         isServer: false,
@@ -175,6 +165,16 @@ try {
 
       // Wait for first compilation to complete
       await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise);
+    } else {
+      runRspackBuild({
+        isTestModule: true,
+        isClient: false,
+        isServer: true,
+        watch: isMeteorAppTestWatch(),
+        onCompile: onCompileServer,
+        label: 'Test',
+      });
+      await waitForFirstCompilation(clientFirstCompile, serverFirstCompile, clientFirstCompilePromise, serverFirstCompilePromise, { target: 'server' });
     }
 
   } else if (isMeteorAppBuild()) {

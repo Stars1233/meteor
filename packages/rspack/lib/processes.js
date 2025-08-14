@@ -67,7 +67,11 @@ export function getRspackEnv({ isClient, isServer }) {
 
   const initialEntrypoints = getMeteorInitialAppEntrypoints();
   const isTest = isMeteorAppTest();
-  const isTestModule = initialEntrypoints.testModule != null;
+  const isTestEager =
+    initialEntrypoints.testModule == null &&
+    initialEntrypoints.testClient == null &&
+    initialEntrypoints.testServer == null;
+  const isTestModule = initialEntrypoints.testModule != null || isTestEager;
 
   const module = isMeteorAppTest() ? { isTest: true } : { isMain: true };
   const env = isMeteorAppDevelopment()
@@ -95,6 +99,7 @@ export function getRspackEnv({ isClient, isServer }) {
     ['isVerbose', isMeteorAppConfigModernVerbose()],
     ['isTest', isMeteorAppTest()],
     ['isTestModule', isTestModule],
+    ['isTestEager', isTestEager],
     ['isRun', isMeteorAppRun()],
     ['isBuild', isMeteorAppBuild()],
     ['isClient', isClient],

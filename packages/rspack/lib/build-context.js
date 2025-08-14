@@ -108,7 +108,11 @@ export function ensureModuleFilesExist() {
     entryFile: initialEntrypoints.mainServer || '',
     outputFile: getBuildFilePath({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output, onlyFilename: true }),
   };
-  const isTestModule = initialEntrypoints.testModule != null;
+  const isTestEager =
+    initialEntrypoints.testModule == null &&
+    initialEntrypoints.testClient == null &&
+    initialEntrypoints.testServer == null;
+  const isTestModule = initialEntrypoints.testModule != null || isTestEager;
   const testModuleFiles = {
     entryFile: initialEntrypoints.testModule || '',
     outputFile: getBuildFilePath({ isTest: true, isTestModule: true, role: FILE_ROLE.output, onlyFilename: true }),
