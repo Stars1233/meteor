@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnProcess } = require('./process');
-const semver = require('semver');
 
 /**
  * Checks if a npm dependency exists in the project.
@@ -134,6 +133,7 @@ export function installNpmDependency(dependencies, options = {}) {
  * @returns {boolean} True if the dependency version meets the condition, false otherwise
  */
 export function checkNpmDependencyVersion(dependency, options = {}) {
+  const semver = require('semver');
   const cwd = options.cwd || process.cwd();
   const versionRequirement = options.versionRequirement;
   const semverCondition = options.semverCondition || 'gte';
