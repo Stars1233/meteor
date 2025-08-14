@@ -7,6 +7,7 @@ import { inspect } from "node:util";
 
 import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
 import { getMeteorAppSwcConfig } from "./lib/swc.js";
+import { mergeSplitOverlap } from './lib/mergeRulesSplitOverlap.js';
 
 const require = createRequire(import.meta.url);
 
@@ -66,7 +67,7 @@ function createSwcConfig({ isTypescriptEnabled, isJsxEnabled, isTsxEnabled, exte
   const customConfig = getMeteorAppSwcConfig() || {};
   const swcConfig = merge(defaultConfig, customConfig);
   return {
-    test: /\.[jt]sx?$/,
+    test: /\.(?:[mc]?js|jsx|[mc]?ts|tsx)$/i,
     exclude: /node_modules|\.meteor\/local/,
     loader: 'builtin:swc-loader',
     options: swcConfig,
@@ -175,6 +176,8 @@ export default function (inMeteor = {}, argv = {}) {
     ...(isCoffeescriptEnabled ? ['.coffee'] : []),
     '.ts',
     '.tsx',
+    '.mts',
+    '.cts',
     '.js',
     '.jsx',
     '.mjs',
@@ -340,10 +343,10 @@ export default function (inMeteor = {}, argv = {}) {
         : projectConfig;
 
     if (Meteor.isClient) {
-      clientConfig = merge(clientConfig, userConfig);
+      clientConfig = mergeSplitOverlap(clientConfig, userConfig);
     }
     if (Meteor.isServer) {
-      serverConfig = merge(serverConfig, userConfig);
+      serverConfig = mergeSplitOverlap(serverConfig, userConfig);
     }
   }
 
