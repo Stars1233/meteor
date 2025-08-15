@@ -23,6 +23,7 @@ describe('ReactRouter App Bundling /', () => {
     customAssertions: {
       afterRun: async ({ result, port }) => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+        await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
         await assert404Page(port);
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
@@ -31,6 +32,7 @@ describe('ReactRouter App Bundling /', () => {
       },
       afterRunProduction: async ({ result, port }) => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+        await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
         await assert404Page(port, { isProductionMode: true });
       },
       afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
@@ -45,6 +47,7 @@ describe('ReactRouter App Bundling /', () => {
       },
       afterBuild: async ({ result }) => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+        await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
       },
     }
   }));
