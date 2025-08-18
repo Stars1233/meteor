@@ -1,4 +1,4 @@
-import { DefinePlugin, BannerPlugin } from '@rspack/core';
+import { DefinePlugin, BannerPlugin, HtmlRspackPlugin } from '@rspack/core';
 import fs from 'fs';
 import { createRequire } from 'module';
 import path from 'path';
@@ -8,6 +8,8 @@ import { inspect } from "node:util";
 import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
 import { getMeteorAppSwcConfig } from "./lib/swc.js";
 import { mergeSplitOverlap } from './lib/mergeRulesSplitOverlap.js';
+import CleanBuildAssetsPlugin from "./plugins/CleanBuildAssetsPlugin.js";
+import RspackMeteorHtmlPlugin from "./plugins/RspackMeteorHtmlPlugin.js";
 
 const require = createRequire(import.meta.url);
 
@@ -136,6 +138,7 @@ export default function (inMeteor = {}, argv = {}) {
 
   // Determine output points
   const outputPath = Meteor.outputPath;
+  const outputDir = path.dirname(Meteor.outputPath || '');
   const outputFilename = Meteor.outputFilename;
 
   // Determine run point
@@ -232,8 +235,14 @@ export default function (inMeteor = {}, argv = {}) {
         isDevEnvironment ? outputFilename : `../${buildContext}/${outputPath}`,
       libraryTarget: 'commonjs',
       publicPath: '/',
-      chunkFilename: `${bundlesContext}/[id].[chunkhash].js`,
+      chunkFilename: `${bundlesContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
+      cssFilename: `${assetsContext}/[name]${
+        isProd ? '.[contenthash]' : ''
+      }.css`,
+      cssChunkFilename: `${assetsContext}/[id]${
+        isProd ? '.[contenthash]' : ''
+      }.css`,
     },
     optimization: {
       usedExports: true,
@@ -256,6 +265,9 @@ export default function (inMeteor = {}, argv = {}) {
     resolve: { extensions, alias },
     externals,
     plugins: [
+      ...(isProd ? [
+        new CleanBuildAssetsPlugin({ verbose: Meteor.isDebug || Meteor.isVerbose }),
+      ] : []),
       ...[
         ...(isReactEnabled && reactRefreshModule && isDevEnvironment
           ? [new reactRefreshModule()]
@@ -273,6 +285,24 @@ export default function (inMeteor = {}, argv = {}) {
         banner: bannerOutput,
         entryOnly: true,
       }),
+      new HtmlRspackPlugin({
+        inject: false,
+        cache: true,
+        filename: `../${buildContext}/${outputDir}/index.html`,
+        templateContent: `
+            <head>
+              <% for tag in htmlRspackPlugin.tags.headTags { %>
+                <%= toHtml(tag) %>
+              <% } %>
+            </head>
+            <body>
+              <% for tag in htmlRspackPlugin.tags.bodyTags { %>
+                <%= toHtml(tag) %>
+              <% } %>
+            </body>
+          `,
+      }),
+      new RspackMeteorHtmlPlugin({}),
     ],
     watchOptions,
     devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
@@ -284,10 +314,12 @@ export default function (inMeteor = {}, argv = {}) {
         ...(Meteor.isBlazeEnabled && { hot: false }),
         port: Meteor.devServerPort || 8080,
         devMiddleware: {
-          writeToDisk: false,
+          writeToDisk: (filePath) =>
+            /\.(html)$/.test(filePath) && !filePath.includes('.hot-update.'),
         },
       },
     }),
+    experiments: { css: true },
   };
 
   const serverNameConfig = `[${isTest && 'test-' || ''}${isTestModule && 'module' || 'server'}-rspack]`;
