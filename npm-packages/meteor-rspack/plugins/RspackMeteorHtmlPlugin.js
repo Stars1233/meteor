@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { createRequire } from 'node:module';
 
-function loadHtmlRspackPluginFromHost(compiler) {
+export function loadHtmlRspackPluginFromHost(compiler) {
   // Prefer the compiler's context; fall back to process.cwd()
   const ctx = compiler.options?.context || compiler.context || process.cwd();
   const requireFromHost = createRequire(path.join(ctx, 'package.json'));

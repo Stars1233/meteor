@@ -123,6 +123,57 @@ function splitOverlapRulesMerge(aRules, bRules) {
 }
 
 /**
+ * Creates a customizer function for unique plugins.
+ * 
+ * @param {string} key - The key to check for uniqueness
+ * @param {string[]} pluginNames - Array of plugin constructor names to make unique
+ * @param {Function} getter - Function to get the identifier from the plugin
+ * @returns {Function} Customizer function
+ */
+export function unique(key, pluginNames = [], getter = item => item.constructor && item.constructor.name) {
+  return (a, b, k) => {
+    if (k !== key) return undefined;
+
+    const aItems = Array.isArray(a) ? a : [];
+    const bItems = Array.isArray(b) ? b : [];
+
+    // If not dealing with plugins, return undefined to use default merging
+    if (key !== 'plugins') return undefined;
+
+    // Create a map to track plugins by their identifier
+    const uniquePlugins = new Map();
+
+    // Process all plugins from both arrays
+    [...aItems, ...bItems].forEach(plugin => {
+      const id = getter(plugin);
+
+      // If this is a plugin we want to make unique and we can identify it
+      if (id && pluginNames.includes(id)) {
+        uniquePlugins.set(id, plugin); // Keep only the last instance
+      }
+    });
+
+    // Create the result array with all non-unique plugins from a
+    const result = aItems.filter(plugin => {
+      const id = getter(plugin);
+      return !id || !pluginNames.includes(id) || uniquePlugins.get(id) === plugin;
+    });
+
+    // Add unique plugins from b that weren't already in the result
+    bItems.forEach(plugin => {
+      const id = getter(plugin);
+      if (!id || !pluginNames.includes(id)) {
+        result.push(plugin);
+      } else if (uniquePlugins.get(id) === plugin) {
+        result.push(plugin);
+      }
+    });
+
+    return result;
+  };
+}
+
+/**
  * Merges webpack/rspack configs with smart handling of overlapping rules.
  *
  * @param {...Object} configs - Configs to merge
@@ -136,6 +187,16 @@ export function mergeSplitOverlap(...configs) {
         const bRules = Array.isArray(b) ? b : [];
         return splitOverlapRulesMerge(aRules, bRules);
       }
+
+      // Handle plugins uniqueness
+      if (key === 'plugins') {
+        return unique(
+          'plugins',
+          ['HtmlRspackPlugin'],
+          (plugin) => plugin.constructor && plugin.constructor.name
+        )(a, b, key);
+      }
+
       // fall through to default merging
       return undefined;
     }

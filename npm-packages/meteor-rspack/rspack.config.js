@@ -1,4 +1,4 @@
-import { DefinePlugin, BannerPlugin, HtmlRspackPlugin } from '@rspack/core';
+import { DefinePlugin, BannerPlugin } from '@rspack/core';
 import fs from 'fs';
 import { createRequire } from 'module';
 import path from 'path';
@@ -9,7 +9,7 @@ import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
 import { getMeteorAppSwcConfig } from "./lib/swc.js";
 import { mergeSplitOverlap } from './lib/mergeRulesSplitOverlap.js';
 import CleanBuildAssetsPlugin from "./plugins/CleanBuildAssetsPlugin.js";
-import RspackMeteorHtmlPlugin from "./plugins/RspackMeteorHtmlPlugin.js";
+import HtmlRspackPlugin from './plugins/HtmlRspackPlugin.js';
 
 const require = createRequire(import.meta.url);
 
@@ -139,6 +139,7 @@ export default function (inMeteor = {}, argv = {}) {
   // Determine output points
   const outputPath = Meteor.outputPath;
   const outputDir = path.dirname(Meteor.outputPath || '');
+
   const outputFilename = Meteor.outputFilename;
 
   // Determine run point
@@ -155,6 +156,10 @@ export default function (inMeteor = {}, argv = {}) {
   const buildContext = Meteor.buildContext || '_build';
   const bundlesContext = Meteor.bundlesContext || 'bundles';
   const assetsContext = Meteor.assetsContext || 'assets';
+
+  // Determine build output and pass to Meteor
+  const buildOutputDir = path.resolve(process.cwd(), buildContext, outputDir);
+  Meteor.buildOutputDir = buildOutputDir;
 
   // Set watch options
   const watchOptions = {
@@ -303,7 +308,6 @@ export default function (inMeteor = {}, argv = {}) {
             </body>
           `,
       }),
-      new RspackMeteorHtmlPlugin(),
     ],
     watchOptions,
     devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',

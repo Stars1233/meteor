@@ -5,6 +5,7 @@ import {
   defineConfig as _rspackDefineConfig,
   Configuration as _RspackConfig,
 } from '@rspack/cli';
+import { HtmlRspackPluginOptions } from '@rspack/core';
 
 export interface MeteorRspackConfig extends _RspackConfig {
   meteor?: {
@@ -34,3 +35,15 @@ export type ConfigFactory = (
 export function defineConfig(
   factory: ConfigFactory
 ): ReturnType<typeof _rspackDefineConfig>;
+
+/**
+ * A plugin that composes the original HtmlRspackPlugin from @rspack/core
+ * and RspackMeteorHtmlPlugin, in that order.
+ */
+export class HtmlRspackPlugin {
+  constructor(options?: HtmlRspackPluginOptions);
+  apply(compiler: any): void;
+}
+
+// Re-export HtmlRspackPluginOptions from @rspack/cli
+export { HtmlRspackPluginOptions };

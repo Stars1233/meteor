@@ -1,4 +1,5 @@
 import { defineConfig as rspackDefineConfig } from '@rspack/cli';
+import HtmlRspackPlugin from './plugins/HtmlRspackPlugin.js';
 
 /**
  * @typedef {import('rspack').Configuration & {
@@ -21,3 +22,6 @@ export function defineConfig(factory) {
 
 // Export our helper plus passthrough
 export default defineConfig;
+
+// Export the HtmlRspackPlugin
+export { HtmlRspackPlugin };
