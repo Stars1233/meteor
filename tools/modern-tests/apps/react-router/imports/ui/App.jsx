@@ -5,6 +5,7 @@ import {
   Route,
   createRoutesFromElements,
 } from "react-router-dom";
+import "./Global.less";
 
 // Dynamically import components
 const Home = lazy(() =>

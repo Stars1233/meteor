@@ -25,6 +25,15 @@ export default defineConfig(Meteor => {
           ],
           type: 'javascript/auto',
         },
+        {
+          test: /\.less$/,
+          use: [
+            {
+              loader: 'less-loader',
+            },
+          ],
+          type: 'css/auto',
+        },
       ],
     },
   };

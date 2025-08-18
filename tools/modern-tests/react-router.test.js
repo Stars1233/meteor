@@ -9,7 +9,7 @@ import {
 import { testMeteorBundler, testMeteorRspackBundler } from './test-helpers';
 import fs from 'fs-extra';
 import path from 'path';
-import { assertMeteorReactApp } from "./assertions";
+import { assertBodyStyles, assertMeteorReactApp } from "./assertions";
 
 describe('ReactRouter App Bundling /', () => {
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
@@ -25,6 +25,10 @@ describe('ReactRouter App Bundling /', () => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
         await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
         await assert404Page(port);
+        // Less styles support
+        await assertBodyStyles({
+          'white-space': 'break-spaces',
+        });
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
@@ -34,6 +38,10 @@ describe('ReactRouter App Bundling /', () => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
         await waitForMeteorOutput(result.outputLines, /.*babel-plugin-react-compiler.*/);
         await assert404Page(port, { isProductionMode: true });
+        // Less styles support
+        await assertBodyStyles({
+          'white-space': 'break-spaces',
+        });
       },
       afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR to not be enabled in production-like mode
