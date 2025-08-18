@@ -15,6 +15,7 @@ const {
   isMeteorAppRun,
   isMeteorAppBuild,
   isMeteorAppDebug,
+  isMeteorAppTest,
   isMeteorAppConfigModernVerbose,
   isMeteorBlazeProject,
   isMeteorLessProject,
@@ -139,7 +140,34 @@ export function configureMeteorForRspack() {
     ]),
   ];
 
-  const foldersToIgnore = ['node_modules/**', ...extraFoldersToIgnore];
+
+  const testIgnorePath = `${RSPACK_BUILD_CONTEXT}/${path.dirname(
+    getBuildFilePath({
+      isTest: true,
+    })
+  )}/**`;
+  const otherMainIgnorePath =
+    (isMeteorAppDevelopment() &&
+      `${RSPACK_BUILD_CONTEXT}/${path.dirname(
+        getBuildFilePath({
+          isMain: true,
+          isProduction: true,
+        }),
+      )}/**`) ||
+    `${RSPACK_BUILD_CONTEXT}/${path.dirname(
+      getBuildFilePath({
+        isMain: true,
+        isDevelopment: true,
+      }),
+    )}/**`;
+  const foldersToIgnore = [
+    ...((isMeteorAppTest() && [otherMainIgnorePath]) || [
+      testIgnorePath,
+      otherMainIgnorePath,
+    ]),
+    'node_modules/**',
+    ...extraFoldersToIgnore,
+  ].filter(Boolean);
   const rootFilesToIgnore = [
     ...projectRootFilesAndFolders.files
       .filter(file => !['package.json', '.meteorignore'].includes(file)),
