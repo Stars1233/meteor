@@ -29,6 +29,10 @@ describe('ReactRouter App Bundling /', () => {
         await assertBodyStyles({
           'white-space': 'break-spaces',
         });
+        // TODO assert
+        // await assertMetaTags({
+        //   'theme-color': '#4285f4',
+        // });
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
@@ -42,6 +46,10 @@ describe('ReactRouter App Bundling /', () => {
         await assertBodyStyles({
           'white-space': 'break-spaces',
         });
+        // TODO assert
+        // await assertMetaTags({
+        //   'theme-color': '#4285f4',
+        // });
       },
       afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR to not be enabled in production-like mode

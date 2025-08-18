@@ -241,3 +241,41 @@ export async function assertBodyStyles(expectedStyles, options = {}) {
     ...options
   });
 }
+
+/**
+ * Helper function to assert that meta tags have the expected content
+ * @param {Object} expectedMetaTags - Expected meta tag properties and values as key-value pairs
+ * @param {Object} options - Additional options for assertConsoleEval
+ * @returns {Promise<Object>} - A promise that resolves with the meta tag values
+ * 
+ * @example
+ * // Assert that the theme-color meta tag has the expected value
+ * await assertMetaTags({
+ *   'theme-color': '#4285f4'
+ * });
+ */
+export async function assertMetaTags(expectedMetaTags, options = {}) {
+  console.log(`Asserting meta tags: ${JSON.stringify(expectedMetaTags)}`);
+
+  // Create a JavaScript code string that evaluates the meta tags
+  const code = `
+    (() => {
+      const result = {};
+      ${Object.keys(expectedMetaTags).map(prop => 
+        `// Try to find meta tag by property or name attribute
+        let metaTag = document.querySelector('meta[property="${prop}"]');
+        if (!metaTag) {
+          metaTag = document.querySelector('meta[name="${prop}"]');
+        }
+        result['${prop}'] = metaTag ? metaTag.getAttribute('content') : null;`
+      ).join('\n')}
+      return result;
+    })()
+  `;
+
+  // Use assertConsoleEval to evaluate the code and check the result
+  return await assertConsoleEval(code, expectedMetaTags, { 
+    exactMatch: true,  // We want exact matches for meta tag content
+    ...options
+  });
+}

@@ -36,5 +36,13 @@ export default defineConfig(Meteor => {
         },
       ],
     },
+    plugins: [
+      Meteor.HtmlRspackPlugin({
+        title: 'react-router',
+        meta: {
+          'theme-color': '#4285f4',
+        },
+      }),
+    ],
   };
 });
