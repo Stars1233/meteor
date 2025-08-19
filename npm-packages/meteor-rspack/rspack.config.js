@@ -1,15 +1,15 @@
 import { DefinePlugin, BannerPlugin } from '@rspack/core';
 import fs from 'fs';
 import { createRequire } from 'module';
+import { inspect } from 'node:util';
 import path from 'path';
 import { merge } from 'webpack-merge';
-import { inspect } from "node:util";
 
-import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
-import { getMeteorAppSwcConfig } from "./lib/swc.js";
 import { mergeSplitOverlap } from './lib/mergeRulesSplitOverlap.js';
-import CleanBuildAssetsPlugin from "./plugins/CleanBuildAssetsPlugin.js";
+import { getMeteorAppSwcConfig } from './lib/swc.js';
+import CleanBuildAssetsPlugin from './plugins/CleanBuildAssetsPlugin.js';
 import HtmlRspackPlugin from './plugins/HtmlRspackPlugin.js';
+import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
 
 const require = createRequire(import.meta.url);
 
@@ -46,7 +46,13 @@ function createCacheStrategy(mode) {
 }
 
 // SWC loader rule (JSX/JS)
-function createSwcConfig({ isTypescriptEnabled, isJsxEnabled, isTsxEnabled, externalHelpers, isDevEnvironment }) {
+function createSwcConfig({
+  isTypescriptEnabled,
+  isJsxEnabled,
+  isTsxEnabled,
+  externalHelpers,
+  isDevEnvironment,
+}) {
   const defaultConfig = {
     jsc: {
       baseUrl: process.cwd(),
@@ -122,6 +128,7 @@ export default function (inMeteor = {}, argv = {}) {
   const isReactEnabled = Meteor.isReactEnabled;
   const isTestModule = Meteor.isTestModule;
   const isTestEager = Meteor.isTestEager;
+  const isTestFullApp = Meteor.isTestFullApp;
   const swcExternalHelpers = Meteor.swcExternalHelpers;
   const mode = isProd ? 'production' : 'development';
 
@@ -179,21 +186,22 @@ export default function (inMeteor = {}, argv = {}) {
             <% } %>
           </body>
         `,
-      ...options
+      ...options,
     });
   };
 
   // Set watch options
   const watchOptions = {
     ...defaultWatchOptions,
-    ...isTest && isTestEager && {
-      ignored: [
-        ...defaultWatchOptions.ignored,
-        '**/_build/**',
-        '**/.meteor/local/**',
-        '**/node_modules/**',
-      ],
-    },
+    ...(isTest &&
+      isTestEager && {
+        ignored: [
+          ...defaultWatchOptions.ignored,
+          '**/_build/**',
+          '**/.meteor/local/**',
+          '**/node_modules/**',
+        ],
+      }),
   };
 
   if (Meteor.isDebug || Meteor.isVerbose) {
@@ -235,21 +243,25 @@ export default function (inMeteor = {}, argv = {}) {
       : []),
   ];
 
-  const reactRefreshModule = isReactEnabled ? safeRequire('@rspack/plugin-react-refresh') : null;
+  const reactRefreshModule = isReactEnabled
+    ? safeRequire('@rspack/plugin-react-refresh')
+    : null;
 
   const requireExternalsPlugin = new RequireExternalsPlugin({
     filePath: path.join(buildContext, runPath),
     ...(Meteor.isBlazeEnabled && {
       externals: /\.html$/,
-      isEagerImport: (module) => module.endsWith('.html'),
-      ...isProd && {
+      isEagerImport: module => module.endsWith('.html'),
+      ...(isProd && {
         lastImports: [`./${outputFilename}`],
-      },
+      }),
     }),
     enableGlobalPolyfill: isDevEnvironment,
   });
 
-  const clientNameConfig = `[${isTest && 'test-' || ''}${isTestModule && 'module' || 'client'}-rspack]`;
+  const clientNameConfig = `[${(isTest && 'test-') || ''}${
+    (isTestModule && 'module') || 'client'
+  }-rspack]`;
   // Base client config
   let clientConfig = {
     name: clientNameConfig,
@@ -293,9 +305,13 @@ export default function (inMeteor = {}, argv = {}) {
     resolve: { extensions, alias },
     externals,
     plugins: [
-      ...(isProd ? [
-        new CleanBuildAssetsPlugin({ verbose: Meteor.isDebug || Meteor.isVerbose }),
-      ] : []),
+      ...(isProd
+        ? [
+            new CleanBuildAssetsPlugin({
+              verbose: Meteor.isDebug || Meteor.isVerbose,
+            }),
+          ]
+        : []),
       ...[
         ...(isReactEnabled && reactRefreshModule && isDevEnvironment
           ? [new reactRefreshModule()]
@@ -325,7 +341,7 @@ export default function (inMeteor = {}, argv = {}) {
         ...(Meteor.isBlazeEnabled && { hot: false }),
         port: Meteor.devServerPort || 8080,
         devMiddleware: {
-          writeToDisk: (filePath) =>
+          writeToDisk: filePath =>
             /\.(html)$/.test(filePath) && !filePath.includes('.hot-update.'),
         },
       },
@@ -333,15 +349,21 @@ export default function (inMeteor = {}, argv = {}) {
     experiments: { css: true },
   };
 
-  const serverNameConfig = `[${isTest && 'test-' || ''}${isTestModule && 'module' || 'server'}-rspack]`;
+  const serverEntry =
+    isTest && isTestEager && isTestFullApp
+      ? 'node_modules/@meteorjs/rspack/entries/eager-app-tests.js'
+      : isTest && isTestEager
+      ? 'node_modules/@meteorjs/rspack/entries/eager-tests.js'
+      : path.resolve(process.cwd(), buildContext, entryPath);
+  const serverNameConfig = `[${(isTest && 'test-') || ''}${
+    (isTestModule && 'module') || 'server'
+  }-rspack]`;
   // Base server config
   let serverConfig = {
     name: serverNameConfig,
     target: 'node',
     mode,
-    entry: isTest && isTestEager
-      ? "node_modules/@meteorjs/rspack/entries/eager-tests.js"
-      : path.resolve(process.cwd(), buildContext, entryPath),
+    entry: serverEntry,
     output: {
       path: serverOutputDir,
       filename: () => `../${buildContext}/${outputPath}`,
@@ -370,16 +392,16 @@ export default function (inMeteor = {}, argv = {}) {
       new DefinePlugin(
         isTest && (isTestModule || isTestEager)
           ? {
-              "Meteor.isTest": JSON.stringify(isTest),
-              "Meteor.isDevelopment": JSON.stringify(isDev),
+              'Meteor.isTest': JSON.stringify(isTest),
+              'Meteor.isDevelopment': JSON.stringify(isDev),
             }
           : {
-              "Meteor.isClient": JSON.stringify(false),
-              "Meteor.isServer": JSON.stringify(true),
-              "Meteor.isTest": JSON.stringify(isTest),
-              "Meteor.isDevelopment": JSON.stringify(isDev),
-              "Meteor.isProduction": JSON.stringify(isProd),
-            }
+              'Meteor.isClient': JSON.stringify(false),
+              'Meteor.isServer': JSON.stringify(true),
+              'Meteor.isTest': JSON.stringify(isTest),
+              'Meteor.isDevelopment': JSON.stringify(isDev),
+              'Meteor.isProduction': JSON.stringify(isProd),
+            },
       ),
       new BannerPlugin({
         banner: bannerOutput,
@@ -389,9 +411,8 @@ export default function (inMeteor = {}, argv = {}) {
     ],
     watchOptions,
     devtool: isDevEnvironment || isTest ? 'source-map' : 'hidden-source-map',
-    ...((isDevEnvironment || isTest && !isTestEager) &&
-      createCacheStrategy(mode)
-    ),
+    ...((isDevEnvironment || (isTest && !isTestEager)) &&
+      createCacheStrategy(mode)),
   };
 
   // Load and apply project-level overrides for the selected build

@@ -1,7 +1,7 @@
 {
   const ctx = import.meta.webpackContext('/', {
     recursive: true,
-    regExp: /\.(?:test|spec)s?\.[^.]+$/,
+    regExp: /\.app-?(?:test|spec)s?\.[^.]+$/,
     exclude: /(^|\/)(node_modules|\.meteor|_build)(\/|$)/,
     mode: 'eager',
   });

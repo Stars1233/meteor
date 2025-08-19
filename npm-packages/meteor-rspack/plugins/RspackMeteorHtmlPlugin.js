@@ -13,7 +13,7 @@ export function loadHtmlRspackPluginFromHost(compiler) {
 
 /**
  * Rspack plugin to:
- * 1. Remove the injected `client-rspack.js` script tag
+ * 1. Remove the injected `*-rspack.js` script tags
  * 2. Strip <!doctype> and <html>…</html> wrappers from the final HTML
  */
 export default class RspackMeteorHtmlPlugin {
@@ -26,11 +26,11 @@ export default class RspackMeteorHtmlPlugin {
     compiler.hooks.compilation.tap('RspackMeteorHtmlPlugin', compilation => {
       const hooks = HtmlRspackPlugin.getCompilationHooks(compilation);
 
-      // remove <script src=".../client-rspack.js">
+      // remove <script src="...*-rspack.js">
       hooks.alterAssetTags.tap('RspackMeteorHtmlPlugin', data => {
         data.assetTags.scripts = data.assetTags.scripts.filter(t => {
           const src = t.attributes?.src || t.asset || '';
-          return !(t.tagName === 'script' && /(?:^|\/)client-rspack\.js$/i.test(src));
+          return !(t.tagName === 'script' && /(?:^|\/)[^\/]*-rspack\.js$/i.test(src));
         });
       });
 
