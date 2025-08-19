@@ -60,6 +60,7 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
       cwd: appDir,
       versionRequirement: dep.version,
       semverCondition: dep.semverCondition || 'gte',
+      existenceOnly: dep.existenceOnly,
     })
   );
 

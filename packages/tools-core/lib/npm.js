@@ -130,7 +130,8 @@ export function installNpmDependency(dependencies, options = {}) {
  * @param {string} [options.versionRequirement] - The version requirement to check against (e.g., '6.0.0')
  * @param {string} [options.semverCondition='gte'] - The semver condition to use (e.g., 'gte', 'lt', 'eq')
  * @param {boolean} [options.checkNodeModules] - Whether to check in node_modules first (defaults to false)
- * @returns {boolean} True if the dependency version meets the condition, false otherwise
+ * @param {boolean} [options.existenceOnly] - If true, only checks if the dependency exists without version validation
+ * @returns {boolean} True if the dependency version meets the condition (or exists if existenceOnly is true), false otherwise
  */
 export function checkNpmDependencyVersion(dependency, options = {}) {
   const semver = require('semver');
@@ -140,6 +141,14 @@ export function checkNpmDependencyVersion(dependency, options = {}) {
 
   if (!dependency) {
     throw new Error('Dependency name must be specified');
+  }
+
+  // If existenceOnly is true, delegate to checkNpmDependencyExists
+  if (options.existenceOnly) {
+    return checkNpmDependencyExists(dependency, {
+      cwd,
+      checkNodeModules: options.checkNodeModules
+    });
   }
 
   if (!versionRequirement) {
