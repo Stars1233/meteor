@@ -98,6 +98,16 @@ function createCoffeescriptConfig({ swcConfig }) {
   };
 }
 
+// Keep files outside of build folders
+function keepOutsideBuild() {
+  return (p) => {
+    const normalized = '/' + path.normalize(p).replaceAll(path.sep, '/').replace(/^\/+/, '');
+    const isInBuildRoot = /\/_build(\/|$)/.test(normalized);
+    const isInBuildStar = /\/_build-[^/]+(\/|$)/.test(normalized);
+    return !(isInBuildRoot || isInBuildStar); // true => KEEP, false => DELETE
+  };
+}
+
 // Watch options shared across both builds
 const defaultWatchOptions = {
   ignored: ['**/.meteor/local/**', '**/dist/**'],
@@ -282,7 +292,7 @@ export default function (inMeteor = {}, argv = {}) {
       cssChunkFilename: `${assetsContext}/[id]${
         isProd ? '.[contenthash]' : ''
       }.css`,
-      clean: isProd,
+      ...(isProd && { clean: { keep: keepOutsideBuild() } }),
     },
     optimization: {
       usedExports: true,
@@ -371,7 +381,7 @@ export default function (inMeteor = {}, argv = {}) {
       libraryTarget: 'commonjs',
       chunkFilename: `${bundlesContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
-      clean: isProd,
+      ...(isProd && { clean: { keep: keepOutsideBuild() } }),
     },
     optimization: { usedExports: true },
     module: {
