@@ -11,14 +11,21 @@
   "dependencies": {
     "@babel/runtime": "^7.23.5",
     "@swc/helpers": "^0.5.17",
-    "@tailwindcss/postcss": "^4.1.12",
     "meteor-node-stubs": "^1.2.12",
+    "vue": "^3.3.9",
+    "vue-meteor-tracker": "^3.0.0-beta.7",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@meteorjs/rspack": "^0.0.32",
+    "@rspack/cli": "^1.4.8",
+    "@rspack/core": "^1.4.8",
+    "@tailwindcss/postcss": "^4.1.12",
+    "@types/meteor": "^2.9.7",
     "postcss": "^8.5.6",
     "postcss-loader": "^8.1.1",
-    "vue": "^3.5.18",
-    "vue-loader": "^17.4.2",
-    "vue-meteor-tracker": "^3.0.0-beta.7",
-    "vue-router": "^4.5.1"
+    "tailwindcss": "^4.1.12",
+    "vue-loader": "^17.4.2"
   },
   "meteor": {
     "modern": true,

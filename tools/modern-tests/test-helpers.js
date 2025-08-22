@@ -4,23 +4,30 @@
  */
 
 import {
-  killProcessByPort,
-  setupMeteorApp,
-  runMeteorApp,
-  cleanupTempDir,
-  killMeteorProcess,
-  runMeteorCommand,
-  wait,
   appendFileContent,
-  waitForMeteorOutput,
-  waitForPlaywrightConsole,
+  buildMeteorApp,
+  cleanupTempDir,
+  createMeteorApp,
+  killMeteorProcess,
+  killProcessByPort,
+  runMeteorApp,
+  runMeteorCommand,
   runMeteorTests,
-  buildMeteorApp
+  setupMeteorApp,
+  wait,
+  waitForMeteorOutput,
+  waitForPlaywrightConsole
 } from "./helpers";
-import { assertMeteorReactApp, assertRspackScriptTag, assertFileExist, assertBodyStyles } from './assertions';
-import fs from 'fs-extra';
-import path from 'path';
-import execa from 'execa';
+import {
+  assertBodyStyles,
+  assertFileExist,
+  assertMeteorApp,
+  assertMeteorReactApp,
+  assertRspackScriptTag
+} from "./assertions";
+import fs from "fs-extra";
+import path from "path";
+import execa from "execa";
 
 /**
  * Helper function to set up and run tests for the Meteor Bundler
@@ -533,6 +540,211 @@ export function testMeteorRspackBundler(options) {
 
         // Run custom assertions if provided
         if (customAssertions && customAssertions.afterBuild) {
+          await customAssertions.afterBuild({ tempDir, buildOutputDir, result });
+        }
+      } finally {
+        // Clean up the build output directory
+        await cleanupTempDir(buildOutputDir);
+      }
+    });
+  };
+}
+
+/**
+ * Helper function to test a Meteor skeleton
+ * @param {Object} options - Options for the test
+ * @param {string} options.skeletonName - Name of the skeleton to test (e.g., 'react', 'apollo', 'vue')
+ * @param {string} options.title - Title to use for assertions (defaults to skeletonName if not provided)
+ * @param {number} options.port - Port to run the app on
+ * @param {Object} options.filePaths - File paths for the app
+ * @param {string} options.filePaths.client - Client file path (e.g., 'client/main.jsx')
+ * @param {string} options.filePaths.server - Server file path (e.g., 'server/main.js')
+ * @param {string} options.filePaths.test - Test file path (e.g., 'tests/main.js')
+ * @param {Object} options.customAssertions - Custom assertions to run after each step
+ * @param {Function} options.customAssertions.afterCreate - Custom assertions to run after creating the app
+ * @param {Function} options.customAssertions.afterRun - Custom assertions to run after running the app
+ * @param {Function} options.customAssertions.afterRunProduction - Custom assertions to run after running the app in production mode
+ * @param {Function} options.customAssertions.afterTestOnce - Custom assertions to run after running tests once
+ * @param {Function} options.customAssertions.afterBuild - Custom assertions to run after building the app
+ * @returns {Function} - Jest test function
+ */
+export function testMeteorSkeleton(options) {
+  const {
+    skeletonName,
+    title = skeletonName, // Default to skeletonName if title is not provided
+    port,
+    filePaths = {
+      client: "client/main.jsx",
+      server: "server/main.js",
+      test: "tests/main.js"
+    },
+    customAssertions = {},
+    checkBodyStyles = true,
+  } = options;
+
+  return () => {
+    let meteorProcess;
+    let tempDir;
+
+    beforeAll(async () => {
+      // Ensure any process on the port is killed
+      await killProcessByPort(port);
+    });
+
+    afterAll(async () => {
+      // Clean up the temporary directory
+      if (tempDir) {
+        await cleanupTempDir(tempDir);
+      }
+    });
+
+    test(`"meteor create --${skeletonName}" / should create a new Meteor ${skeletonName} app`, async () => {
+      // Create a new Meteor app with the specified skeleton
+      const result = await createMeteorApp(skeletonName, skeletonName);
+      tempDir = result.tempDir;
+      const newAppMeteorProcess = result.meteorProcess;
+
+      // Wait for the process to complete
+      await newAppMeteorProcess;
+
+      // Check if the app directory exists
+      const appDirExists = await fs.pathExists(tempDir);
+      expect(appDirExists).toBe(true);
+
+      // Check if package.json exists
+      const packageJsonPath = path.join(tempDir, "package.json");
+      const packageJsonExists = await fs.pathExists(packageJsonPath);
+      expect(packageJsonExists).toBe(true);
+
+      // Run custom assertions if provided
+      if (customAssertions.afterCreate) {
+        await customAssertions.afterCreate({ tempDir, packageJsonPath });
+      }
+    });
+
+    test(`"meteor run" / should run the ${skeletonName} app`, async () => {
+      // Run the newly created app
+      const result = await runMeteorApp(tempDir, port, {
+        waitForOutput: "=> App running at:"
+      });
+      meteorProcess = result.meteorProcess;
+
+      // Wait for a margin
+      await wait(500);
+
+      // Assert that the Meteor app is running correctly
+      await assertMeteorApp(port, { title });
+
+      if (checkBodyStyles) {
+        // Assert that the body has the expected CSS styles
+        await assertBodyStyles({
+          "padding": "10px",
+          "font-family": "sans-serif"
+        });
+      }
+
+      // Run custom assertions if provided
+      if (customAssertions.afterRun) {
+        await customAssertions.afterRun({ tempDir, port, meteorProcess, result });
+      }
+
+      // Kill the meteor process
+      await killMeteorProcess(meteorProcess);
+
+      // Ensure any process on the port is killed
+      await killProcessByPort(port);
+    });
+
+    test(`"meteor run --production" / should run the ${skeletonName} app in production mode`, async () => {
+      // Run the app in production mode
+      const result = await runMeteorApp(tempDir, port, {
+        waitForOutput: "=> App running at:",
+        commandOptions: ["--production"]
+      });
+      meteorProcess = result.meteorProcess;
+
+      // Wait for a margin
+      await wait(500);
+
+      // Assert that the Meteor app is running correctly
+      await assertMeteorApp(port, { title });
+
+      if (checkBodyStyles) {
+        // Assert that the body has the expected CSS styles
+        await assertBodyStyles({
+          "padding": "10px",
+          "font-family": "sans-serif"
+        });
+      }
+
+      // Run custom assertions if provided
+      if (customAssertions.afterRunProduction) {
+        await customAssertions.afterRunProduction({ tempDir, port, meteorProcess, result });
+      }
+
+      // Kill the meteor process
+      await killMeteorProcess(meteorProcess);
+
+      // Ensure any process on the port is killed
+      await killProcessByPort(port);
+    });
+
+    test(`"meteor test --once" / should run tests once for the ${skeletonName} app`, async () => {
+      // Install playwright as a dev dependency
+      console.log("Installing playwright as a dev dependency...");
+      await execa.command("meteor npm i --save-dev playwright", {
+        cwd: tempDir,
+        stdio: "inherit",
+        shell: true
+      });
+
+      // Run tests once for the app
+      const result = await runMeteorTests(tempDir, port, {
+        waitForOutput: "=> App running at:",
+        commandOptions: ["--once"],
+        checkTestResults: true
+      });
+
+      // Wait for a margin
+      await wait(500);
+
+      // Run custom assertions if provided
+      if (customAssertions.afterTestOnce) {
+        await customAssertions.afterTestOnce({ tempDir, port, result });
+      }
+
+      // Ensure any process on the port is killed
+      await killProcessByPort(port);
+    });
+
+    test(`"meteor build" / should build the ${skeletonName} app`, async () => {
+      // Build the app
+      const { buildOutputDir, processResult: result } = await buildMeteorApp(tempDir, {
+        commandOptions: ["--directory"],
+        captureOutput: true
+      });
+
+      // Wait for a margin
+      await wait(500);
+
+      try {
+        // Assert that the build output directory exists
+        const buildDirExists = await fs.pathExists(buildOutputDir);
+        expect(buildDirExists).toBe(true);
+
+        // Assert that the main.js file exists
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/main.js`)).toBe(true);
+
+        // Assert that the server/package.json file exists
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/server/package.json`)).toBe(true);
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/server/program.json`)).toBe(true);
+
+        // Assert that the [web.browser|web.browser.legacy]/program.json file exists
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser/program.json`)).toBe(true);
+        expect(await fs.pathExists(`${buildOutputDir}/bundle/programs/web.browser.legacy/program.json`)).toBe(true);
+
+        // Run custom assertions if provided
+        if (customAssertions.afterBuild) {
           await customAssertions.afterBuild({ tempDir, buildOutputDir, result });
         }
       } finally {

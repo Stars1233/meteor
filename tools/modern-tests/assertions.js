@@ -16,7 +16,7 @@ import { wait } from "./helpers";
  */
 export async function assertMeteorApp(port, options = {}) {
   // Extract options with default values
-  const { title: inTitle, h1: inH1 } = options;
+  const { title: inTitle, h1: inH1 = "Welcome to Meteor!" } = options;
 
   // Navigate to the app
   await page.goto(`http://localhost:${port}`);

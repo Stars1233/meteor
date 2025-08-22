@@ -17,6 +17,13 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
+  "devDependencies": {
+    "@graphql-tools/webpack-loader": "^7.0.0",
+    "@meteorjs/rspack": "^0.0.32",
+    "@rspack/cli": "^1.4.8",
+    "@rspack/core": "^1.4.8",
+    "@rspack/plugin-react-refresh": "^1.4.3"
+  },
   "meteor": {
     "mainModule": {
       "client": "client/main.jsx",
