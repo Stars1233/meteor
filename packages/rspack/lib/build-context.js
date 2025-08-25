@@ -433,7 +433,9 @@ import '../../${config?.entryFile}';`;
 
   if (config?.outputFile &&
     (role === FILE_ROLE.build || config?.isProduction ||
-       (role === FILE_ROLE.run && (config?.isServer || config?.isTest)))) {
+      (role === FILE_ROLE.run &&
+        (config?.isServer || config?.isTest || config?.isNative)))
+  ) {
     return `/* Link to ⚡ Rspack ${capitalizeFirstLetter(side)} App */
 ${
   (isMeteorBlazeProject() && config?.isClient && '// In Blaze, import happens last so HTML files preload first') ||
