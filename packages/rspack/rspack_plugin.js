@@ -43,7 +43,7 @@ const {
 
 const {
   setupCompilationTracking,
-  waitForFirstCompilation
+  waitForFirstCompilation,
 } = require('./lib/compilation');
 
 const {
@@ -62,6 +62,7 @@ const {
   isMeteorAppProduction,
   isMeteorAppDebug,
   isMeteorAppConfigModernVerbose,
+  isMeteorAppNative,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -123,7 +124,7 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
       } = setupCompilationTracking();
 
       // For 'run' command, start Rspack in appropriate modes with distinct callbacks
-      if (isMeteorAppDevelopment()) {
+      if (isMeteorAppDevelopment() || !isMeteorAppNative()) {
         startRspackClientServe({ onCompile: onCompileClient });
         startRspackServerWatch({ onCompile: onCompileServer });
       } else if (isMeteorAppProduction()) {

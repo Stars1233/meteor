@@ -184,6 +184,32 @@ export function isMeteorAppTestWatch() {
 }
 
 /**
+ * Check if the current Meteor current command is running Android.
+ * @returns {boolean}
+ */
+export function isMeteorAppNativeAndroid() {
+  return Package?.meteor?.global?.currentCommand?.options?.['android-device'] ||
+    Package?.meteor?.global?.currentCommand?.options?.['android'];
+}
+
+/**
+ * Check if the current Meteor current command is running iOS.
+ * @returns {boolean}
+ */
+export function isMeteorAppNativeIos() {
+  return Package?.meteor?.global?.currentCommand?.options?.['ios-device'] ||
+    Package?.meteor?.global?.currentCommand?.options?.['ios'];
+}
+
+/**
+ * Checks if the current Meteor command is running native.
+ * @returns {boolean}
+ */
+export function isMeteorAppNative() {
+  return isMeteorAppNativeAndroid() || isMeteorAppNativeIos();
+}
+
+/**
  * Checks if the Meteor application is running in development mode.
  * @returns {boolean} True if the application is in development mode, false otherwise.
  */
