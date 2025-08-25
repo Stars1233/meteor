@@ -124,10 +124,10 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
       } = setupCompilationTracking();
 
       // For 'run' command, start Rspack in appropriate modes with distinct callbacks
-      if (isMeteorAppDevelopment() || !isMeteorAppNative()) {
+      if (isMeteorAppDevelopment() && !isMeteorAppNative()) {
         startRspackClientServe({ onCompile: onCompileClient });
         startRspackServerWatch({ onCompile: onCompileServer });
-      } else if (isMeteorAppProduction()) {
+      } else if (isMeteorAppProduction() || isMeteorAppNative()) {
         runRspackBuild({
           isClient: true,
           isServer: false,
