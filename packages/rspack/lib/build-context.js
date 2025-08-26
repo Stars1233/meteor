@@ -497,6 +497,79 @@ ${importContent}
 }
 
 /**
+ * Cleans the build context files of the current environment
+ * Removes all build files and directories for the current environment
+ * Also cleans _build-* files from public and private folders
+ * @returns {void}
+ */
+export function cleanBuildContextFiles() {
+  const appDir = getMeteorAppDir();
+  const buildContextPath = path.join(appDir, RSPACK_BUILD_CONTEXT);
+
+  // Only proceed if the build context directory exists
+  if (!fs.existsSync(buildContextPath)) {
+    return;
+  }
+
+  // Get current environment
+  const env = {
+    ...(isMeteorAppDevelopment() ? { isDevelopment: true } : { isProduction: true }),
+    isNative: isMeteorAppNative(),
+  };
+
+  try {
+    // Clean main module directories
+    const mainClientPath = path.dirname(path.join(buildContextPath, getBuildFilePath({ isMain: true, isClient: true, ...env })));
+    const mainServerPath = path.dirname(path.join(buildContextPath, getBuildFilePath({ isMain: true, isServer: true, ...env })));
+
+    // Clean test module directories if they exist
+    const testModulePath = path.dirname(path.join(buildContextPath, getBuildFilePath({ isTest: true, isTestModule: true })));
+    const testClientPath = path.dirname(path.join(buildContextPath, getBuildFilePath({ isTest: true, isClient: true })));
+    const testServerPath = path.dirname(path.join(buildContextPath, getBuildFilePath({ isTest: true, isServer: true })));
+
+    // Create a Set to ensure unique directory paths
+    const uniqueDirPaths = new Set([mainClientPath, mainServerPath, testModulePath, testClientPath, testServerPath]);
+
+    // Remove directories if they exist
+    [...uniqueDirPaths].forEach(dirPath => {
+      if (fs.existsSync(dirPath)) {
+        fs.rmSync(dirPath, { recursive: true, force: true });
+      }
+    });
+
+    // Clean _build-* files from public and private folders
+    const publicDir = path.join(appDir, 'public');
+    const privateDir = path.join(appDir, 'private');
+
+    [publicDir, privateDir].forEach(dir => {
+      if (fs.existsSync(dir)) {
+        try {
+          const files = fs.readdirSync(dir);
+          files.forEach(file => {
+            if (file.startsWith('_build-')) {
+              const filePath = path.join(dir, file);
+              fs.rmSync(filePath, { recursive: true, force: true });
+            }
+          });
+
+          // Also remove client-rspack.js from public directory if it exists
+          if (dir === publicDir) {
+            const clientRspackPath = path.join(dir, 'client-rspack.js');
+            if (fs.existsSync(clientRspackPath)) {
+              fs.rmSync(clientRspackPath, { force: true });
+            }
+          }
+        } catch (err) {
+          logError(`Failed to clean _build-* files from ${dir}: ${err.message}`);
+        }
+      }
+    });
+  } catch (error) {
+    logError(`Failed to clean build context files: ${error.message}`);
+  }
+}
+
+/**
  * Ensures the rspack.config.js file exists at the project level
  * Creates the file if it doesn't exist with the required template
  * @returns {string} Path to the rspack.config.js file

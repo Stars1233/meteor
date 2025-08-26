@@ -25,6 +25,7 @@ export const DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION = '0.5.17';
  * @property {string} INITIAL_ENTRYPONTS - Key for storing initial entrypoints
  * @property {string} CLIENT_FIRST_COMPILE - Key for tracking client first compilation state
  * @property {string} SERVER_FIRST_COMPILE - Key for tracking server first compilation state
+ * @property {string} BUILD_CONTEXT_FILES_CLEANED - Key for tracking if build context files have been cleaned
  */
 export const GLOBAL_STATE_KEYS = {
   CLIENT_PROCESS: 'rspack.clientProcess',
@@ -35,6 +36,7 @@ export const GLOBAL_STATE_KEYS = {
   INITIAL_ENTRYPONTS: 'meteor.initialEntrypoints',
   CLIENT_FIRST_COMPILE: 'rspack.clientFirstCompile',
   SERVER_FIRST_COMPILE: 'rspack.serverFirstCompile',
+  BUILD_CONTEXT_FILES_CLEANED: 'rspack.buildContextFilesCleaned',
 };
 
 /**

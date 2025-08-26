@@ -28,6 +28,7 @@ const {
 const {
   ensureRspackBuildContextExists,
   ensureRspackConfigExists,
+  cleanBuildContextFiles,
 } = require('./lib/build-context');
 
 const {
@@ -47,6 +48,7 @@ const {
 } = require('./lib/compilation');
 
 const {
+  getGlobalState,
   setGlobalState
 } = require('meteor/tools-core/lib/global-state');
 
@@ -86,6 +88,12 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
       logInfo(`[i] Meteor Npm prefix: ${getNpmCommand([])?.prefix}`);
     }
 
+    // Clean build context files only if they haven't been cleaned yet
+    if (!getGlobalState(GLOBAL_STATE_KEYS.BUILD_CONTEXT_FILES_CLEANED)) {
+      cleanBuildContextFiles();
+      setGlobalState(GLOBAL_STATE_KEYS.BUILD_CONTEXT_FILES_CLEANED, true);
+    }
+
     // Ensure Rspack is installed
     await ensureRspackInstalled();
 
@@ -93,7 +101,6 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
     if (checkReactInstalled()) {
       await ensureRspackReactInstalled();
     }
-
 
     // Ensure the Rspack build context directory exists
     ensureRspackBuildContextExists();
