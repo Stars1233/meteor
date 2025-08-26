@@ -21,7 +21,7 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@meteorjs/rspack": "^0.0.33",
+    "@meteorjs/rspack": "^0.0.34",
     "@rspack/cli": "^1.4.8",
     "@rspack/core": "^1.4.8",
     "@rspack/plugin-react-refresh": "^1.4.3",
