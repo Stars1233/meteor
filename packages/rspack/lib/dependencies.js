@@ -2,7 +2,7 @@
  * @module dependencies
  * @description Functions for managing dependencies for Rspack plugin
  */
-import { DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION } from "./constants";
+import { DEFAULT_METEOR_RSPACK_REACT_REFRESH_VERSION, DEFAULT_METEOR_RSPACK_SWC_HELPERS_VERSION } from "./constants";
 
 const {
   getGlobalState,
@@ -167,7 +167,8 @@ export function checkReactInstalled() {
 
 export async function ensureRspackReactInstalled() {
   const dependencies = [
-    { name: '@rspack/plugin-react-refresh', version: DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION, semverCondition: 'gte', dev: true }
+    { name: '@rspack/plugin-react-refresh', version: DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION, semverCondition: 'gte', dev: true },
+    { name: 'react-refresh', version: DEFAULT_METEOR_RSPACK_REACT_REFRESH_VERSION, semverCondition: 'gte', dev: true },
   ];
 
   await ensureDependenciesInstalled(

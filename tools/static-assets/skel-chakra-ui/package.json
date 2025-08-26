@@ -24,7 +24,8 @@
     "@meteorjs/rspack": "^0.0.33",
     "@rspack/cli": "^1.4.8",
     "@rspack/core": "^1.4.8",
-    "@rspack/plugin-react-refresh": "^1.4.3"
+    "@rspack/plugin-react-refresh": "^1.4.3",
+    "react-refresh": "^0.17.0"
   },
   "meteor": {
     "mainModule": {
