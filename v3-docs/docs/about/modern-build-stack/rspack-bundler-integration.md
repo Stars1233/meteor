@@ -50,7 +50,7 @@ if (condition) {
 }
 ```
 
-Refer to the Meteor migration guide to ensure your app code has no nested imports.
+[Refer to the Meteor migration guide](#nested-imports) to ensure your app code has no nested imports.
 
 ### Reserve a new build context
 
@@ -158,37 +158,36 @@ Don't confuse nested imports with standardized dynamic imports using `import()` 
 Example with a nested import:
 
 ```javascript
+// import { a as b } from "./c"; // root import
 if (condition) {
-  import { a as b } from "./c";
-  console.log(b);
-}
-```
-
-Without a nested import (moved to top):
-
-``` javascript
-import { a as b } from "./c";
-
-if (condition) {
+  import { a as b } from "./c"; // nested import
   console.log(b);
 }
 ```
 
 For background, see: [Why nested import](https://github.com/benjamn/reify/blob/main/WHY_NEST_IMPORTS.md).
 
-With verbose mode in the Meteor modern config, you can spot fallbacks caused by nested imports in your app code and prepare it to be handled by Rspack.
+To use Rspack, migrate your nested imports to a standard form. To identify and fix nested imports in your project, [use verbose mode in Meteor 3.3’s modern transpiler](./meteor-bundler-optimizations.md#optimize-swc-and-handle-fallbacks). Enable it with:
 
 ```json  
 "meteor": {
   "modern": {
-	"verbose": true
+    "verbose": true
   }
 }
 ```
 
-The only fallbacks you need to fix are these:
+When you run your app, `[Transpiler]` logs will show each file. Focus on `(app)` files that fail with messages like:
 
-Nested imports isn’t standard, most modern projects use other deferred loading methods. Move imports to the top, or use require or dynamic imports. Let Rspack handle files to speed builds and enable modern features. The choice is up to the devs. Some Meteor devs use nested imports for valid reasons. You can opt out of Rspack and still get build speed gains from Meteor bundler optimizations.
+`Error: 'import' and 'export' cannot be used outside of module code`
+
+![](https://forums.meteor.com/uploads/default/original/3X/e/1/e1a2c285284f82ab736bcada647d88bd4fa8d3ec.png)
+
+**Fix nested imports by moving them to the top of the file, or by replacing them with require or dynamic import.**
+
+You can skip migrating `(package)` code with nested imports. Meteor packages are still handled by the Meteor bundler in Rspack integration, but your app code is fully delegated to Rspack and must use standard syntax.
+
+Nested imports isn’t standard, most modern projects use other deferred loading methods. Let Rspack handle files to speed builds and enable modern features. The choice is up to the devs. Some Meteor devs use nested imports for valid reasons. You can opt out of Rspack and still get build speed gains from Meteor bundler optimizations.
 
 :::info
 With Meteor–Rspack integration, you can still use nested imports if they are defined in Meteor Atmosphere packages. These will be accepted without any breaking changes.
