@@ -206,7 +206,7 @@ You can manage connected devices in Android Studio and Xcode.
 
 Hot Code Push (HCP) lets the client automatically get the latest version when code changes are detected. This improves development with live reloads and ensures production apps receive updates without republishing to the stores.
 
-For development, enable HCP by starting the application server with the --mobile-server option.
+For development, enable HCP by starting the application server with the `--mobile-server` option.
 
 - On an emulator,
   - Run: `meteor run android --mobile-server 10.0.2.2:3000`
