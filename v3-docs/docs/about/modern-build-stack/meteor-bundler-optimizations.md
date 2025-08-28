@@ -28,7 +28,7 @@ Add this to your app’s `package.json`:
 
 This enables all Meteor bundler optimizations, with SWC adoption as the main highlight.
 
-### Requirements
+## Requirements
 
 **Meteor Bundler optimizations are backward compatible**, meaning enabling modern will not introduce breaking changes to your app’s development experience.
 

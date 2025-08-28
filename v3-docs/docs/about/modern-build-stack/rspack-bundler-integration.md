@@ -42,7 +42,7 @@ In Meteor, set this in `package.json`:
 }
 ```
 
-Check out the Meteor migration guide on describing entry points in your app.
+[Check out the Meteor migration guide](#entry-points) on describing entry points in your app.
 
 ### Remove nested imports
 
