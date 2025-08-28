@@ -1,3 +1,8 @@
+---
+outline:
+  level: [2, 4]
+---
+
 # Meteor Bundler Optimizations
 
 The Meteor bundler is made up of key components that enhance your experience in development and production. We worked on each to bring all possible optimizations. As a result:

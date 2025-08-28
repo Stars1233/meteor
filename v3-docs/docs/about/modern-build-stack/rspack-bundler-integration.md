@@ -1,3 +1,8 @@
+---
+outline:
+  level: [2, 3]
+---
+
 # Rspack Bundler Integration
 
 Rspack integration updates Meteor apps to modern bundling standards, offering faster builds, quicker reloads, smaller bundles, and a smoother development experience with built-in features and configurations.
