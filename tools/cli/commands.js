@@ -703,6 +703,7 @@ export const AVAILABLE_SKELETONS = [
   "tailwind",
   "chakra-ui",
   "solid",
+  "legacy",
 ];
 
 const SKELETON_INFO = {
@@ -740,6 +741,7 @@ main.registerCommand({
     tailwind: { type: Boolean },
     'chakra-ui': { type: Boolean },
     solid: { type: Boolean },
+    legacy: { type: Boolean },
     prototype: { type: Boolean },
     from: { type: String },
   },
