@@ -163,8 +163,7 @@ export function isMeteorAppBuild() {
  * @returns {boolean} True if the current command is 'test', false otherwise.
  */
 export function isMeteorAppTest() {
-  return Package?.meteor?.global?.currentCommand?.name === 'test'
-    || Package?.meteor?.global?.currentCommand?.name === 'test-packages';
+  return Package?.meteor?.global?.currentCommand?.name === 'test';
 }
 
 /**
@@ -403,4 +402,12 @@ export function isMeteorScssProject() {
  */
 export function isMeteorBundleVisualizerProject() {
   return getMeteorAppPackages().includes('bundle-visualizer');
+}
+
+/**
+ * Checks if the current Meteor command is 'test-packages'.
+ * @returns {boolean} True if the current command is 'test-packages', false otherwise.
+ */
+export function isMeteorPackagesTest() {
+  return Package?.meteor?.global?.currentCommand?.name === 'test-packages';
 }

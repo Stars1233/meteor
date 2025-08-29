@@ -66,7 +66,6 @@ const {
   isMeteorAppDebug,
   isMeteorAppConfigModernVerbose,
   isMeteorAppNative,
-  isMeteorBundleVisualizerProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
