@@ -111,7 +111,7 @@ export function configureMeteorForRspack() {
     ...ignoredDirs
       .filter(
         dir =>
-          !['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT].includes(dir),
+          !['public', 'private', '.meteor', 'packages', RSPACK_BUILD_CONTEXT].includes(dir),
       )
       .map(dir => `${dir}/**`),
   ];
@@ -165,7 +165,7 @@ export function configureMeteorForRspack() {
   ].filter(Boolean);
   const rootFilesToIgnore = [
     ...projectRootFilesAndFolders.files.filter(
-      file => !['package.json', '.meteorignore'].includes(file),
+      file => !['package.json', '.meteorignore', 'tsconfig.json'].includes(file),
     ),
   ];
   const filesToIgnore = [...rootFilesToIgnore, ...extraFilesToIgnore];
