@@ -3435,7 +3435,7 @@ const setupBenchmarkSuite = async (profilingPath) => {
   process.env.GIT_TERMINAL_PROMPT = 0;
 
   const repoUrl = "https://github.com/meteor/performance";
-  const branch = "v3.3.0";
+  const branch = "v3.4.0";
 
   let tarFailed = false;
 
