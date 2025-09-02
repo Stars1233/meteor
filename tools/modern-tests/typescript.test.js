@@ -2,6 +2,7 @@ import {
   waitForMeteorOutput,
 } from "./helpers";
 import { testMeteorRspackBundler } from './test-helpers';
+import { assertFileExist } from "./assertions";
 
 describe('TypeScript App Bundling /', () => {
   describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
@@ -14,9 +15,10 @@ describe('TypeScript App Bundling /', () => {
       testServer: 'tests/server.ts',
     },
     customAssertions: {
-      afterRun: async ({ result }) => {
+      afterRun: async ({ result, tempDir }) => {
         await waitForTypeScriptEnvs(result.outputLines, { isTsxEnabled: true });
         await waitForTypeScriptErrorFree(result.outputLines);
+        await assertFileExist(tempDir, '.meteor/local/types');
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default

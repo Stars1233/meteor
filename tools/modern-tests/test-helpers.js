@@ -36,16 +36,23 @@ import waitOn from "wait-on";
  * @param {string} options.appName - Name of the app ('react' or 'typescript')
  * @param {number} options.port - Port to run the app on
  * @param {Function} options.customAssertions - Custom assertions to run after the app is started
+ * @param {Function} options.beforeAllBehavior - Additional behavior to run in beforeAll
+ * @param {Function} options.afterAllBehavior - Additional behavior to run in afterAll
  * @returns {Function} - Jest test function
  */
 export function testMeteorBundler(options) {
-  const { appName, port, customAssertions } = options;
+  const { appName, port, customAssertions, beforeAllBehavior, afterAllBehavior } = options;
 
   return () => {
     let meteorProcess;
     let tempDir;
 
     beforeAll(async () => {
+      // Run additional beforeAll behavior
+      if (beforeAllBehavior) {
+        await beforeAllBehavior({ tempDir, port });
+      }
+
       // Ensure any process on the port is killed
       await killProcessByPort(port);
 
@@ -56,6 +63,11 @@ export function testMeteorBundler(options) {
     afterAll(async () => {
       // Clean up the temporary directory
       await cleanupTempDir(tempDir);
+
+      // Run additional afterAll behavior
+      if (afterAllBehavior) {
+        await afterAllBehavior({ tempDir, port });
+      }
     });
 
     test(`"meteor run" / should start the app`, async () => {
@@ -98,6 +110,8 @@ export function testMeteorBundler(options) {
  * @param {boolean} options.verbose - Whether to enable verbose output (default: true)
  * @param {boolean} options.testFullApp - Whether to run tests with the --full-app flag (default: false)
  * @param {boolean} options.testBundleVisualizer - Whether to run tests with bundle-visualizer in production mode (default: false)
+ * @param {Function} options.beforeAllBehavior - Additional behavior to run in beforeAll
+ * @param {Function} options.afterAllBehavior - Additional behavior to run in afterAll
  * @returns {Function} - Jest test function
  */
 export function testMeteorRspackBundler(options) {
@@ -105,7 +119,7 @@ export function testMeteorRspackBundler(options) {
     appName, 
     port, 
     filePaths = { 
-      client: 'client/main.jsx', 
+      client: 'client/main.jsx',
       server: 'server/main.js',
       test: 'tests/main.js',
       testClient: undefined,
@@ -134,6 +148,9 @@ export function testMeteorRspackBundler(options) {
     testFullApp = false,
     // Option to test with bundle-visualizer in production mode
     testBundleVisualizer = false,
+    // Additional behavior for beforeAll and afterAll
+    beforeAllBehavior,
+    afterAllBehavior,
   } = options;
 
   return () => {
@@ -141,6 +158,11 @@ export function testMeteorRspackBundler(options) {
     let tempDir;
 
     beforeAll(async () => {
+      // Run additional beforeAll behavior
+      if (beforeAllBehavior) {
+        await beforeAllBehavior({ tempDir, port });
+      }
+
       // Ensure any process on the port is killed
       await killProcessByPort(port);
       await killProcessByPort('8080');
@@ -181,6 +203,11 @@ export function testMeteorRspackBundler(options) {
     afterAll(async () => {
       // Clean up the temporary directory
       await cleanupTempDir(tempDir);
+
+      // Run additional afterAll behavior
+      if (afterAllBehavior) {
+        await afterAllBehavior({ tempDir, port });
+      }
     });
 
     test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
@@ -200,7 +227,6 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(tempDir, '_build/main-dev/server-entry.js');
       await assertFileExist(tempDir, '_build/main-dev/server-rspack.js');
       await assertFileExist(tempDir, '_build/main-dev/server-meteor.js');
-      // await assertFileExist(tempDir, '_build/main-dev/index.html');
 
       // Assert that the Meteor app is running correctly
       await assertMeteorReactApp(port, { title: appName });
@@ -630,6 +656,8 @@ export function testMeteorRspackBundler(options) {
  * @param {Function} options.customAssertions.afterRunProduction - Custom assertions to run after running the app in production mode
  * @param {Function} options.customAssertions.afterTestOnce - Custom assertions to run after running tests once
  * @param {Function} options.customAssertions.afterBuild - Custom assertions to run after building the app
+ * @param {Function} options.beforeAllBehavior - Additional behavior to run in beforeAll
+ * @param {Function} options.afterAllBehavior - Additional behavior to run in afterAll
  * @returns {Function} - Jest test function
  */
 export function testMeteorSkeleton(options) {
@@ -644,6 +672,8 @@ export function testMeteorSkeleton(options) {
     },
     customAssertions = {},
     checkBodyStyles = true,
+    beforeAllBehavior,
+    afterAllBehavior,
   } = options;
 
   return () => {
@@ -651,6 +681,11 @@ export function testMeteorSkeleton(options) {
     let tempDir;
 
     beforeAll(async () => {
+      // Run additional beforeAll behavior
+      if (beforeAllBehavior) {
+        await beforeAllBehavior({ tempDir, port });
+      }
+
       // Ensure any process on the port is killed
       await killProcessByPort(port);
     });
@@ -659,6 +694,11 @@ export function testMeteorSkeleton(options) {
       // Clean up the temporary directory
       if (tempDir) {
         await cleanupTempDir(tempDir);
+      }
+
+      // Run additional afterAll behavior
+      if (afterAllBehavior) {
+        await afterAllBehavior({ tempDir, port });
       }
     });
 

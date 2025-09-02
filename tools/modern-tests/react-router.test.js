@@ -12,6 +12,12 @@ describe('ReactRouter App Bundling /', () => {
       test: 'tests/main.app-test.js',
     },
     testFullApp: true,
+    beforeAllBehavior: async () => {
+      process.env.METEOR_PACKAGE_DIRS = './my-packages';
+    },
+    afterAllBehavior: async () => {
+      process.env.METEOR_PACKAGE_DIRS = '';
+    },
     customAssertions: {
       afterRun: async ({ result, port }) => {
         await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
@@ -25,6 +31,10 @@ describe('ReactRouter App Bundling /', () => {
         await assertMetaTags({
           'theme-color': '#4285f4',
         });
+        // default-package loading
+        await waitForMeteorOutput(result.outputLines, /.*default-package loaded.*/);
+        // custom-package loading
+        await waitForMeteorOutput(result.outputLines, /.*custom-package loaded.*/);
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
