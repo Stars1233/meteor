@@ -4,6 +4,7 @@ import { LinksCollection } from '/imports/api/links';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import '@helper/alias';
 import ReactAlias from '@react/alias';
+import './resolve-extensions/first';
 
 console.log('@react/alias loaded', ReactAlias.version);
 

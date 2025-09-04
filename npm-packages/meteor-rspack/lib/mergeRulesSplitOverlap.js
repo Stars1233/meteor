@@ -267,6 +267,14 @@ export function mergeSplitOverlap(...configs) {
         return splitOverlapRulesMerge(aRules, bRules);
       }
 
+      // Ensure custom extensions first
+      if (key === 'resolve.extensions') {
+        const aRules = Array.isArray(a) ? a : [];
+        const bRules = Array.isArray(b) ? b : [];
+        const merged = [...bRules, ...aRules];
+        return [...new Set(merged)];
+      }
+
       // Handle plugins uniqueness
       if (key === 'plugins') {
         return unique(

@@ -35,6 +35,8 @@ describe('ReactRouter App Bundling /', () => {
         await waitForMeteorOutput(result.outputLines, /.*default-package loaded.*/);
         // custom-package loading
         await waitForMeteorOutput(result.outputLines, /.*custom-package loaded.*/);
+        // resolve.extensions loading
+        await waitForMeteorOutput(result.outputLines, /.*first\.jsx loaded.*/);
       },
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default

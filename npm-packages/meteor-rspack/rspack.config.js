@@ -118,7 +118,9 @@ export default function (inMeteor = {}, argv = {}) {
   const isDev = !!Meteor.isDevelopment || !isProd;
   const isTest = !!Meteor.isTest;
   const isClient = !!Meteor.isClient;
+  const isServer = !!Meteor.isServer;
   const isRun = !!Meteor.isRun;
+  const isBuild = !!Meteor.isBuild;
   const isReactEnabled = !!Meteor.isReactEnabled;
   const isTestModule = !!Meteor.isTestModule;
   const isTestEager = !!Meteor.isTestEager;
@@ -203,12 +205,13 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
+  const enableSwcExternalHelpers = !isServer && swcExternalHelpers;
   const isDevEnvironment = isRun && isDev && !isTest && !isNative;
   const swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
     isJsxEnabled,
     isTsxEnabled,
-    externalHelpers: swcExternalHelpers,
+    externalHelpers: enableSwcExternalHelpers,
     isDevEnvironment,
   });
   // Expose swc config to use in custom configs
@@ -248,7 +251,7 @@ export default function (inMeteor = {}, argv = {}) {
         lastImports: [`./${outputFilename}`],
       }),
     }),
-    enableGlobalPolyfill: isDevEnvironment,
+    enableGlobalPolyfill: isDevEnvironment && !isServer,
   });
 
   const rsdoctorModule = isBundleVisualizerEnabled
@@ -261,6 +264,14 @@ export default function (inMeteor = {}, argv = {}) {
         }),
       ]
     : [];
+  const bannerPluginConfig = !isBuild
+    ? [
+        new BannerPlugin({
+          banner: bannerOutput,
+          entryOnly: true,
+        }),
+      ]
+    : [];
 
   const clientNameConfig = `[${(isTest && 'test-') || ''}${
     (isTestModule && 'module') || 'client'
@@ -269,7 +280,7 @@ export default function (inMeteor = {}, argv = {}) {
   let clientConfig = {
     name: clientNameConfig,
     target: 'web',
-    mode: 'development',
+    mode,
     entry: path.resolve(process.cwd(), buildContext, entryPath),
     output: {
       path: clientOutputDir,
@@ -322,10 +333,7 @@ export default function (inMeteor = {}, argv = {}) {
         'Meteor.isDevelopment': JSON.stringify(isDev),
         'Meteor.isProduction': JSON.stringify(isProd),
       }),
-      new BannerPlugin({
-        banner: bannerOutput,
-        entryOnly: true,
-      }),
+      ...bannerPluginConfig,
       Meteor.HtmlRspackPlugin(),
       ...doctorPluginConfig,
     ],
@@ -404,11 +412,8 @@ export default function (inMeteor = {}, argv = {}) {
               'Meteor.isProduction': JSON.stringify(isProd),
             },
       ),
-      new BannerPlugin({
-        banner: bannerOutput,
-        entryOnly: true,
-      }),
-      isTestModule && requireExternalsPlugin,
+      ...bannerPluginConfig,
+      requireExternalsPlugin,
       ...doctorPluginConfig,
     ],
     watchOptions,

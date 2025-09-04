@@ -281,7 +281,8 @@ BCp.processOneFileForTarget = function (inputFile, source) {
     const features = Object.assign({}, this.extraFeatures);
     const arch = inputFile.getArch();
 
-    if (arch.startsWith("os.")) {
+    const isNodeTarget = arch.startsWith("os.");
+    if (isNodeTarget) {
       // Start with a much simpler set of Babel presets and plugins if
       // we're compiling for Node 8.
       features.nodeMajorVersion = parseInt(process.versions.node, 10);
@@ -355,6 +356,7 @@ BCp.processOneFileForTarget = function (inputFile, source) {
             tsx: hasTSXSupport,
           },
           ...(hasSwcHelpersAvailable &&
+            !isNodeTarget &&
             (packageName == null ||
               !['modules-runtime'].includes(packageName)) && {
               externalHelpers: true,
