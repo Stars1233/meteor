@@ -21,7 +21,9 @@ const {
   isMeteorLessProject,
   isMeteorScssProject,
   getMeteorEnvPackageDirs,
+  getMeteorAppConfig,
 } = require('meteor/tools-core/lib/meteor');
+const { buildUnignorePatterns } = require('meteor/tools-core/lib/ignore');
 
 import { getInitialEntrypoints } from './build-context';
 
@@ -92,6 +94,7 @@ function getFileExtensionsToIgnore() {
  * @returns {void}
  */
 export function configureMeteorForRspack() {
+  const meteorAppConfig = getMeteorAppConfig();
   const initialEntrypoints = getInitialEntrypoints();
 
   // Ignore node_modules to prevent Meteor from processing them
@@ -180,9 +183,13 @@ export function configureMeteorForRspack() {
     ),
   ];
   const filesToIgnore = [...rootFilesToIgnore, ...extraFilesToIgnore];
+  const unignoredFilesAndFolders = buildUnignorePatterns(
+    meteorAppConfig?.modules || [],
+    { skipLevel: 1 },
+  );
   const meteorAppIgnores = `${foldersToIgnore.join(' ')} ${filesToIgnore.join(
     ' ',
-  )}`;
+  )} ${unignoredFilesAndFolders.join(' ')}`.trim();
   setMeteorAppIgnore(meteorAppIgnores);
 
   if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {

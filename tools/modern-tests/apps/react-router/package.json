@@ -33,6 +33,7 @@
       "client": "client/main.jsx",
       "server": "server/main.js"
     },
+    "modules": ["styles/module.css"],
     "modern": true
   }
 }

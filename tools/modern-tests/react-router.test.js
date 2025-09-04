@@ -27,6 +27,10 @@ describe('ReactRouter App Bundling /', () => {
         await assertBodyStyles({
           'white-space': 'break-spaces',
         });
+        // Meteor modules config
+        await assertBodyStyles({
+          'align-content': 'center',
+        });
         // Custom html rspack plugin options
         await assertMetaTags({
           'theme-color': '#4285f4',
@@ -49,6 +53,10 @@ describe('ReactRouter App Bundling /', () => {
         // Less styles support
         await assertBodyStyles({
           'white-space': 'break-spaces',
+        });
+        // Meteor modules config
+        await assertBodyStyles({
+          'align-content': 'center',
         });
         // Custom html rspack plugin options
         await assertMetaTags({

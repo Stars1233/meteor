@@ -167,6 +167,7 @@ export async function assertConsoleEval(code, expectedResult, options = {}) {
     try {
       // Evaluate the code in the browser context
       const result = await page.evaluate(code);
+      console.log("--> (assertions.js-Line: 170)\n result: ", result);
 
       if (exactMatch) {
         // Check for exact match

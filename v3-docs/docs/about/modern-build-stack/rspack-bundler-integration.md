@@ -174,6 +174,20 @@ Ensure your app defines these entry files with the correct paths where each modu
 
 Defining entry points improves performance even with the Meteor bundler, as Meteor stops scanning and eagerly loading unnecessary files. For Meteor-Rspack integration, this is required, since it does not support automatic code discovery for efficiency.
 
+In Meteor-Rspack integration, all app code is ignored by Meteor and handled by Rspack. By default, Meteor still processes eagerly CSS and HTML files in the entry folder (e.g. `client/`).
+
+If you need Meteor to handle CSS or HTML files outside the main entry folder, add them to the `modules` field. This field accepts an array of strings, each pointing to a file or folder, except those inside the reserved `imports` folder for scripts.
+
+``` json
+{
+  "meteor": {
+    "modules": ["styles/main.css"]
+  }
+}
+```
+
+With this, Meteor will process these files, merge stylesheets, generate the final HTML, and support files a Meteor plugin may use, except for JS or script code now handled by Rspack. You can also process CSS and HTML files directly with Rspack using loaders from imports in your app code, as mentioned in ["CSS, Less and SCSS"](#css-less-and-scss) or ["HtmlRspackPlugin"](#htmlrspackplugin). If you prefer Meteor's loading approach, you can still rely on it.
+
 ### Nested Imports
 
 Nested imports are a feature of Meteor’s bundler, not supported in standard bundlers. Meteor introduced them during a time when bundling standards were still evolving and experimented with its own approach. This feature comes from the [`reify` module](https://github.com/benjamn/reify/tree/main) and works with Babel transpilation. SWC doesn't support them since they were never standardized.
