@@ -3,7 +3,53 @@
  * @description Functions for managing Rspack processes
  */
 import { checkNpmDependencyExists, getNpxCommand } from 'meteor/tools-core/lib/npm';
-import { RSPACK_DEVSERVER_PORT } from "./constants";
+import { getMeteorAppPort } from 'meteor/tools-core/lib/meteor';
+
+/**
+ * Calculates the devServerPort based on process.env.PORT
+ * Base port is 8077, and we add the sum of the digits of process.env.PORT
+ * @returns {number} The calculated devServerPort
+ */
+export function calculateDevServerPort() {
+  const port = getMeteorAppPort();
+  const basePort = 8077;
+
+  // Sum the digits of the port
+  const digitSum = port.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+
+  return basePort + digitSum;
+}
+
+/**
+ * Calculates the Rsdoctor client port based on process.env.PORT
+ * Base port is 8885, and we add the sum of the digits of process.env.PORT
+ * @returns {number} The calculated Rsdoctor client port
+ */
+export function calculateRsdoctorClientPort() {
+  const port = getMeteorAppPort();
+  const basePort = 8885;
+
+  // Sum the digits of the port
+  const digitSum = port.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+
+  return basePort + digitSum;
+}
+
+/**
+ * Calculates the Rsdoctor server port based on process.env.PORT
+ * Base port is 8885, and we add the sum of the digits of process.env.PORT + 1
+ * @returns {number} The calculated Rsdoctor server port
+ */
+export function calculateRsdoctorServerPort() {
+  const port = getMeteorAppPort();
+  const basePort = 8885;
+
+  // Sum the digits of the port
+  const digitSum = port.split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+
+  // Add 1 to differentiate from client port
+  return basePort + digitSum + 1;
+}
 
 const {
   spawnProcess,
@@ -131,7 +177,7 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ['buildContext', RSPACK_BUILD_CONTEXT],
     ['chunksContext', RSPACK_CHUNKS_CONTEXT],
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
-    ['devServerPort', RSPACK_DEVSERVER_PORT],
+    ['devServerPort', process.env.RSPACK_DEVSERVER_PORT],
     ...(swcExternalHelpers &&  [['swcExternalHelpers', swcExternalHelpers]] || []),
     ...(isReactEnabled &&  [['isReactEnabled', isReactEnabled]] || []),
     ...(isBlazeEnabled &&  [['isBlazeEnabled', isBlazeEnabled]] || []),
@@ -139,7 +185,11 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ...(isTypescriptEnabled &&  [['isTypescriptEnabled', isTypescriptEnabled]] || []),
     ...(isTsxEnabled &&  [['isTsxEnabled', isTsxEnabled]] || []),
     ...(isJsxEnabled &&  [['isJsxEnabled', isJsxEnabled]] || []),
-    ...(isBundleVisualizerEnabled &&  [['isBundleVisualizerEnabled', isBundleVisualizerEnabled]] || []),
+    ...(isBundleVisualizerEnabled &&  [
+      ['isBundleVisualizerEnabled', isBundleVisualizerEnabled],
+      ['rsdoctorClientPort', process.env.RSDOCTOR_CLIENT_PORT],
+      ['rsdoctorServerPort', process.env.RSDOCTOR_SERVER_PORT],
+    ] || []),
 
   ].filter(Boolean);
   return pairs.flatMap(([key, val]) => [

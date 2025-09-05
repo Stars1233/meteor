@@ -260,7 +260,9 @@ export default function (inMeteor = {}, argv = {}) {
   const doctorPluginConfig = isBundleVisualizerEnabled && rsdoctorModule?.RsdoctorRspackPlugin
     ? [
         new rsdoctorModule.RsdoctorRspackPlugin({
-          port: isClient ? 8081 : 8082,
+          port: isClient 
+            ? (parseInt(Meteor.rsdoctorClientPort || '8888', 10))
+            : (parseInt(Meteor.rsdoctorServerPort || '8889', 10)),
         }),
       ]
     : [];
