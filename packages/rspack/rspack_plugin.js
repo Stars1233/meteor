@@ -23,7 +23,6 @@ const {
   ensureRspackInstalled,
   checkReactInstalled,
   ensureRspackReactInstalled,
-  ensureRspackDoctorInstalled,
 } = require('./lib/dependencies');
 
 const {
@@ -37,6 +36,9 @@ const {
   startRspackServerWatch,
   runRspackBuild,
   cleanup,
+  calculateDevServerPort,
+  calculateRsdoctorClientPort,
+  calculateRsdoctorServerPort,
 } = require('./lib/processes');
 
 const {
@@ -66,6 +68,7 @@ const {
   isMeteorAppDebug,
   isMeteorAppConfigModernVerbose,
   isMeteorAppNative,
+  isMeteorBundleVisualizerProject,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -111,6 +114,31 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
 
     // Configure Meteor settings for Rspack
     configureMeteorForRspack();
+
+    // Calculate and set the devServerPort at boot
+    if (!process.env.RSPACK_DEVSERVER_PORT) {
+      process.env.RSPACK_DEVSERVER_PORT = calculateDevServerPort();
+      if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
+        logInfo(`[i] Rspack DevServer Port: ${process.env.RSPACK_DEVSERVER_PORT}`);
+      }
+    }
+
+    // Calculate and set the Rsdoctor client and server ports at boot only if bundle visualizer is enabled
+    if (isMeteorBundleVisualizerProject()) {
+      if (!process.env.RSDOCTOR_CLIENT_PORT) {
+        process.env.RSDOCTOR_CLIENT_PORT = calculateRsdoctorClientPort();
+        if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
+          logInfo(`[i] Rsdoctor Client Port: ${process.env.RSDOCTOR_CLIENT_PORT}`);
+        }
+      }
+
+      if (!process.env.RSDOCTOR_SERVER_PORT) {
+        process.env.RSDOCTOR_SERVER_PORT = calculateRsdoctorServerPort();
+        if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
+          logInfo(`[i] Rsdoctor Server Port: ${process.env.RSDOCTOR_SERVER_PORT}`);
+        }
+      }
+    }
 
     // Register cleanup handler
     process.on('exit', cleanup);

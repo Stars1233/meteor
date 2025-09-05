@@ -176,7 +176,7 @@ Defining entry points improves performance even with the Meteor bundler, as Mete
 
 In Meteor-Rspack integration, all app code is ignored by Meteor and handled by Rspack. By default, Meteor still processes eagerly CSS and HTML files in the entry folder (e.g. `client/`).
 
-If you need Meteor to handle CSS or HTML files outside the main entry folder, add them to the `modules` field. This field accepts an array of strings, each pointing to a file or folder, except those inside the reserved `imports` folder for scripts.
+If you need Meteor to handle CSS or HTML files outside the main entry folder, add them to the `modules` field. This field accepts an array of strings, each pointing to a file or folder.
 
 ``` json
 {

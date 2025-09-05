@@ -30,6 +30,14 @@ export function getMeteorAppConfig() {
 }
 
 /**
+ * Get Meteor's app port
+ * @returns {false|*}
+ */
+export function getMeteorAppPort() {
+  return Package?.meteor?.global?.currentCommand?.options?.['port'] || process.env.PORT || '3000';
+}
+
+/**
  * Retrieves the modern configuration from the application's package.json.
  * @returns {Object|undefined} The modern configuration object or undefined if not found.
  */
