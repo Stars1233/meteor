@@ -71,8 +71,20 @@ function createSwcConfig({
       externalHelpers,
     },
   };
+
+  // Swcrc config not customizable
+  const omitPaths = [
+    'jsc.target',
+  ];
+  // Define warning function
+  const warningFn = path => {
+    console.warn(
+      `[.swcrc] Ignored custom "${path}" — reserved for Meteor-Rspack integration.`,
+    );
+  };
   const customConfig = getMeteorAppSwcConfig() || {};
-  const swcConfig = merge(defaultConfig, customConfig);
+  const cleanedCustomConfig = cleanOmittedPaths(customConfig, { omitPaths, warningFn });
+  const swcConfig = merge(defaultConfig, cleanedCustomConfig);
   return {
     test: /\.(?:[mc]?js|jsx|[mc]?ts|tsx)$/i,
     exclude: /node_modules|\.meteor\/local/,
