@@ -60,7 +60,7 @@ export function isMeteorAppConfigModernVerbose() {
  */
 export function hasMeteorAppConfigAutoInstallDeps() {
   const { autoInstallDeps = true } = getMeteorAppConfig() || {};
-  return autoInstallDeps;
+  return !!autoInstallDeps;
 }
 
 /**
