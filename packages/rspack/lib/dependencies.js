@@ -211,3 +211,31 @@ export async function ensureRspackDoctorInstalled() {
     'Rspack Doctor'
   );
 }
+
+/**
+ * Checks if TypeScript is installed and sets global state accordingly
+ * Sets global state and environment variables based on TypeScript detection
+ * @returns {boolean} Whether TypeScript is installed
+ */
+export function checkTypescriptInstalled() {
+  // Skip if already checked
+  if (getGlobalState(GLOBAL_STATE_KEYS.TYPESCRIPT_CHECKED, false)) {
+    return;
+  }
+
+  const appDir = getMeteorAppDir();
+  // Check if TypeScript is a dependency in the project
+  const isTypescriptInstalled = checkNpmDependencyExists('typescript', { cwd: appDir });
+
+  if (isTypescriptInstalled) {
+    // Set environment variable to indicate TypeScript is enabled
+    process.env.METEOR_TYPESCRIPT_ENABLED = 'true';
+  } else {
+    process.env.METEOR_TYPESCRIPT_ENABLED = 'false';
+  }
+
+  // Mark as checked
+  setGlobalState(GLOBAL_STATE_KEYS.TYPESCRIPT_CHECKED, true);
+
+  return isTypescriptInstalled;
+}

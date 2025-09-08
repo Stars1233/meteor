@@ -5,8 +5,10 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import '@helper/alias';
 import ReactAlias from '@react/alias';
 import './resolve-extensions/first';
+import { TypescriptEnabled } from './ts/helpers';
 
 console.log('@react/alias loaded', ReactAlias.version);
+console.log('TypescriptEnabled', TypescriptEnabled);
 
 async function insertLink({ title, url }) {
   await LinksCollection.insertAsync({ title, url, createdAt: new Date() });

@@ -22,6 +22,7 @@ const {
 const {
   ensureRspackInstalled,
   checkReactInstalled,
+  checkTypescriptInstalled,
   ensureRspackReactInstalled,
 } = require('./lib/dependencies');
 
@@ -114,12 +115,18 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
     if (hasMeteorAppConfigAutoInstallDeps()) {
       // Ensure Rspack is installed
       await ensureRspackInstalled();
+    }
 
-      // Check if Rspack React is installed
-      if (checkReactInstalled()) {
+    // Check if Rspack React is installed
+    if (checkReactInstalled()) {
+      // Auto install deps (by default enabled)
+      if (hasMeteorAppConfigAutoInstallDeps()) {
         await ensureRspackReactInstalled();
       }
     }
+
+    // Check if TypeScript is installed
+    checkTypescriptInstalled();
 
     // Ensure the Rspack build context directory exists
     ensureRspackBuildContextExists();

@@ -3,7 +3,7 @@
  * @description Functions for managing Rspack processes
  */
 import { checkNpmDependencyExists, getNpxCommand } from 'meteor/tools-core/lib/npm';
-import { getMeteorAppPort } from 'meteor/tools-core/lib/meteor';
+import { getMeteorAppPort, isMeteorTypescriptProject } from 'meteor/tools-core/lib/meteor';
 
 /**
  * Calculates the devServerPort based on process.env.PORT
@@ -136,11 +136,14 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
 
   const entryKey = `${isTest && isTestModule ? 'test' : 'main'}${isClient ? 'Client' : 'Server'}`;
   const inputFilePath = isTest && isTestModule ? initialEntrypoints.testModule : initialEntrypoints[entryKey];
-  const isTypescriptEnabled = inputFilePath?.endsWith('.ts') || inputFilePath?.endsWith('.tsx');
-  const isTsxEnabled = inputFilePath?.endsWith('.tsx');
-  const isJsxEnabled = inputFilePath?.endsWith('.jsx');
+  const isTypescriptEnabled = process.env.METEOR_TYPESCRIPT_ENABLED === 'true' ||
+    inputFilePath?.endsWith('.ts') ||
+    inputFilePath?.endsWith('.tsx');
 
-  const isReactEnabled = !!process.env.METEOR_REACT_ENABLED;
+  const isReactEnabled = process.env.METEOR_REACT_ENABLED === 'true';
+  const isTsxEnabled = inputFilePath?.endsWith('.tsx') || isReactEnabled;
+  const isJsxEnabled = inputFilePath?.endsWith('.jsx') || isReactEnabled;
+
   const isBlazeEnabled = isMeteorBlazeProject();
   const isBlazeHotEnabled = isMeteorBlazeHotProject();
   const isBundleVisualizerEnabled = isMeteorBundleVisualizerProject();

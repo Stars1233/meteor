@@ -422,6 +422,14 @@ export function isMeteorBundleVisualizerProject() {
 }
 
 /**
+ * Checks if the Meteor application is a Typescript project.
+ * @returns {boolean} True if the application is a Typescript project, false otherwise.
+ */
+export function isMeteorTypescriptProject() {
+  return getMeteorAppPackages().includes('typescript');
+}
+
+/**
  * Checks if the current Meteor command is 'test-packages'.
  * @returns {boolean} True if the current command is 'test-packages', false otherwise.
  */
