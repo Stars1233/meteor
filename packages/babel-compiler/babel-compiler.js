@@ -375,6 +375,7 @@ BCp.processOneFileForTarget = function (inputFile, source) {
       // Merge with app-level SWC config
       if (lastModifiedSwcConfig) {
         swcOptions = deepMerge(swcOptions, lastModifiedSwcConfig, [
+          'jsc.target',
           'env.targets',
           'module.type',
         ]);
