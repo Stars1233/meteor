@@ -176,7 +176,6 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
       }),
     ],
     ['runPath', getBuildFilePath({ ...module, ...env, ...side, ...commandRole }) ],
-    ['bannerOutput', JSON.stringify(getBuildFileContent({ ...module, ...env, ...side, role: FILE_ROLE.output }))],
     ['buildContext', RSPACK_BUILD_CONTEXT],
     ['chunksContext', RSPACK_CHUNKS_CONTEXT],
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
