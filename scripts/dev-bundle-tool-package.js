@@ -22,7 +22,7 @@ var packageJson = {
     "@babel/runtime": "7.25.0",
     // For backwards compatibility with isopackets that still depend on
     // babel-runtime rather than @babel/runtime.
-    "babel-runtime": "7.0.0-beta.3",
+    "babel-runtime": "7.0.0-beta.4",
     "@types/underscore": "1.11.15",
     underscore: "1.13.7",
     "source-map-support": "https://github.com/meteor/node-source-map-support/tarball/1912478769d76e5df4c365e147f25896aee6375e",

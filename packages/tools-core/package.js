@@ -1,6 +1,6 @@
 Package.describe({
   summary: "Helpers for managing modern tools in Meteor",
-  version: '1.0.0-beta340.3',
+  version: '1.0.0-beta340.4',
 });
 
 Package.onUse(function (api) {
