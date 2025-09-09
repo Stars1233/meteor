@@ -243,20 +243,10 @@ BCp.processOneFileForTarget = function (inputFile, source) {
     bare: !! fileOptions.bare
   };
 
-  if (process.env.METEOR_VERBOSE === 'true') {
-    console.log('inputFilePath', inputFilePath, inputFile.getPathInPackage());
-    console.log('Plugin?.rspackHelpers?.isRspackOutputFile', Plugin?.rspackHelpers?.isRspackOutputFile);
-    console.log('Plugin?.rspackHelpers?.rspackFilePattern', Plugin?.rspackHelpers?.rspackFilePattern);
-    console.log('Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)', Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath));
-  }
-
   // Check if the file is a Rspack output file
   // If it is, bypass SWC/Babel and just read the file and its map file
   // as the contents are already transpiled by Rspack.
-if (process.env.METEOR_SKIP_OUTPUT_FILE_PROCESSING !== 'true' &&
-    (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath) ||
-      inputFilePath.includes('-rspack.js'))
-  ) {
+if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)) {
     try {
       // Get the full path to the file
       const fullPath = inputFile.getPathInPackage();
