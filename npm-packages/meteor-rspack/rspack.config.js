@@ -161,7 +161,7 @@ export default function (inMeteor = {}, argv = {}) {
   const runPath = Meteor.runPath;
 
   // Determine banner
-  const bannerOutput = JSON.parse(Meteor.bannerOutput || '');
+  const bannerOutput = JSON.parse(Meteor.bannerOutput || process.env.RSPACK_BANNER || '""');
 
   // Determine output directories
   const clientOutputDir = path.resolve(process.cwd(), 'public');
