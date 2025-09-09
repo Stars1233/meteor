@@ -113,8 +113,8 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
     if (!success) {
       const isYarnProj = process.env.YARN_ENABLED === 'true';
       const installCommand = isYarnProj 
-        ? `yarn add --dev ${joinWithAnd(dependencyStrings)}`
-        : `meteor npm install -D ${joinWithAnd(dependencyStrings)}`;
+        ? `yarn add --dev ${dependencyStrings.join(' ').trim()}`
+        : `meteor npm install -D ${dependencyStrings.join(' ').trim()}`;
 
       logError(`\n┌─────────────────────────────────────────────────`);
       logError(`│ ❌ ${packageName} Installation Failed`);
