@@ -105,11 +105,11 @@ export function getConfigFileName() {
 }
 
 /**
- * Gets the appropriate Rspack environment variables
+ * Gets the appropriate Rspack environment variables and command line arguments
  * @param {Object} options - Options for environment variables
  * @param {boolean} options.isClient - Whether this is for client-side build
  * @param {boolean} options.isServer - Whether this is for server-side build
- * @returns {string[]} Array of command line arguments for Rspack
+ * @returns {Object} Object containing params (command line arguments) and envs (environment variables)
  */
 export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
   const RSPACK_BUILD_CONTEXT = require('./constants').RSPACK_BUILD_CONTEXT;
@@ -194,10 +194,19 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ] || []),
 
   ].filter(Boolean);
-  return pairs.flatMap(([key, val]) => [
+
+  // Create environment variables object with bannerOutput
+  const envs = {
+    RSPACK_BANNER: JSON.stringify(getBuildFileContent({ ...module, ...env, ...side, role: FILE_ROLE.output }))
+  };
+
+  // Create params from pairs
+  const params = pairs.flatMap(([key, val]) => [
     '--env',
     `${key}=${val}`
   ]);
+
+  return { params, envs };
 }
 
 /**
@@ -218,11 +227,13 @@ export function startRspackClientServe(options = {}) {
 
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
-  const { command, args } = getNpxCommand(['rspack', 'serve', '--config', configFile, ...getRspackEnv({ isClient: true, isServer: false })]);
+  const { params, envs } = getRspackEnv({ isClient: true, isServer: false });
+  const { command, args } = getNpxCommand(['rspack', 'serve', '--config', configFile, ...params]);
   const newClientProcess = spawnProcess(
     command,
     args, {
       cwd: appDir,
+      env: { ...process.env, ...envs },
       onStdout: (data) => {
         logInfo(`[Rspack Client] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
@@ -271,11 +282,13 @@ export function startRspackServerWatch(options = {}) {
 
   const appDir = getMeteorAppDir();
   const configFile = getConfigFileName();
-  const { command, args } = getNpxCommand(['rspack', 'build', '--watch', '--config', configFile, ...getRspackEnv({ isClient: false, isServer: true })]);
+  const { params, envs } = getRspackEnv({ isClient: false, isServer: true });
+  const { command, args } = getNpxCommand(['rspack', 'build', '--watch', '--config', configFile, ...params]);
   const newServerProcess = spawnProcess(
     command,
     args, {
     cwd: appDir,
+    env: { ...process.env, ...envs },
     onStdout: (data) => {
       logInfo(`[Rspack Server] ${data}`);
       if (onCompile && data.trim().includes("compiled")) {
@@ -319,13 +332,14 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
   const endpoint = isTestModule ? 'Module' : isClient ? 'Client' : 'Server';
   // Use a promise to ensure Meteor waits until Rspack finishes
   return new Promise((resolve, reject) => {
+    const { params, envs } = getRspackEnv({ isClient, isServer, isTest, isTestModule });
     const rspackArgs = [
       'rspack',
       'build',
       '--config',
       configFile,
       ...(watch && ['--watch']) || [],
-      ...getRspackEnv({ isClient, isServer, isTest, isTestModule }),
+      ...params,
     ].filter(Boolean);
     const { command, args } = getNpxCommand(rspackArgs);
     spawnProcess(
@@ -333,6 +347,7 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
       args,
       {
       cwd: appDir,
+      env: { ...process.env, ...envs },
       onStdout: (data) => {
         logInfo(`[Rspack ${label} ${endpoint}] ${data}`);
         if (onCompile && data.trim().includes("compiled")) {
