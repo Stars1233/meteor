@@ -232,6 +232,7 @@ export default function (inMeteor = {}, argv = {}) {
   const externals = [
     /^meteor.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : []),
+    ...(isServer ? [/^bcrypt$/] : []),
   ];
   const alias = {
     '/': path.resolve(process.cwd()),
