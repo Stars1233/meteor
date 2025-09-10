@@ -11,6 +11,7 @@
     "@babel/runtime": "^7.23.5",
     "@modelcontextprotocol/sdk": "^1.17.3",
     "@swc/helpers": "^0.5.17",
+    "bcrypt": "^6.0.0",
     "meteor-node-stubs": "^1.2.12",
     "react": "^18.3.1",
     "react-compiler-runtime": "^19.1.0-rc.2",

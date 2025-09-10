@@ -6,9 +6,11 @@ import '@helper/alias';
 import ReactAlias from '@react/alias';
 import './resolve-extensions/first';
 import { TypescriptEnabled } from './ts/helpers';
+import bcrypt from "bcrypt";
 
 console.log('@react/alias loaded', ReactAlias.version);
 console.log('TypescriptEnabled', TypescriptEnabled);
+console.log("bcrypt loaded", !!bcrypt);
 
 async function insertLink({ title, url }) {
   await LinksCollection.insertAsync({ title, url, createdAt: new Date() });
