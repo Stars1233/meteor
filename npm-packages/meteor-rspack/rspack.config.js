@@ -217,7 +217,7 @@ export default function (inMeteor = {}, argv = {}) {
     console.log('[i] Meteor flags:', Meteor);
   }
 
-  const enableSwcExternalHelpers = !isServer && swcExternalHelpers;
+  const enableSwcExternalHelpers = !!swcExternalHelpers;
   const isDevEnvironment = isRun && isDev && !isTest && !isNative;
   const swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
