@@ -88,6 +88,14 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
     const devDepsToInstall = allDepsToInstall.filter(dep => dep.dev === true || dep.dev == null);
     if (devDepsToInstall.length > 0) {
       const devDepsStrings = devDepsToInstall.map(dep => `${dep.name}@${dep.version}`);
+
+      // Log progress for dev dependencies
+      logProgress(
+        `🔧 Installing ${devDepsToInstall.length} dev dependenc${
+          devDepsToInstall.length === 1 ? "y" : "ies"
+        }...`
+      );
+
       success = await installNpmDependency(devDepsStrings, {
         cwd: appDir,
         dev: true,
@@ -99,6 +107,13 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
     const depsToInstall = allDepsToInstall.filter(dep => dep.dev === false);
     if (depsToInstall.length > 0) {
       const depsStrings = depsToInstall.map(dep => `${dep.name}@${dep.version}`);
+
+      // Log progress for regular dependencies
+      logProgress(
+        `🔧 Installing ${depsToInstall.length} dependenc${
+          devDepsToInstall.length === 1 ? "y" : "ies"
+        }...`
+      );
 
       let depsSuccess;
       depsSuccess = await installNpmDependency(depsStrings, {
