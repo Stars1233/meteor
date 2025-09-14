@@ -3,12 +3,12 @@
  * overlapping file extensions in module rules.
  */
 
-import { mergeWithCustomize } from 'webpack-merge';
+const { mergeWithCustomize } = require('webpack-merge');
 
 /**
  * File extensions to check when determining rule overlaps.
  */
-export const EXT_CATALOG = [
+const EXT_CATALOG = [
   '.tsx', '.ts', '.mts', '.cts',
   '.jsx', '.js', '.mjs', '.cjs',
 ];
@@ -130,7 +130,7 @@ function splitOverlapRulesMerge(aRules, bRules) {
  * @param {Function} getter - Function to get the identifier from the plugin
  * @returns {Function} Customizer function
  */
-export function unique(key, pluginNames = [], getter = item => item.constructor && item.constructor.name) {
+function unique(key, pluginNames = [], getter = item => item.constructor && item.constructor.name) {
   return (a, b, k) => {
     if (k !== key) return undefined;
 
@@ -183,7 +183,7 @@ export function unique(key, pluginNames = [], getter = item => item.constructor 
  * @param {Function} [options.warningFn] - Custom warning function that receives the path string
  * @returns {Object} The cleaned object with specified paths removed
  */
-export function cleanOmittedPaths(obj, options = {}) {
+function cleanOmittedPaths(obj, options = {}) {
   if (!obj || typeof obj !== 'object') {
     return obj;
   }
@@ -277,7 +277,7 @@ function normalizeExternals(config) {
  * @param {...Object} configs - Configs to merge
  * @returns {Object} Merged config
  */
-export function mergeSplitOverlap(...configs) {
+function mergeSplitOverlap(...configs) {
   // Normalize externals in all configs before merging
   const normalizedConfigs = configs.map(normalizeExternals);
 
@@ -311,3 +311,10 @@ export function mergeSplitOverlap(...configs) {
     }
   })(...normalizedConfigs);
 }
+
+module.exports = {
+  EXT_CATALOG,
+  unique,
+  cleanOmittedPaths,
+  mergeSplitOverlap
+};

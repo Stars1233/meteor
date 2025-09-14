@@ -1,16 +1,13 @@
-import { DefinePlugin, BannerPlugin } from '@rspack/core';
-import fs from 'fs';
-import { createRequire } from 'module';
-import { inspect } from 'node:util';
-import path from 'path';
-import { merge } from 'webpack-merge';
+const { DefinePlugin, BannerPlugin } = require('@rspack/core');
+const fs = require('fs');
+const { inspect } = require('node:util');
+const path = require('path');
+const { merge } = require('webpack-merge');
 
-import { cleanOmittedPaths, mergeSplitOverlap } from "./lib/mergeRulesSplitOverlap.js";
-import { getMeteorAppSwcConfig } from './lib/swc.js';
-import HtmlRspackPlugin from './plugins/HtmlRspackPlugin.js';
-import { RequireExternalsPlugin } from './plugins/RequireExtenalsPlugin.js';
-
-const require = createRequire(import.meta.url);
+const { cleanOmittedPaths, mergeSplitOverlap } = require("./lib/mergeRulesSplitOverlap.js");
+const { getMeteorAppSwcConfig } = require('./lib/swc.js');
+const HtmlRspackPlugin = require('./plugins/HtmlRspackPlugin.js');
+const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js');
 
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
@@ -114,7 +111,7 @@ const defaultWatchOptions = {
  * @param {{ mode?: string; clientEntry?: string; serverEntry?: string; clientOutputFolder?: string; serverOutputFolder?: string; chunksContext?: string; assetsContext?: string; serverAssetsContext?: string }} argv
  * @returns {import('@rspack/cli').Configuration[]}
  */
-export default function (inMeteor = {}, argv = {}) {
+module.exports = function (inMeteor = {}, argv = {}) {
   // Transform Meteor env properties to proper boolean values
   const Meteor = { ...inMeteor };
   // Convert string boolean values to actual booleans

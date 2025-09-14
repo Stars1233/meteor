@@ -377,7 +377,7 @@ With the Meteor–Rspack integration, `zodern:melte` no longer works. Use the of
 
 ### Tailwind
 
-Meteor-Rspack supports Tailwind projects out of the box. For details, check [the official Rspack and Tailwind guide](https://rspack.rs/guide/tech/css#tailwind-css).
+Meteor-Rspack supports Tailwind projects out of the box. For details, check [the official Rspack and Tailwind guide](https://tailwindcss.com/docs/installation/framework-guides/rspack/react).
 
 > Use `meteor create --tailwind` to start with a preconfigured Rspack Tailwind app.
 

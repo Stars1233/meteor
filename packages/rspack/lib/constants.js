@@ -5,7 +5,7 @@
 
 export const DEFAULT_RSPACK_VERSION = '1.5.3';
 
-export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.46';
+export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.47';
 
 export const DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION = '1.4.3';
 
