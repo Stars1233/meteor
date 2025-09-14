@@ -369,9 +369,9 @@ module.exports = function (inMeteor = {}, argv = {}) {
 
   const serverEntry =
     isTest && isTestEager && isTestFullApp
-      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-app-tests.js')
+      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-app-tests.mjs')
       : isTest && isTestEager
-      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-tests.js')
+      ? path.resolve(process.cwd(), 'node_modules/@meteorjs/rspack/entries/eager-tests.mjs')
       : path.resolve(process.cwd(), buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}${
     (isTestModule && 'module') || 'server'
