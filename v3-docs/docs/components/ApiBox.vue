@@ -117,12 +117,12 @@ const debug = (name) => {
         <slot />
         <ParamTable v-if="isFunction || isClass" :params="ui.params" :options="ui.options" :from="gitHubSource" />
         <template v-if="!hasCustomExample">
-            <Booleans v-if="isBoolean" :memberof="ui.memberof" :from="ui.module" :is-default-import="ui.isDefaultImport"
+            <Booleans v-if="isBoolean" :memberof="ui.memberof" :from="ui.module" :is-default-import="isDefaultImport"
                 :longname="ui.longname" />
-            <Functions v-if="isFunction" :from="ui.module" :is-default-import="ui.isDefaultImport"
+            <Functions v-if="isFunction" :from="ui.module" :is-default-import="isDefaultImport"
                 :longname="ui.longname" :params="ui.params" :fnName="ui.name"
                 :memberof="isInstance ? instanceName : ui.memberof" :scope="ui.scope" :returns="ui.returns" />
-            <Classes v-if="isClass" :params="ui.params" :from="ui.module" :is-default-import="ui.isDefaultImport"
+            <Classes v-if="isClass" :params="ui.params" :from="ui.module" :is-default-import="isDefaultImport"
                 :longname="ui.longname" />
 
         </template>
