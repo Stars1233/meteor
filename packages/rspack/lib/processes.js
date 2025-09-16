@@ -2,8 +2,61 @@
  * @module processes
  * @description Functions for managing Rspack processes
  */
-import { checkNpmDependencyExists, getNpxCommand } from 'meteor/tools-core/lib/npm';
-import { getMeteorAppPort, isMeteorTypescriptProject } from 'meteor/tools-core/lib/meteor';
+
+import fs from 'fs';
+import path from 'path';
+
+const {
+  spawnProcess,
+  stopProcess,
+  isProcessRunning
+} = require('meteor/tools-core/lib/process');
+
+const {
+  logError,
+  logInfo,
+} = require('meteor/tools-core/lib/log');
+
+const {
+  getMeteorAppDir,
+  isMeteorAppTest,
+  isMeteorAppTestFullApp,
+  isMeteorAppDevelopment,
+  isMeteorAppProduction,
+  isMeteorAppDebug,
+  isMeteorAppRun,
+  isMeteorAppBuild,
+  isMeteorAppNative,
+  isMeteorBlazeProject,
+  isMeteorBlazeHotProject,
+  getMeteorInitialAppEntrypoints,
+  isMeteorAppConfigModernVerbose,
+  isMeteorBundleVisualizerProject,
+  getMeteorAppPort,
+} = require('meteor/tools-core/lib/meteor');
+
+const {
+  checkNpmDependencyExists,
+  getNpxCommand,
+  getMonorepoPath,
+} = require('meteor/tools-core/lib/npm');
+
+const {
+  getGlobalState,
+  setGlobalState
+} = require('meteor/tools-core/lib/global-state');
+
+const {
+  GLOBAL_STATE_KEYS,
+  RSPACK_CHUNKS_CONTEXT,
+  RSPACK_ASSETS_CONTEXT,
+  FILE_ROLE,
+} = require('./constants');
+
+const {
+  getBuildFilePath,
+  getBuildFileContent,
+} = require('./build-context');
 
 /**
  * Calculates the devServerPort based on process.env.PORT
@@ -51,57 +104,29 @@ export function calculateRsdoctorServerPort() {
   return basePort + digitSum + 1;
 }
 
-const {
-  spawnProcess,
-  stopProcess,
-  isProcessRunning
-} = require('meteor/tools-core/lib/process');
-
-const {
-  logError,
-  logInfo,
-} = require('meteor/tools-core/lib/log');
-
-const {
-  getMeteorAppDir,
-  isMeteorAppTest,
-  isMeteorAppTestFullApp,
-  isMeteorAppDevelopment,
-  isMeteorAppProduction,
-  isMeteorAppDebug,
-  isMeteorAppRun,
-  isMeteorAppBuild,
-  isMeteorAppNative,
-  isMeteorBlazeProject,
-  isMeteorBlazeHotProject,
-  getMeteorInitialAppEntrypoints,
-  isMeteorAppConfigModernVerbose,
-  isMeteorBundleVisualizerProject,
-} = require('meteor/tools-core/lib/meteor');
-
-const {
-  getGlobalState,
-  setGlobalState
-} = require('meteor/tools-core/lib/global-state');
-
-const {
-  GLOBAL_STATE_KEYS,
-  RSPACK_CHUNKS_CONTEXT,
-  RSPACK_ASSETS_CONTEXT,
-  FILE_ROLE,
-} = require('./constants');
-
-const {
-  getBuildFilePath,
-  getBuildFileContent,
-} = require('./build-context');
-
 /**
  * Gets the appropriate config file name based on environment
  * @returns {string} The name of the Rspack config file
+ * @throws {Error} If no valid config file is found
  */
 export function getConfigFileName() {
-  return `${process.cwd()}/node_modules/@meteorjs/rspack/rspack.config.js`;
+  // Check if the config file exists at the current path
+  const defaultConfigPath = `${process.cwd()}/node_modules/@meteorjs/rspack/rspack.config.js`;
+  if (fs.existsSync(defaultConfigPath)) {
+    return defaultConfigPath;
+  }
+
+  // If not found, check if we're in a monorepo and look for alternative config
+  const monorepoPath = getMonorepoPath();
+  if (monorepoPath) {
+    const alternativeConfigPath = path.join(monorepoPath, 'node_modules/@meteorjs/rspack/rspack.config.js');
+    if (fs.existsSync(alternativeConfigPath)) {
+      return alternativeConfigPath;
+    }
+  }
+
+  // If no config file is found, throw an error
+  throw new Error('Could not find rspack.config.js. Make sure @meteorjs/rspack is installed correctly.');
 }
 
 /**
