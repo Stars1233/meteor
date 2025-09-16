@@ -148,7 +148,8 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
 
     if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
       const configFile = getConfigFileName();
-      logInfo(`[i] Rspack config: ${configFile}`);
+      logInfo(`[i] Rspack default config: ${configFile}`);
+      logInfo(`[i] Rspack custom config: ${process.cwd()}/rspack.config.js`);
     }
 
     // Calculate and set the Rsdoctor client and server ports at boot only if bundle visualizer is enabled
