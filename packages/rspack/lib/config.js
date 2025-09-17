@@ -249,7 +249,13 @@ export function configureMeteorForRspack() {
   ].filter(Boolean);
   const rootFilesToIgnore = [
     ...projectRootFilesAndFolders.files.filter(
-      file => !['package.json', '.meteorignore', 'tsconfig.json'].includes(file),
+      file =>
+        ![
+          'package.json',
+          '.meteorignore',
+          'tsconfig.json',
+          'postcss.config.js',
+        ].includes(file),
     ),
   ];
   const filesToIgnore = [...rootFilesToIgnore, ...extraFilesToIgnore];
