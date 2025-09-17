@@ -72,10 +72,12 @@ You don’t need to migrate your project for this, just ensure these folders are
 If you want to customize the folder names, set these options in `package.json`:
 
 ``` json
-"meteor": {
+{
+  "meteor": {
     "buildContext": "build",
     "assetsContext": "assets",
     "chunksContext": "chunks"
+  }
 }
 ```
 
