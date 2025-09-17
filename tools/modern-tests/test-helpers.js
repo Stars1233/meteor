@@ -115,10 +115,11 @@ export function testMeteorBundler(options) {
  * @returns {Function} - Jest test function
  */
 export function testMeteorRspackBundler(options) {
-  const { 
-    appName, 
-    port, 
-    filePaths = { 
+  const {
+    appName,
+    port,
+    isMonorepo = false,
+    filePaths = {
       client: 'client/main.jsx',
       server: 'server/main.js',
       test: 'tests/main.js',
@@ -160,6 +161,7 @@ export function testMeteorRspackBundler(options) {
   return () => {
     let meteorProcess;
     let tempDir;
+    let appDir;
 
     beforeAll(async () => {
       // Run additional beforeAll behavior
@@ -172,20 +174,22 @@ export function testMeteorRspackBundler(options) {
       await killProcessByPort('8080');
 
       // Setup the Meteor app
-      tempDir = (await setupMeteorApp(appName))?.tempDir;
+      tempDir = (await setupMeteorApp(appName, { isMonorepo }))?.tempDir;
 
       // Add Rspack package
-      await runMeteorCommand('add', ['rspack'], tempDir, { checkExitCode: true });
+      appDir = isMonorepo ? path.join(tempDir, 'app') : tempDir;
+      await runMeteorCommand('add', ['rspack'], appDir, { checkExitCode: true });
 
       // Set meteor.modern.verbose to true
       if (verbose) {
-        await execa('npm', ['pkg', 'delete', 'meteor.modern'], { cwd: tempDir });
-        await execa('npm', ['pkg', 'set', 'meteor.modern.verbose=true'], { cwd: tempDir });
+        await execa('npm', ['pkg', 'delete', 'meteor.modern'], { cwd: appDir });
+        await execa('npm', ['pkg', 'set', 'meteor.modern.verbose=true'], { cwd: appDir });
       }
 
       // Run the Meteor app to install Rspack
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at:",
+        isMonorepo
       });
       meteorProcess = result.meteorProcess;
 
@@ -193,8 +197,8 @@ export function testMeteorRspackBundler(options) {
       await wait(1000);
 
       // Assert that the config files exists
-      await assertFileExist(tempDir, '.gitignore', { content: buildDir });
-      await assertFileExist(tempDir, configFile, { content: '@meteorjs/rspack' });
+      await assertFileExist(appDir, '.gitignore', { content: buildDir });
+      await assertFileExist(appDir, configFile, { content: '@meteorjs/rspack' });
 
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
@@ -218,6 +222,7 @@ export function testMeteorRspackBundler(options) {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at:",
+        isMonorepo
       });
       meteorProcess = result.meteorProcess;
 
@@ -225,12 +230,12 @@ export function testMeteorRspackBundler(options) {
       await wait(500);
 
       // Assert that the app files exists
-      await assertFileExist(tempDir, `${buildDir}/main-dev/client-entry.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-dev/client-rspack.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-dev/client-meteor.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-dev/server-entry.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-dev/server-rspack.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-dev/server-meteor.js`);
+      await assertFileExist(appDir, `${buildDir}/main-dev/client-entry.js`);
+      await assertFileExist(appDir, `${buildDir}/main-dev/client-rspack.js`);
+      await assertFileExist(appDir, `${buildDir}/main-dev/client-meteor.js`);
+      await assertFileExist(appDir, `${buildDir}/main-dev/server-entry.js`);
+      await assertFileExist(appDir, `${buildDir}/main-dev/server-rspack.js`);
+      await assertFileExist(appDir, `${buildDir}/main-dev/server-meteor.js`);
 
       // Assert that the Meteor app is running correctly
       await assertMeteorReactApp(port, { title: appName });
@@ -257,11 +262,11 @@ export function testMeteorRspackBundler(options) {
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterRunRebuildClient) {
-        await customAssertions.afterRunRebuildClient({ 
-          tempDir, 
-          port, 
-          meteorProcess, 
-          result, 
+        await customAssertions.afterRunRebuildClient({
+          tempDir,
+          port,
+          meteorProcess,
+          result,
           allConsoleLogs: consoleLogs.allLogs
         });
       }
@@ -307,6 +312,7 @@ export function testMeteorRspackBundler(options) {
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at:",
         commandOptions: ['--production'],
+        isMonorepo
       });
       meteorProcess = result.meteorProcess;
 
@@ -314,13 +320,13 @@ export function testMeteorRspackBundler(options) {
       await wait(500);
 
       // Assert that the app files exists
-      await assertFileExist(tempDir, `${buildDir}/main-prod/client-entry.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-prod/client-rspack.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-prod/client-meteor.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-prod/server-entry.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-prod/server-rspack.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-prod/server-meteor.js`);
-      await assertFileExist(tempDir, `${buildDir}/main-prod/index.html`);
+      await assertFileExist(appDir, `${buildDir}/main-prod/client-entry.js`);
+      await assertFileExist(appDir, `${buildDir}/main-prod/client-rspack.js`);
+      await assertFileExist(appDir, `${buildDir}/main-prod/client-meteor.js`);
+      await assertFileExist(appDir, `${buildDir}/main-prod/server-entry.js`);
+      await assertFileExist(appDir, `${buildDir}/main-prod/server-rspack.js`);
+      await assertFileExist(appDir, `${buildDir}/main-prod/server-meteor.js`);
+      await assertFileExist(appDir, `${buildDir}/main-prod/index.html`);
 
       await assertFileExist(tempDir, filePaths.server);
 
@@ -349,10 +355,10 @@ export function testMeteorRspackBundler(options) {
 
       // Run custom assertions if provided
       if (customAssertions && customAssertions.afterRunProductionRebuildClient) {
-        await customAssertions.afterRunProductionRebuildClient({ 
-          tempDir, 
-          port, 
-          meteorProcess, 
+        await customAssertions.afterRunProductionRebuildClient({
+          tempDir,
+          port,
+          meteorProcess,
           result,
           allConsoleLogs: consoleLogs.allLogs
         });
@@ -401,6 +407,7 @@ export function testMeteorRspackBundler(options) {
         const result = await runMeteorApp(tempDir, port, {
           waitForOutput: "=> App running at:",
           commandOptions: ['--extra-packages', 'bundle-visualizer', '--production'],
+          isMonorepo
         });
         meteorProcess = result.meteorProcess;
 
@@ -408,13 +415,13 @@ export function testMeteorRspackBundler(options) {
         await wait(500);
 
         // Assert that the app files exists
-        await assertFileExist(tempDir, `${buildDir}/main-prod/client-entry.js`);
-        await assertFileExist(tempDir, `${buildDir}/main-prod/client-rspack.js`);
-        await assertFileExist(tempDir, `${buildDir}/main-prod/client-meteor.js`);
-        await assertFileExist(tempDir, `${buildDir}/main-prod/server-entry.js`);
-        await assertFileExist(tempDir, `${buildDir}/main-prod/server-rspack.js`);
-        await assertFileExist(tempDir, `${buildDir}/main-prod/server-meteor.js`);
-        await assertFileExist(tempDir, `${buildDir}/main-prod/index.html`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/client-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/client-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/client-meteor.js`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/server-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/server-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/server-meteor.js`);
+        await assertFileExist(appDir, `${buildDir}/main-prod/index.html`);
 
         // Assert that the Meteor app is running correctly
         await assertMeteorReactApp(port, { title: appName });
@@ -459,6 +466,7 @@ export function testMeteorRspackBundler(options) {
         waitForOutput: "=> App running at:",
         commandOptions: testFullApp ? ['--full-app'] : [],
         checkTestResults: false,
+        isMonorepo
       });
       meteorProcess = result.meteorProcess;
 
@@ -469,16 +477,16 @@ export function testMeteorRspackBundler(options) {
 
       // Assert that the app files exists
       if (isTestModule) {
-        await assertFileExist(tempDir, `${buildDir}/test/test-entry.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/test-rspack.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/test-meteor.js`);
+        await assertFileExist(appDir, `${buildDir}/test/test-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/test/test-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/test/test-meteor.js`);
       } else {
-        await assertFileExist(tempDir, `${buildDir}/test/client-entry.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/client-rspack.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/client-meteor.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/server-entry.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/server-rspack.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/server-meteor.js`);
+        await assertFileExist(appDir, `${buildDir}/test/client-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/test/client-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/test/client-meteor.js`);
+        await assertFileExist(appDir, `${buildDir}/test/server-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/test/server-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/test/server-meteor.js`);
       }
 
       // Run custom assertions if provided
@@ -542,6 +550,7 @@ export function testMeteorRspackBundler(options) {
         waitForOutput: "=> App running at:",
         commandOptions: testFullApp ? ['--full-app', '--once'] : ['--once'],
         checkTestResults: true,
+        isMonorepo
       });
 
       // Wait for a margin
@@ -551,16 +560,16 @@ export function testMeteorRspackBundler(options) {
 
       // Assert that the app files exists
       if (isTestModule) {
-        await assertFileExist(tempDir, `${buildDir}/test/test-entry.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/test-rspack.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/test-meteor.js`);
+        await assertFileExist(appDir, `${buildDir}/test/test-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/test/test-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/test/test-meteor.js`);
       } else {
-        await assertFileExist(tempDir, `${buildDir}/test/client-entry.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/client-rspack.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/client-meteor.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/server-entry.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/server-rspack.js`);
-        await assertFileExist(tempDir, `${buildDir}/test/server-meteor.js`);
+        await assertFileExist(appDir, `${buildDir}/test/client-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/test/client-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/test/client-meteor.js`);
+        await assertFileExist(appDir, `${buildDir}/test/server-entry.js`);
+        await assertFileExist(appDir, `${buildDir}/test/server-rspack.js`);
+        await assertFileExist(appDir, `${buildDir}/test/server-meteor.js`);
       }
 
       if (verbose) {
@@ -587,7 +596,8 @@ export function testMeteorRspackBundler(options) {
       // Build the app with Rspack
       const { buildOutputDir, processResult: result } = await buildMeteorApp(tempDir, {
         commandOptions: ['--directory'],
-        captureOutput: true
+        captureOutput: true,
+        isMonorepo
       });
 
       // Wait for a margin
