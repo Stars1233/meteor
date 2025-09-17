@@ -153,6 +153,8 @@ export function testMeteorRspackBundler(options) {
     afterAllBehavior,
     // Build directory (default: '_build')
     buildDir = '_build',
+    // Rspack config file (default: 'rspack.config.js')
+    configFile = 'rspack.config.js',
   } = options;
 
   return () => {
@@ -192,7 +194,7 @@ export function testMeteorRspackBundler(options) {
 
       // Assert that the config files exists
       await assertFileExist(tempDir, '.gitignore', { content: buildDir });
-      await assertFileExist(tempDir, 'rspack.config.js', { content: '@meteorjs/rspack' });
+      await assertFileExist(tempDir, configFile, { content: '@meteorjs/rspack' });
 
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);

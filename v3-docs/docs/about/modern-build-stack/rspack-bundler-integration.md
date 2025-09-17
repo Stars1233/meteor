@@ -107,7 +107,7 @@ Please report your plugin usage as [GitHub issues](https://github.com/meteor/met
 
 ## Custom `rspack.config.js`
 
-Meteor-Rspack projects can be customized using the `rspack.config.js` file, which is automatically available when installing the `rspack` package.
+Meteor-Rspack projects can be customized using the `rspack.config.js` file, which is automatically available when installing the `rspack` package. You can also use `rspack.config.mjs` or `rspack.config.cjs` if you prefer strict ESM or CommonJS formats.
 
 This file defines dynamic configurations, so you return the config from a resolved function.
 
