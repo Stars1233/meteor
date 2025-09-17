@@ -14,6 +14,7 @@ describe('TypeScript App Bundling /', () => {
       testClient: 'tests/client.ts',
       testServer: 'tests/server.ts',
     },
+    buildDir: 'build',
     customAssertions: {
       afterRun: async ({ result, tempDir }) => {
         // SCSS styles support

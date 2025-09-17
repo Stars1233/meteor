@@ -202,7 +202,7 @@ module.exports = function (inMeteor = {}, argv = {}) {
       isTestEager && {
         ignored: [
           ...defaultWatchOptions.ignored,
-          '**/_build/**',
+          `**/${buildContext}/**`,
           '**/.meteor/local/**',
           '**/node_modules/**',
         ],

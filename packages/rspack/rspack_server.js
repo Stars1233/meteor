@@ -6,11 +6,28 @@ import {
   RSPACK_CHUNKS_CONTEXT,
   RSPACK_ASSETS_CONTEXT,
   RSPACK_HOT_UPDATE_REGEX,
-  RSPACK_BUNDLES_REGEX,
-  RSPACK_ASSETS_REGEX,
 } from "./lib/constants";
 
 if (Meteor.isDevelopment) {
+  const rspackChunksContext = process.env.RSPACK_CHUNKS_CONTEXT || RSPACK_CHUNKS_CONTEXT;
+  const rspackAssetsContext = process.env.RSPACK_ASSETS_CONTEXT || RSPACK_ASSETS_CONTEXT;
+
+  /**
+   * Regex pattern for rspack bundles
+   * @constant {RegExp}
+   */
+  const RSPACK_CHUNKS_REGEX = new RegExp(
+    `^\/${rspackChunksContext}\/(.+)$`,
+  );
+
+  /**
+   * Regex pattern for rspack assets
+   * @constant {RegExp}
+   */
+  const RSPACK_ASSETS_REGEX = new RegExp(
+    `^\/${rspackAssetsContext}\/(.+)$`,
+  );
+
   // Target URL for the Rspack dev server
   const target = `http://localhost:${process.env.RSPACK_DEVSERVER_PORT}`;
 
@@ -52,10 +69,10 @@ if (Meteor.isDevelopment) {
     }
 
     // 2) match "/build-chunks/<anything>"
-    const bundlesMatch = req.url.match(RSPACK_BUNDLES_REGEX);
+    const bundlesMatch = req.url.match(RSPACK_CHUNKS_REGEX);
     if (bundlesMatch) {
       // Redirect "/bundles/foo.js" → "/__rspack__/build-chunks/foo.js"
-      const target = `/__rspack__/${RSPACK_CHUNKS_CONTEXT}/${bundlesMatch[1]}`;
+      const target = `/__rspack__/${rspackChunksContext}/${bundlesMatch[1]}`;
       res.writeHead(307, { Location: target });
       return res.end();
     }
@@ -64,7 +81,7 @@ if (Meteor.isDevelopment) {
     const assetsMatch = req.url.match(RSPACK_ASSETS_REGEX);
     if (assetsMatch) {
       // Redirect "/build-assets/foo.js" → "/__rspack__/build-assets/foo.js"
-      const target = `/__rspack__/${RSPACK_ASSETS_CONTEXT}/${assetsMatch[1]}`;
+      const target = `/__rspack__/${rspackAssetsContext}/${assetsMatch[1]}`;
       res.writeHead(307, { Location: target });
       return res.end();
     }

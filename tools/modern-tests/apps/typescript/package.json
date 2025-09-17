@@ -37,6 +37,9 @@
       "client": "tests/client.ts",
       "server": "tests/server.ts"
     },
-    "modern": true
+    "modern": true,
+    "buildContext": "build",
+    "assetsContext": "assets",
+    "chunksContext": "chunks"
   }
 }
