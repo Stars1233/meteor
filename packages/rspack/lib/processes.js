@@ -105,28 +105,60 @@ export function calculateRsdoctorServerPort() {
 }
 
 /**
+ * Helper function to check for a file with different extensions in order of priority
+ * @param {string} basePath - The base directory path (without 'rspack.config' and extension)
+ * @returns {string|null} The full path with extension if found, null otherwise
+ */
+export function getCustomConfigFilePath(basePath = getMeteorAppDir()) {
+  const configBasePath = path.join(basePath, 'rspack.config');
+
+  // Check for .js extension first (highest priority)
+  const jsPath = `${configBasePath}.js`;
+  if (fs.existsSync(jsPath)) {
+    return jsPath;
+  }
+
+  // Check for .mjs extension next
+  const mjsPath = `${configBasePath}.mjs`;
+  if (fs.existsSync(mjsPath)) {
+    return mjsPath;
+  }
+
+  // Check for .cjs extension last
+  const cjsPath = `${configBasePath}.cjs`;
+  if (fs.existsSync(cjsPath)) {
+    return cjsPath;
+  }
+
+  // No valid config file found with any extension
+  return null;
+}
+
+/**
  * Gets the appropriate config file name based on environment
  * @returns {string} The name of the Rspack config file
  * @throws {Error} If no valid config file is found
  */
-export function getConfigFileName() {
-  // Check if the config file exists at the current path
-  const defaultConfigPath = `${process.cwd()}/node_modules/@meteorjs/rspack/rspack.config.js`;
-  if (fs.existsSync(defaultConfigPath)) {
+export function getConfigFilePath() {
+  // Check if the config file exists at the current path with any of the supported extensions
+  const defaultConfigBasePath = path.join(process.cwd(), 'node_modules/@meteorjs/rspack');
+  const defaultConfigPath = getCustomConfigFilePath(defaultConfigBasePath);
+  if (defaultConfigPath) {
     return defaultConfigPath;
   }
 
   // If not found, check if we're in a monorepo and look for alternative config
   const monorepoPath = getMonorepoPath();
   if (monorepoPath) {
-    const alternativeConfigPath = path.join(monorepoPath, 'node_modules/@meteorjs/rspack/rspack.config.js');
-    if (fs.existsSync(alternativeConfigPath)) {
+    const alternativeConfigBasePath = path.join(monorepoPath, 'node_modules/@meteorjs/rspack');
+    const alternativeConfigPath = getCustomConfigFilePath(alternativeConfigBasePath);
+    if (alternativeConfigPath) {
       return alternativeConfigPath;
     }
   }
 
   // If no config file is found, throw an error
-  throw new Error('Could not find rspack.config.js. Make sure @meteorjs/rspack is installed correctly.');
+  throw new Error('Could not find rspack.config.js, rspack.config.mjs, or rspack.config.cjs. Make sure @meteorjs/rspack is installed correctly.');
 }
 
 /**
@@ -175,6 +207,8 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
 
   const swcExternalHelpers = checkNpmDependencyExists('@swc/helpers');
 
+  const projectConfigPath = getCustomConfigFilePath();
+
   const pairs = [
     ['isDevelopment', isMeteorAppDevelopment()],
     ['isProduction', isMeteorAppProduction()],
@@ -205,6 +239,7 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ['chunksContext', RSPACK_CHUNKS_CONTEXT],
     ['assetsContext', RSPACK_ASSETS_CONTEXT],
     ['devServerPort', process.env.RSPACK_DEVSERVER_PORT],
+    ['projectConfigPath', projectConfigPath],
     ...(swcExternalHelpers &&  [['swcExternalHelpers', swcExternalHelpers]] || []),
     ...(isReactEnabled &&  [['isReactEnabled', isReactEnabled]] || []),
     ...(isBlazeEnabled &&  [['isBlazeEnabled', isBlazeEnabled]] || []),
@@ -251,7 +286,7 @@ export function startRspackClientServe(options = {}) {
   }
 
   const appDir = getMeteorAppDir();
-  const configFile = getConfigFileName();
+  const configFile = getConfigFilePath();
   const { params, envs } = getRspackEnv({ isClient: true, isServer: false });
   const { command, args } = getNpxCommand(['rspack', 'serve', '--config', configFile, ...params]);
   const newClientProcess = spawnProcess(
@@ -314,7 +349,7 @@ export function startRspackServerWatch(options = {}) {
   }
 
   const appDir = getMeteorAppDir();
-  const configFile = getConfigFileName();
+  const configFile = getConfigFilePath();
   const { params, envs } = getRspackEnv({ isClient: false, isServer: true });
   const { command, args } = getNpxCommand(['rspack', 'build', '--watch', '--config', configFile, ...params]);
   const newServerProcess = spawnProcess(
@@ -368,7 +403,7 @@ export function startRspackServerWatch(options = {}) {
  */
 export async function runRspackBuild({ isClient, isServer, isTest, isTestModule, onCompile, watch, label = 'Build' } = {}) {
   const appDir = getMeteorAppDir();
-  const configFile = getConfigFileName();
+  const configFile = getConfigFilePath();
 
   const endpoint = isTestModule ? 'Module' : isClient ? 'Client' : 'Server';
   // Use a promise to ensure Meteor waits until Rspack finishes

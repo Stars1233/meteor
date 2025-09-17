@@ -109,9 +109,9 @@ const defaultWatchOptions = {
 /**
  * @param {{ isClient: boolean; isServer: boolean; isDevelopment?: boolean; isProduction?: boolean; isTest?: boolean }} Meteor
  * @param {{ mode?: string; clientEntry?: string; serverEntry?: string; clientOutputFolder?: string; serverOutputFolder?: string; chunksContext?: string; assetsContext?: string; serverAssetsContext?: string }} argv
- * @returns {import('@rspack/cli').Configuration[]}
+ * @returns {Promise<import('@rspack/cli').Configuration[]>}
  */
-module.exports = function (inMeteor = {}, argv = {}) {
+module.exports = async function (inMeteor = {}, argv = {}) {
   // Transform Meteor env properties to proper boolean values
   const Meteor = { ...inMeteor };
   // Convert string boolean values to actual booleans
@@ -137,6 +137,7 @@ module.exports = function (inMeteor = {}, argv = {}) {
   const swcExternalHelpers = !!Meteor.swcExternalHelpers;
   const isNative = !!Meteor.isNative;
   const mode = isProd ? 'production' : 'development';
+  const projectConfigPath = Meteor.projectConfigPath || path.resolve(process.cwd(), 'rspack.config.js');
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled =
@@ -435,13 +436,36 @@ module.exports = function (inMeteor = {}, argv = {}) {
   };
 
   // Load and apply project-level overrides for the selected build
-  const projectConfigPath = path.resolve(process.cwd(), 'rspack.config.js');
-
   // Check if we're in a Meteor package directory by looking at the path
   const isMeteorPackageConfig = process.cwd().includes('/packages/rspack');
   if (fs.existsSync(projectConfigPath) && !isMeteorPackageConfig) {
-    const projectConfig =
-      require(projectConfigPath)?.default || require(projectConfigPath);
+    // Check if there's a .mjs or .cjs version of the config file
+    const mjsConfigPath = projectConfigPath.replace(/\.js$/, '.mjs');
+    const cjsConfigPath = projectConfigPath.replace(/\.js$/, '.cjs');
+
+    let configPath = projectConfigPath;
+    if (fs.existsSync(mjsConfigPath)) {
+      configPath = mjsConfigPath;
+    } else if (fs.existsSync(cjsConfigPath)) {
+      configPath = cjsConfigPath;
+    }
+
+    // Use require for CommonJS modules and dynamic import for ES modules
+    let projectConfig;
+    try {
+      if (path.extname(configPath) === '.mjs') {
+        // For ESM modules, we need to use dynamic import
+        const fileUrl = `file://${configPath}`;
+        const module = await import(fileUrl);
+        projectConfig = module.default || module;
+      } else {
+        // For CommonJS modules, we can use require
+        projectConfig = require(configPath)?.default || require(configPath);
+      }
+    } catch (error) {
+      console.error(`Error loading rspack config from ${configPath}:`, error);
+      throw error;
+    }
 
     const userConfig =
       typeof projectConfig === 'function'

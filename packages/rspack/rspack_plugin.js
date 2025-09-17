@@ -40,7 +40,8 @@ const {
   calculateDevServerPort,
   calculateRsdoctorClientPort,
   calculateRsdoctorServerPort,
-  getConfigFileName,
+  getConfigFilePath,
+  getCustomConfigFilePath,
 } = require('./lib/processes');
 
 const {
@@ -147,9 +148,10 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
     }
 
     if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
-      const configFile = getConfigFileName();
+      const configFile = getConfigFilePath();
       logInfo(`[i] Rspack default config: ${configFile}`);
-      logInfo(`[i] Rspack custom config: ${process.cwd()}/rspack.config.js`);
+      const projectConfigFile = getCustomConfigFilePath();
+      logInfo(`[i] Rspack custom config: ${projectConfigFile}`);
     }
 
     // Calculate and set the Rsdoctor client and server ports at boot only if bundle visualizer is enabled
