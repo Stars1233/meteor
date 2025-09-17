@@ -255,6 +255,7 @@ export function configureMeteorForRspack() {
           '.meteorignore',
           'tsconfig.json',
           'postcss.config.js',
+          'scss-config.json',
         ].includes(file),
     ),
   ];
