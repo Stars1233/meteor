@@ -704,6 +704,7 @@ export const AVAILABLE_SKELETONS = [
   "chakra-ui",
   "solid",
   "legacy",
+  "coffee"
 ];
 
 const SKELETON_INFO = {
@@ -718,8 +719,9 @@ const SKELETON_INFO = {
   "svelte": "To create a basic Svelte app",
   "tailwind": "To create an app using React and Tailwind",
   "chakra-ui": "To create an app Chakra UI and React",
-  "solid": "To create a basic Solid app"
-}
+  "solid": "To create a basic Solid app",
+  "coffee": "To create a basic CoffeeScript app",
+};
 
 main.registerCommand({
   name: 'create',
@@ -740,6 +742,7 @@ main.registerCommand({
     svelte: { type: Boolean },
     tailwind: { type: Boolean },
     'chakra-ui': { type: Boolean },
+    coffee: { type: Boolean },
     solid: { type: Boolean },
     legacy: { type: Boolean },
     prototype: { type: Boolean },
@@ -844,7 +847,7 @@ main.registerCommand({
             return transform(f);
           },
           transformContents: async function (contents, f) {
-            if (/(\.html|\.[jt]sx?|\.css)/.test(f)) {
+            if (/(\.html|\.[jt]sx?|\.css|\.coffee)/.test(f)) {
               return Buffer.from(await transform(contents.toString()));
             } else {
               return contents;
@@ -1229,7 +1232,7 @@ main.registerCommand({
               return Buffer.from(contents.toString().replace(/~prototype~/g, ""));
             }
           }
-          if (/(\.html|\.[jt]sx?|\.css)/.test(f)) {
+          if (/(\.html|\.[jt]sx?|\.css|\.coffee)/.test(f)) {
             return Buffer.from(transform(contents.toString()));
           } else {
             return contents;

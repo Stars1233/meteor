@@ -278,6 +278,7 @@ If you run `meteor create` without arguments, Meteor will launch an interactive 
 | `--typescript` | React + TypeScript | [TypeScript Guide](https://guide.meteor.com/build-tool.html#typescript) |
 | `--tailwind` | React + Tailwind CSS | - |
 | `--chakra-ui` | React + Chakra UI | [Simple Tasks Example](https://github.com/fredmaiaarantes/simpletasks) |
+ | `--coffee` | CoffeeScript | - |
 
 ### Project Structure Options
 
