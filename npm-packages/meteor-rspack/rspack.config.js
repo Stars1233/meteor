@@ -8,7 +8,6 @@ const { cleanOmittedPaths, mergeSplitOverlap } = require("./lib/mergeRulesSplitO
 const { getMeteorAppSwcConfig } = require('./lib/swc.js');
 const HtmlRspackPlugin = require('./plugins/HtmlRspackPlugin.js');
 const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js');
-const { createIgnoreFoldersRegex, getMeteorIgnoreEntries } = require("./lib/ignore.js");
 const { generateEagerTestFile } = require("./lib/test.js");
 
 // Safe require that doesn't throw if the module isn't found
