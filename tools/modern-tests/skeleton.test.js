@@ -19,6 +19,16 @@ describe('Meteor Skeletons /', () => {
     },
   }));
 
+  describe('Babel Skeleton /', testMeteorSkeleton({
+    skeletonName: 'babel',
+    port: 3212,
+    filePaths: {
+      client: 'client/main.jsx',
+      server: 'server/main.js',
+      test: 'tests/main.js'
+    },
+  }));
+
   describe('Blaze Skeleton /', testMeteorSkeleton({
     skeletonName: 'blaze',
     port: 3202,

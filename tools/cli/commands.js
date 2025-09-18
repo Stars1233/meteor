@@ -692,6 +692,7 @@ function getExamplesJSON(){
 const DEFAULT_SKELETON = "react";
 export const AVAILABLE_SKELETONS = [
   "apollo",
+  "babel",
   "bare",
   "blaze",
   "full",
@@ -721,6 +722,7 @@ const SKELETON_INFO = {
   "chakra-ui": "To create an app Chakra UI and React",
   "solid": "To create a basic Solid app",
   "coffee": "To create a basic CoffeeScript app",
+  "babel": "To create a React app with Babel support",
 };
 
 main.registerCommand({
@@ -731,6 +733,7 @@ main.registerCommand({
     list: { type: Boolean },
     example: { type: String },
     package: { type: Boolean },
+    babel: { type: Boolean },
     bare: { type: Boolean },
     minimal: { type: Boolean },
     full: { type: Boolean },
