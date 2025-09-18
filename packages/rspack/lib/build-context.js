@@ -594,7 +594,7 @@ export function ensureRspackConfigExists() {
   // If no config file exists, we'll create a .js one
   const jsConfigPath = path.join(appDir, 'rspack.config.js');
 
-  const configTemplate = `import { defineConfig } from '@meteorjs/rspack';
+  const configTemplate = `const { defineConfig } = require('@meteorjs/rspack');
 
 /**
  * Rspack configuration for Meteor projects.
@@ -606,7 +606,7 @@ export function ensureRspackConfigExists() {
  *
  * Use these flags to adjust your build settings based on environment.
  */
-export default defineConfig(Meteor => {
+module.exports = defineConfig(Meteor => {
   return {};
 });
 `;
