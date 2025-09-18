@@ -52,7 +52,7 @@ function createSwcConfig({
   const defaultConfig = {
     jsc: {
       baseUrl: process.cwd(),
-      paths: { '/*': ['*'] },
+      paths: { '/*': ['*', '/*'] },
       parser: {
         syntax: isTypescriptEnabled ? 'typescript' : 'ecmascript',
         ...(isTsxEnabled && { tsx: true }),
