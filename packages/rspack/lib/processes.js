@@ -441,7 +441,7 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
             logError(errorMsg);
             throw new Error(errorMsg);
           }
-          throw new Error(`[Rspack ${label} Error ${endpoint}] ${data}`);
+          logError(`[Rspack ${label} Error ${endpoint}] ${data}`);
         }
       },
       onExit: (code) => {
