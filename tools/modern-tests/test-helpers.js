@@ -200,6 +200,11 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(appDir, '.gitignore', { content: buildDir });
       await assertFileExist(appDir, configFile, { content: '@meteorjs/rspack' });
 
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterInit) {
+        await customAssertions.afterInit({ tempDir, port, meteorProcess, result });
+      }
+
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
 
