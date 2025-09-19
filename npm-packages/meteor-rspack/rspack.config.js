@@ -27,16 +27,16 @@ function safeRequire(moduleName) {
 }
 
 // Persistent filesystem cache strategy
-function createCacheStrategy(mode) {
+function createCacheStrategy(mode, side) {
   return {
     cache: true,
     experiments: {
       cache: {
-        version: `swc-${mode}`,
-        type: 'persistent',
+        version: `swc-${mode}${(side && `-${side}`) || ""}`,
+        type: "persistent",
         storage: {
-          type: 'filesystem',
-          directory: 'node_modules/.cache/rspack',
+          type: "filesystem",
+          directory: `node_modules/.cache/rspack${(side && `/${side}`) || ""}`,
         },
       },
     },
@@ -369,7 +369,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         },
       },
     }),
-    experiments: { css: true },
+    ...merge(createCacheStrategy(mode, "client"), { experiments: { css: true } })
   };
 
 
@@ -449,7 +449,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     watchOptions,
     devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
     ...((isDevEnvironment || (isTest && !isTestEager) || isNative) &&
-      createCacheStrategy(mode)),
+      createCacheStrategy(mode, "server")),
   };
 
   // Load and apply project-level overrides for the selected build
