@@ -397,6 +397,14 @@ Meteor-Rspack supports Tailwind projects out of the box. For details, check [the
 
 > Use `meteor create --tailwind` to start with a preconfigured Rspack Tailwind app.
 
+### Babel
+
+Meteor-Rspack supports Babel projects as an alternative to default SWC.
+
+> Use `meteor create --babel` to start with a preconfigured Rspack Babel app.
+
+Using Babel will increase build times. Prefer SWC. If you need Babel for specific files, limit Babel to those files, or use a hybrid with SWC and Babel. For example, [enabling React Compiler is available only via Babel using module rules](https://rspack.rs/guide/tech/react#react-compiler).
+
 ### HtmlRspackPlugin
 
 Meteor-Rspack includes its own HtmlRspackPlugin, enabled by default to attach chunks and assets to the HTML skeleton. Meteor then uses this HTML to generate the final index file.
