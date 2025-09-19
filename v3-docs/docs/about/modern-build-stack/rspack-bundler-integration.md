@@ -112,10 +112,10 @@ Meteor-Rspack projects can be customized using the `rspack.config.js` file, whic
 This file defines dynamic configurations, so you return the config from a resolved function.
 
 ```javascript
-import { defineConfig } from '@meteorjs/rspack';
-import { rspack } from '@rspack/core';
-import HtmlRspackPlugin from 'html-rspack-plugin';
-import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
+const { defineConfig } = require('@meteorjs/rspack');
+const { rspack } = require('@rspack/core');
+const HtmlRspackPlugin = require('html-rspack-plugin');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 /**
  * Example: Using different plugins for client and server builds
@@ -124,7 +124,7 @@ import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
  * - For server: Add Node.js polyfills with NodePolyfillPlugin
  * - For both: Add progress plugin
  */
-export default defineConfig(Meteor => {
+module.exports = defineConfig(Meteor => {
   return {
     plugins: [
       Meteor.isClient && new rspack.ProvidePlugin({ _: 'lodash' }),
