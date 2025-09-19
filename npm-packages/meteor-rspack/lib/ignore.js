@@ -33,14 +33,9 @@ function cleanWildcardEntry(entry) {
  * the parsed entries.
  *
  * @param {string} projectDir - The project directory path
- * @param {Object} options - Options for processing ignore entries
- * @param {boolean} options.foldersOnly - If true, returns only folder entries
- * @returns {Array<string>} - Array of ignore entries
+ * @returns {Object} - Object with rootFolders and nestedFolders arrays
  */
-const getMeteorIgnoreEntries = function (projectDir, options) {
-  options = options || {};
-  const foldersOnly = !!options.foldersOnly;
-
+const getMeteorIgnoreEntries = function (projectDir) {
   const meteorIgnorePath = path.join(projectDir, '.meteorignore');
 
   // Check if .meteorignore file exists
@@ -50,39 +45,35 @@ const getMeteorIgnoreEntries = function (projectDir, options) {
 
     // Process each line in the file
     entries = fileContent.split(/\r?\n/).filter(line => {
-      // Skip empty lines and comments
-      return line.trim() !== '' && !line.trim().startsWith('#');
-    });
+      // Trim the line
+      const trimmedLine = line.trim();
+      // Skip empty lines, comments, and negation entries (starting with !)
+      return trimmedLine !== '' && !trimmedLine.startsWith('#') && !trimmedLine.startsWith('!');
+    }).map(line => line.trim()); // Ensure all lines are trimmed
 
     // Clean all entries from wildcard patterns (*/** parts)
     entries = entries.map(entry => {
       return cleanWildcardEntry(entry);
     }).filter(entry => entry !== null);
 
-    if (foldersOnly) {
-      // Filter to include only entries that are likely to be folders
-      entries = entries.filter(entry => {
-        // Entries ending with / are definitely folders
-        if (entry.endsWith('/')) {
-          return true;
-        }
+    // Separate entries into rootFolders and nestedFolders
+    const rootFolders = [];
+    const nestedFolders = [];
 
-        // Try to determine if it's a folder by checking if it exists
-        // and is a directory
-        try {
-          const fullPath = path.join(projectDir, entry);
-          return fs.existsSync(fullPath) && fs.statSync(fullPath).isDirectory();
-        } catch (e) {
-          // If we can't determine, assume it's not a folder
-          return false;
-        }
-      });
-    }
+    entries.forEach(entry => {
+      // If entry starts with / or ./, it's a root folder
+      if (entry.startsWith('/') || entry.startsWith('./')) {
+        rootFolders.push(entry);
+      } else {
+        // Otherwise, it's a nested folder
+        nestedFolders.push(entry);
+      }
+    });
 
-    return entries;
+    return { rootFolders, nestedFolders };
   } catch (e) {
-    // If the file doesn't exist or can't be read, return an empty array
-    return [];
+    // If the file doesn't exist or can't be read, return empty arrays
+    return { rootFolders: [], nestedFolders: [] };
   }
 };
 
@@ -90,28 +81,92 @@ const getMeteorIgnoreEntries = function (projectDir, options) {
  * Creates a regex pattern to ignore specified folders.
  * The pattern will match paths where the specified folders appear as complete path segments.
  * Special regex characters in folder names are automatically escaped.
- * @param {string[]} folders - Array of folder names to ignore
+ * @param {Object|string[]} options - Options object
+ * @param {string[]} [options.nestedFolders] - Array of folder names to ignore anywhere in the path
+ * @param {string[]} [options.rootFolders] - Array of folder names that should only match at the root level
  * @returns {RegExp} - Regex pattern to ignore the specified folders
  */
-function createIgnoreFoldersRegex(folders) {
-  if (!Array.isArray(folders) || folders.length === 0) {
-    throw new Error('folders must be a non-empty array');
+function createIgnoreFoldersRegex(options) {
+  const nestedFolders = options.nestedFolders || [];
+  const rootFolders = options.rootFolders || [];
+
+  if (!Array.isArray(nestedFolders) || nestedFolders.length === 0) {
+    throw new Error('nestedFolders must be a non-empty array');
   }
 
+  // If rootFolders is not provided or empty, use the original behavior
+  if (!rootFolders || !Array.isArray(rootFolders) || rootFolders.length === 0) {
+    // Escape special regex characters in folder names
+    const escapedFolders = nestedFolders.map(folder => 
+      folder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    );
+
+    // Join folder names with | for the regex pattern
+    const foldersPattern = escapedFolders.join('|');
+
+    // Create a regex that matches paths where the specified folders appear as complete path segments
+    // Format: /(^|\/)(folder1|folder2|folder3)(\/|$)/
+    return new RegExp(`(^|\\/)(${foldersPattern})(\\/|$)`);
+  }
+
+  // Handle both rootFolders and nestedFolders
   // Escape special regex characters in folder names
-  const escapedFolders = folders.map(folder => 
+  const escapedNestedFolders = nestedFolders.map(folder => 
     folder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   );
 
-  // Join folder names with | for the regex pattern
-  const foldersPattern = escapedFolders.join('|');
+  const escapedRootFolders = rootFolders.map(folder => 
+    folder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  );
 
-  // Create a regex that matches paths where the specified folders appear as complete path segments
-  // Format: /(^|\/)(folder1|folder2|folder3)(\/|$)/
-  return new RegExp(`(^|\\/)(${foldersPattern})(\\/|$)`);
+  // Join folder names with | for the regex patterns
+  const nestedFoldersPattern = escapedNestedFolders.join('|');
+  const rootFoldersPattern = escapedRootFolders.join('|');
+
+  // Create a regex that matches:
+  // 1. Root folders at the beginning of the path: /^(folderRootOnly)(\/|$)/
+  // 2. Nested folders anywhere in the path: /(^|\/)(folderAny1|folderAny2)(\/|$)/
+  const pattern = `^(${rootFoldersPattern})(\\/|$)|(^|\\/)(${nestedFoldersPattern})(\\/|$)`;
+  return new RegExp(pattern);
+}
+
+/**
+ * Creates a glob config array for ignoring specified folders.
+ * For nested folders, the pattern will be "**/" + folder + "/**".
+ * For root folders, the pattern will be folder + "/**".
+ * @param {Object} options - Options object
+ * @param {string[]} [options.nestedFolders] - Array of folder names to ignore anywhere in the path
+ * @param {string[]} [options.rootFolders] - Array of folder names that should only match at the root level
+ * @returns {string[]} - Array of glob patterns to ignore the specified folders
+ */
+function createIgnoreGlobConfig(options = {}) {
+  const nestedFolders = options.nestedFolders || [];
+  const rootFolders = options.rootFolders || [];
+  const globPatterns = [];
+
+  // Create glob patterns for nested folders: **/{nestedFolder}/**
+  if (Array.isArray(nestedFolders) && nestedFolders.length > 0) {
+    nestedFolders.forEach(folder => {
+      // Remove leading ./ or / if present
+      const cleanFolder = folder.replace(/^(\.\/|\/)/g, '');
+      globPatterns.push(`**/${cleanFolder}/**`);
+    });
+  }
+
+  // Create glob patterns for root folders: {rootFolder}/**
+  if (Array.isArray(rootFolders) && rootFolders.length > 0) {
+    rootFolders.forEach(folder => {
+      // Remove leading ./ or / if present
+      const cleanFolder = folder.replace(/^(\.\/|\/)/g, '');
+      globPatterns.push(`${cleanFolder}/**`);
+    });
+  }
+
+  return globPatterns;
 }
 
 module.exports = {
   createIgnoreFoldersRegex,
   getMeteorIgnoreEntries,
+  createIgnoreGlobConfig,
 };
