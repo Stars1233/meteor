@@ -375,6 +375,8 @@ export default defineConfig(Meteor => {
 });
 ```
 
+> Use `meteor create --coffee` to start with a preconfigured Rspack Coffeescript app.
+
 ### Svelte
 
 Meteor-Rspack supports Svelte projects out of the box. To enable it, install the required dependencies and add the new configuration to Meteor’s `rspack.config.js` file.
