@@ -272,7 +272,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const rsdoctorModule = isBundleVisualizerEnabled
     ? safeRequire('@rsdoctor/rspack-plugin')
     : null;
-  const doctorPluginConfig = isBundleVisualizerEnabled && rsdoctorModule?.RsdoctorRspackPlugin
+  const doctorPluginConfig = isRun && isBundleVisualizerEnabled && rsdoctorModule?.RsdoctorRspackPlugin
     ? [
         new rsdoctorModule.RsdoctorRspackPlugin({
           port: isClient
