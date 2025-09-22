@@ -1,5 +1,8 @@
 import { Meteor } from 'meteor/meteor';
 import { LinksCollection } from '/imports/api/links';
+import { TestEmail } from '/imports/emails/TestEmail';
+
+console.log('-> TestEmail loaded', !!TestEmail);
 
 async function insertLink({ title, url }) {
   await LinksCollection.insertAsync({ title, url, createdAt: new Date() });

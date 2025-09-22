@@ -50,6 +50,7 @@ function createSwcConfig({
   isTsxEnabled,
   externalHelpers,
   isDevEnvironment,
+  isClient,
 }) {
   const defaultConfig = {
     jsc: {
@@ -64,7 +65,7 @@ function createSwcConfig({
       transform: {
         react: {
           development: isDevEnvironment,
-          refresh: isDevEnvironment,
+          ...(isClient && { refresh: isDevEnvironment }),
         },
       },
       externalHelpers,
@@ -229,6 +230,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     isTsxEnabled,
     externalHelpers: enableSwcExternalHelpers,
     isDevEnvironment,
+    isClient,
   });
   // Expose swc config to use in custom configs
   Meteor.swcConfigOptions = swcConfigRule.options;
