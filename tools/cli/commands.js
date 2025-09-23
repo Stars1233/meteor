@@ -705,7 +705,7 @@ export const AVAILABLE_SKELETONS = [
   "chakra-ui",
   "solid",
   "legacy",
-  "coffee"
+  "coffeescript"
 ];
 
 const SKELETON_INFO = {
