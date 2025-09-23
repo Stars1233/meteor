@@ -9,6 +9,7 @@ import {
   RSPACK_ASSETS_CONTEXT,
   RSPACK_HOT_UPDATE_REGEX,
 } from "./lib/constants";
+import { isMeteorAppDebug } from "meteor/tools-core/lib/meteor";
 
 // Define constants for both development and production
 const rspackChunksContext = process.env.RSPACK_CHUNKS_CONTEXT || RSPACK_CHUNKS_CONTEXT;
@@ -145,6 +146,10 @@ function registerRspackStaticAsset(arch, pathname, filePath) {
   if (staticFiles[pathname]) {
     // Ensure the entry is marked as cacheable
     staticFiles[pathname].cacheable = true;
+
+    if (isMeteorAppDebug()) {
+      console.log(`Registering rspack asset: ${archName} ${pathname} cacheable ${staticFiles[pathname].cacheable}`);
+    }
     return staticFiles[pathname];
   }
 
@@ -164,6 +169,10 @@ function registerRspackStaticAsset(arch, pathname, filePath) {
     hash,
     type
   };
+
+  if (isMeteorAppDebug()) {
+    console.log(`Registering rspack asset: ${archName} ${pathname} cacheable ${staticFiles[pathname].cacheable}`);
+  }
 
   return staticFiles[pathname];
 }
