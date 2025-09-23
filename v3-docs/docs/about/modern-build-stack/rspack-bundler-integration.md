@@ -375,7 +375,7 @@ export default defineConfig(Meteor => {
 });
 ```
 
-> Use `meteor create --coffee` to start with a preconfigured Rspack Coffeescript app.
+> Use `meteor create --coffeescript` to start with a preconfigured Rspack Coffeescript app.
 
 ### Svelte
 
