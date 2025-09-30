@@ -536,7 +536,7 @@ async function doRunCommand(options) {
     );
   }
 
-  runLog.setRawLogs(!options['raw-logs'] && options.timestamps);
+  runLog.setRawLogs(options['raw-logs'] && !options.timestamps);
 
   let webArchs = projectContext.platformList.getWebArchs();
   if (! _.isEmpty(runTargets) ||
@@ -2259,7 +2259,8 @@ async function doTestCommand(options) {
     serverArchitectures.push(DEPLOY_ARCH);
   }
 
-  runLog.setRawLogs(!options['raw-logs'] && options.timestamps);
+  runLog.setRawLogs(options['raw-logs'] && !options.timestamps);
+
 
   var includePackages = [];
   if (options['extra-packages']) {
