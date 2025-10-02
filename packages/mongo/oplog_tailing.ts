@@ -41,6 +41,8 @@ export class OplogHandle {
     excludeCollections?: string[];
     includeCollections?: string[];
   };
+  private _includeNSRegex?: RegExp;
+  private _excludeNSRegex?: RegExp;
   private _stopped: boolean;
   private _tailHandle: any;
   private _readyPromiseResolver: (() => void) | null;
@@ -82,6 +84,18 @@ export class OplogHandle {
     }
     this._oplogOptions = { includeCollections, excludeCollections };
 
+    if (includeCollections?.length) {
+      const incAlt = includeCollections.map((c) => Meteor._escapeRegExp(c)).join('|');
+
+      this._includeNSRegex = new RegExp(`^${Meteor._escapeRegExp(this._dbName)}\\.(?:${incAlt})$`);
+    }
+
+    if (excludeCollections?.length) {
+      const excAlt = excludeCollections.map((c) => Meteor._escapeRegExp(c)).join('|');
+
+      this._excludeNSRegex = new RegExp(`^${Meteor._escapeRegExp(this._dbName)}\\.(?:${excAlt})$`);
+    }
+
     this._catchingUpResolvers = [];
     this._lastProcessedTS = null;
 
@@ -90,6 +104,15 @@ export class OplogHandle {
     });
 
     this._startTrailingPromise = this._startTailing();
+  }
+
+    private _nsAllowed(ns: string | undefined): boolean {
+    if (!ns) return false;
+    if (ns === 'admin.$cmd') return true;
+    if (this._includeNSRegex && !this._includeNSRegex.test(ns)) return false;
+    if (this._excludeNSRegex && this._excludeNSRegex.test(ns)) return false;
+
+    return true;
   }
 
   private _getOplogSelector(lastProcessedTS?: any): any {
@@ -415,6 +438,11 @@ async function handleDoc(handle: OplogHandle, doc: OplogEntry): Promise<void> {
         if (!op.ts) {
           op.ts = nextTimestamp;
           nextTimestamp = nextTimestamp.add(Long.ONE);
+        }
+        // Only forward sub-ops whose ns is allowed
+        // See https://github.com/meteor/meteor/issues/13945
+        if (!handle['_nsAllowed'](op.ns)) {
+          continue;
         }
         await handleDoc(handle, op);
       }
