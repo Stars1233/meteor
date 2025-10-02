@@ -166,6 +166,16 @@ export class OplogHandle {
         ],
       });
     } else {
+      const nsRegex = new RegExp(
+        "^(?:" +
+          [
+            // @ts-ignore
+            Meteor._escapeRegExp(this._dbName + "."),
+            // @ts-ignore
+            Meteor._escapeRegExp("admin.$cmd"),
+          ].join("|") +
+          ")"
+      );
       oplogCriteria.push({
         ns: nsRegex,
       });
