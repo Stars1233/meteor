@@ -3555,3 +3555,59 @@ if (Meteor.isServer) {
     });
   });
 }
+
+// Test for CollectionPrototype._validatedInsert returning the inserted ID
+if (Meteor.isServer) {
+  Tinytest.add("mongo-livedata - _validatedInsert returns insertedId", function (test) {
+    const run = test.runId();
+    const coll = new Mongo.Collection("validatedInsert_test_" + run);
+    
+    // Set up allow rule to enable validation
+    coll.allow({
+      insert: function () { return true; }
+    });
+    
+    // Test document
+    const testDoc = { name: "test document", value: 42 };
+    
+    // Call _validatedInsert directly and check return value
+    const result = coll._validatedInsert(null, testDoc, null);
+    
+    // Should return the inserted ID
+    test.isTrue(result, "_validatedInsert should return a truthy value (the inserted ID)");
+    test.equal(typeof result, "string", "_validatedInsert should return a string ID");
+    
+    // Verify the document was actually inserted with the returned ID
+    const insertedDoc = coll.findOne(result);
+    test.isTrue(insertedDoc, "Document should be found with the returned ID");
+    test.equal(insertedDoc.name, testDoc.name, "Inserted document should have correct name");
+    test.equal(insertedDoc.value, testDoc.value, "Inserted document should have correct value");
+    test.equal(insertedDoc._id, result, "Document _id should match returned ID");
+  });
+  
+  Tinytest.add("mongo-livedata - _validatedInsert with generated ID", function (test) {
+    const run = test.runId();
+    const coll = new Mongo.Collection("validatedInsertGenId_test_" + run);
+    
+    // Set up allow rule to enable validation
+    coll.allow({
+      insert: function () { return true; }
+    });
+    
+    // Test document without ID (will generate one)
+    const testDoc = { name: "test document with generated ID", value: 123 };
+    const generatedId = coll._makeNewID();
+    
+    // Call _validatedInsert with a generated ID
+    const result = coll._validatedInsert(null, testDoc, generatedId);
+    
+    // Should return the generated ID
+    test.equal(result, generatedId, "_validatedInsert should return the generated ID");
+    
+    // Verify the document was inserted with the generated ID
+    const insertedDoc = coll.findOne(generatedId);
+    test.isTrue(insertedDoc, "Document should be found with the generated ID");
+    test.equal(insertedDoc._id, generatedId, "Document _id should be the generated ID");
+    test.equal(insertedDoc.name, testDoc.name, "Inserted document should have correct name");
+  });
+}
