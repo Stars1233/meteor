@@ -1,27 +1,16 @@
-<template>
-  <div>
-    <button @click="increment">Click Me</button>
-    <p>You've pressed the button {{counter}} times.</p>
-  </div>
-</template>
+<script setup>
+import { ref } from 'vue'
 
-<script>
-export default {
-  data() {
-    return {
-      counter: 0,
-    }
-  },
-  methods: {
-    increment() {
-      this.counter += 1
-    }
-  },
+const count = ref(0)
+
+function increment() {
+  count.value++
 }
 </script>
 
-<style scoped>
-  p {
-    font-family: serif;
-  }
-</style>
+<template>
+  <button @click="increment" class="bg-green-700 hover:bg-green-900 text-white py-2 px-4 rounded">Click Me</button>
+  <p>
+    You've pressed the button <strong>{{ count }}</strong> times.
+  </p>
+</template>

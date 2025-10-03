@@ -2,10 +2,10 @@ import { Meteor } from 'meteor/meteor';
 import { Log } from 'meteor/logging';
 import { Hook } from 'meteor/callback-hook';
 
-import Future from 'fibers/future';
 import url from 'url';
 import nodemailer from 'nodemailer';
 import wellKnow from 'nodemailer/lib/well-known';
+import { openpgpEncrypt } from 'nodemailer-openpgp';
 
 export const Email = {};
 export const EmailTest = {};
@@ -25,7 +25,7 @@ export const EmailInternals = {
 
 const MailComposer = EmailInternals.NpmModules.mailcomposer.module;
 
-const makeTransport = function(mailUrlString) {
+const makeTransport = function (mailUrlString, options) {
   const mailUrl = new URL(mailUrlString);
 
   if (mailUrl.protocol !== 'smtp:' && mailUrl.protocol !== 'smtps:') {
@@ -54,13 +54,14 @@ const makeTransport = function(mailUrlString) {
   }
 
   const transport = nodemailer.createTransport(url.format(mailUrl));
-
-  transport._syncSendMail = Meteor.wrapAsync(transport.sendMail, transport);
+  if (options?.encryptionKeys || options?.shouldSign) {
+    transport.use('stream', openpgpEncrypt(options));
+  }
   return transport;
 };
 
 // More info: https://nodemailer.com/smtp/well-known/
-const knownHostsTransport = function(settings = undefined, url = undefined) {
+const knownHostsTransport = function (settings = undefined, url = undefined, options) {
   let service, user, password;
 
   const hasSettings = settings && Object.keys(settings).length;
@@ -105,74 +106,72 @@ const knownHostsTransport = function(settings = undefined, url = undefined) {
     },
   });
 
-  transport._syncSendMail = Meteor.wrapAsync(transport.sendMail, transport);
+  if (options?.encryptionKeys || options?.shouldSign) {
+    transport.use('stream', openpgpEncrypt(options));
+  }
   return transport;
 };
 EmailTest.knowHostsTransport = knownHostsTransport;
 
-const getTransport = function() {
+const getTransport = function (options) {
   const packageSettings = Meteor.settings.packages?.email || {};
   // We delay this check until the first call to Email.send, in case someone
   // set process.env.MAIL_URL in startup code. Then we store in a cache until
   // process.env.MAIL_URL changes.
   const url = process.env.MAIL_URL;
   if (
-    this.cacheKey === undefined ||
-    this.cacheKey !== url ||
-    this.cacheKey !== packageSettings.service ||
-    this.cacheKey !== 'settings'
+    globalThis.cacheKey === undefined ||
+    globalThis.cacheKey !== url ||
+    globalThis.cacheKey !== packageSettings.service ||
+    globalThis.cacheKey !== 'settings'
   ) {
     if (
       (packageSettings.service && wellKnow(packageSettings.service)) ||
       (url && wellKnow(new URL(url).hostname)) ||
       wellKnow(url?.split(':')[0] || '')
     ) {
-      this.cacheKey = packageSettings.service || 'settings';
-      this.cache = knownHostsTransport(packageSettings, url);
+      globalThis.cacheKey = packageSettings.service || 'settings';
+      globalThis.cache = knownHostsTransport(packageSettings, url, options);
     } else {
-      this.cacheKey = url;
-      this.cache = url ? makeTransport(url, packageSettings) : null;
+      globalThis.cacheKey = url;
+      globalThis.cache = url ? makeTransport(url, options) : null;
     }
   }
-  return this.cache;
+  return globalThis.cache;
 };
 
 let nextDevModeMailId = 0;
-let output_stream = process.stdout;
+
+EmailTest._getAndIncNextDevModeMailId = function () {
+  return nextDevModeMailId++;
+};
 
 // Testing hooks
-EmailTest.overrideOutputStream = function(stream) {
+EmailTest.resetNextDevModeMailId = function () {
   nextDevModeMailId = 0;
-  output_stream = stream;
 };
 
-EmailTest.restoreOutputStream = function() {
-  output_stream = process.stdout;
-};
+const devModeSendAsync = function (mail, options) {
+  const stream = options?.stream || process.stdout;
+  return new Promise((resolve, reject) => {
+    let devModeMailId = EmailTest._getAndIncNextDevModeMailId();
 
-const devModeSend = function(mail) {
-  let devModeMailId = nextDevModeMailId++;
-
-  const stream = output_stream;
-
-  // This approach does not prevent other writers to stdout from interleaving.
-  stream.write('====== BEGIN MAIL #' + devModeMailId + ' ======\n');
-  stream.write(
-    '(Mail not sent; to enable sending, set the MAIL_URL ' +
+    // This approach does not prevent other writers to stdout from interleaving.
+    const output = ['====== BEGIN MAIL #' + devModeMailId + ' ======\n'];
+    output.push(
+      '(Mail not sent; to enable sending, set the MAIL_URL ' +
       'environment variable.)\n'
-  );
-  const readStream = new MailComposer(mail).compile().createReadStream();
-  readStream.pipe(stream, { end: false });
-  const future = new Future();
-  readStream.on('end', function() {
-    stream.write('====== END MAIL #' + devModeMailId + ' ======\n');
-    future.return();
+    );
+    const readStream = new MailComposer(mail).compile().createReadStream();
+    readStream.on('data', buffer => {
+      output.push(buffer.toString());
+    });
+    readStream.on('end', function () {
+      output.push('====== END MAIL #' + devModeMailId + ' ======\n');
+      stream.write(output.join(''), () => resolve());
+    });
+    readStream.on('error', (err) => reject(err));
   });
-  future.wait();
-};
-
-const smtpSend = function(transport, mail) {
-  transport._syncSendMail(mail);
 };
 
 const sendHooks = new Hook();
@@ -186,7 +185,7 @@ const sendHooks = new Hook();
  * false to skip sending.
  * @returns {{ stop: function, callback: function }}
  */
-Email.hookSend = function(f) {
+Email.hookSend = function (f) {
   return sendHooks.register(f);
 };
 
@@ -200,7 +199,7 @@ Email.hookSend = function(f) {
 Email.customTransport = undefined;
 
 /**
- * @summary Send an email. Throws an `Error` on failure to contact mail server
+ * @summary Send an email with asyncronous method. Capture  Throws an `Error` on failure to contact mail server
  * or if mail server returns an error. All fields should match
  * [RFC5322](http://tools.ietf.org/html/rfc5322) specification.
  *
@@ -212,8 +211,9 @@ Email.customTransport = undefined;
  * when using the `attachments` or `mailComposer` options.
  *
  * @locus Server
+ * @return {Promise}
  * @param {Object} options
- * @param {String} [options.from] "From:" address (required)
+ * @param {String} options.from "From:" address (required)
  * @param {String|String[]} options.to,cc,bcc,replyTo
  *   "To:", "Cc:", "Bcc:", and "Reply-To:" addresses
  * @param {String} [options.inReplyTo] Message-ID this message is replying to
@@ -231,23 +231,21 @@ Email.customTransport = undefined;
  * You can create a `MailComposer` object via
  * `new EmailInternals.NpmModules.mailcomposer.module`.
  */
-Email.send = function(options) {
-  if (options.mailComposer) {
-    options = options.mailComposer.mail;
-  }
+Email.sendAsync = async function (options) {
+  const email = options.mailComposer ? options.mailComposer.mail : options;
 
   let send = true;
-  sendHooks.forEach(hook => {
-    send = hook(options);
+  await sendHooks.forEachAsync(async (sendHook) => {
+    send = await sendHook(email);
     return send;
   });
-  if (!send) return;
-
-  const customTransport = Email.customTransport;
-  if (customTransport) {
-    const packageSettings = Meteor.settings.packages?.email || {};
-    customTransport({ packageSettings, ...options });
+  if (!send) {
     return;
+  }
+
+  if (Email.customTransport) {
+    const packageSettings = Meteor.settings.packages?.email || {};
+    return Email.customTransport({ packageSettings, ...email });
   }
 
   const mailUrlEnv = process.env.MAIL_URL;
@@ -262,9 +260,59 @@ Email.send = function(options) {
   }
 
   if (mailUrlEnv || mailUrlSettings) {
-    const transport = getTransport();
-    smtpSend(transport, options);
-    return;
+    return getTransport().sendMail(email);
   }
-  devModeSend(options);
+
+  return devModeSendAsync(email, options);
+};
+
+/**
+ * @deprecated
+ * @summary Send an email with asyncronous method. Capture  Throws an `Error` on failure to contact mail server
+ * or if mail server returns an error. All fields should match
+ * [RFC5322](http://tools.ietf.org/html/rfc5322) specification.
+ *
+ * If the `MAIL_URL` environment variable is set, actually sends the email.
+ * Otherwise, prints the contents of the email to standard out.
+ *
+ * Note that this package is based on **nodemailer**, so make sure to refer to
+ * [the documentation](http://nodemailer.com/)
+ * when using the `attachments` or `mailComposer` options.
+ *
+ * @locus Server
+ * @return {Promise}
+ * @param {Object} options
+ * @param {String} options.from "From:" address (required)
+ * @param {String|String[]} options.to,cc,bcc,replyTo
+ *   "To:", "Cc:", "Bcc:", and "Reply-To:" addresses
+ * @param {String} [options.inReplyTo] Message-ID this message is replying to
+ * @param {String|String[]} [options.references] Array (or space-separated string) of Message-IDs to refer to
+ * @param {String} [options.messageId] Message-ID for this message; otherwise, will be set to a random value
+ * @param {String} [options.subject]  "Subject:" line
+ * @param {String} [options.text|html] Mail body (in plain text and/or HTML)
+ * @param {String} [options.watchHtml] Mail body in HTML specific for Apple Watch
+ * @param {String} [options.icalEvent] iCalendar event attachment
+ * @param {Object} [options.headers] Dictionary of custom headers - e.g. `{ "header name": "header value" }`. To set an object under a header name, use `JSON.stringify` - e.g. `{ "header name": JSON.stringify({ tracking: { level: 'full' } }) }`.
+ * @param {Object[]} [options.attachments] Array of attachment objects, as
+ * described in the [nodemailer documentation](https://nodemailer.com/message/attachments/).
+ * @param {MailComposer} [options.mailComposer] A [MailComposer](https://nodemailer.com/extras/mailcomposer/#e-mail-message-fields)
+ * object representing the message to be sent.  Overrides all other options.
+ * You can create a `MailComposer` object via
+ * `new EmailInternals.NpmModules.mailcomposer.module`.
+ * @param {String} [options.encryptionKeys] An array that holds the public keys used to encrypt.
+ * @param {String} [options.shouldSign] Enables you to allow or disallow email signing.
+*/
+Email.send = function(options) {
+  Email.sendAsync(options)
+    .then(() =>
+      console.warn(
+        `Email.send is no longer recommended, you should use Email.sendAsync`
+      )
+    )
+    .catch(e =>
+      console.error(
+        `Email.send is no longer recommended and an error happened`,
+        e
+      )
+    );
 };
