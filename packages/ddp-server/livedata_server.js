@@ -1,4 +1,11 @@
+import isEmpty from 'lodash.isempty';
+import isObject from 'lodash.isobject';
+import isString from 'lodash.isstring';
+import { SessionCollectionView } from './session_collection_view';
+import { SessionDocumentView } from './session_document_view';
+
 DDPServer = {};
+
 
 // Publication strategies define how we handle data from published cursors at the collection level
 // This allows someone to:
@@ -50,33 +57,7 @@ DDPServer.publicationStrategies = publicationStrategies;
 // Session and Subscription are file scope. For now, until we freeze
 // the interface, Server is package scope (in the future it should be
 // exported).
-var DummyDocumentView = function () {
-  var self = this;
-  self.existsIn = new Set(); // set of subscriptionHandle
-  self.dataByKey = new Map(); // key-> [ {subscriptionHandle, value} by precedence]
-};
 
-Object.assign(DummyDocumentView.prototype, {
-  getFields: function () {
-    return {}
-  },
-
-  clearField: function (subscriptionHandle, key, changeCollector) {
-    changeCollector[key] = undefined
-  },
-
-  changeField: function (subscriptionHandle, key, value,
-                         changeCollector, isAdd) {
-    changeCollector[key] = value
-  }
-});
-
-// Represents a single document in a SessionCollectionView
-var SessionDocumentView = function () {
-  var self = this;
-  self.existsIn = new Set(); // set of subscriptionHandle
-  self.dataByKey = new Map(); // key-> [ {subscriptionHandle, value} by precedence]
-};
 
 DDPServer._SessionDocumentView = SessionDocumentView;
 
@@ -89,209 +70,8 @@ DDPServer._getCurrentFence = function () {
   return currentInvocation ? currentInvocation.fence : undefined;
 };
 
-_.extend(SessionDocumentView.prototype, {
-
-  getFields: function () {
-    var self = this;
-    var ret = {};
-    self.dataByKey.forEach(function (precedenceList, key) {
-      ret[key] = precedenceList[0].value;
-    });
-    return ret;
-  },
-
-  clearField: function (subscriptionHandle, key, changeCollector) {
-    var self = this;
-    // Publish API ignores _id if present in fields
-    if (key === "_id")
-      return;
-    var precedenceList = self.dataByKey.get(key);
-
-    // It's okay to clear fields that didn't exist. No need to throw
-    // an error.
-    if (!precedenceList)
-      return;
-
-    var removedValue = undefined;
-    for (var i = 0; i < precedenceList.length; i++) {
-      var precedence = precedenceList[i];
-      if (precedence.subscriptionHandle === subscriptionHandle) {
-        // The view's value can only change if this subscription is the one that
-        // used to have precedence.
-        if (i === 0)
-          removedValue = precedence.value;
-        precedenceList.splice(i, 1);
-        break;
-      }
-    }
-    if (precedenceList.length === 0) {
-      self.dataByKey.delete(key);
-      changeCollector[key] = undefined;
-    } else if (removedValue !== undefined &&
-               !EJSON.equals(removedValue, precedenceList[0].value)) {
-      changeCollector[key] = precedenceList[0].value;
-    }
-  },
-
-  changeField: function (subscriptionHandle, key, value,
-                         changeCollector, isAdd) {
-    var self = this;
-    // Publish API ignores _id if present in fields
-    if (key === "_id")
-      return;
-
-    // Don't share state with the data passed in by the user.
-    value = EJSON.clone(value);
-
-    if (!self.dataByKey.has(key)) {
-      self.dataByKey.set(key, [{subscriptionHandle: subscriptionHandle,
-                                value: value}]);
-      changeCollector[key] = value;
-      return;
-    }
-    var precedenceList = self.dataByKey.get(key);
-    var elt;
-    if (!isAdd) {
-      elt = precedenceList.find(function (precedence) {
-          return precedence.subscriptionHandle === subscriptionHandle;
-      });
-    }
-
-    if (elt) {
-      if (elt === precedenceList[0] && !EJSON.equals(value, elt.value)) {
-        // this subscription is changing the value of this field.
-        changeCollector[key] = value;
-      }
-      elt.value = value;
-    } else {
-      // this subscription is newly caring about this field
-      precedenceList.push({subscriptionHandle: subscriptionHandle, value: value});
-    }
-
-  }
-});
-
-/**
- * Represents a client's view of a single collection
- * @param {String} collectionName Name of the collection it represents
- * @param {Object.<String, Function>} sessionCallbacks The callbacks for added, changed, removed
- * @class SessionCollectionView
- */
-var SessionCollectionView = function (collectionName, sessionCallbacks) {
-  var self = this;
-  self.collectionName = collectionName;
-  self.documents = new Map();
-  self.callbacks = sessionCallbacks;
-};
 
 DDPServer._SessionCollectionView = SessionCollectionView;
-
-
-Object.assign(SessionCollectionView.prototype, {
-
-  isEmpty: function () {
-    var self = this;
-    return self.documents.size === 0;
-  },
-
-  diff: function (previous) {
-    var self = this;
-    DiffSequence.diffMaps(previous.documents, self.documents, {
-      both: _.bind(self.diffDocument, self),
-
-      rightOnly: function (id, nowDV) {
-        self.callbacks.added(self.collectionName, id, nowDV.getFields());
-      },
-
-      leftOnly: function (id, prevDV) {
-        self.callbacks.removed(self.collectionName, id);
-      }
-    });
-  },
-
-  diffDocument: function (id, prevDV, nowDV) {
-    var self = this;
-    var fields = {};
-    DiffSequence.diffObjects(prevDV.getFields(), nowDV.getFields(), {
-      both: function (key, prev, now) {
-        if (!EJSON.equals(prev, now))
-          fields[key] = now;
-      },
-      rightOnly: function (key, now) {
-        fields[key] = now;
-      },
-      leftOnly: function(key, prev) {
-        fields[key] = undefined;
-      }
-    });
-    self.callbacks.changed(self.collectionName, id, fields);
-  },
-
-  added: function (subscriptionHandle, id, fields) {
-    var self = this;
-    var docView = self.documents.get(id);
-    var added = false;
-    if (!docView) {
-      added = true;
-      if (Meteor.server.getPublicationStrategy(this.collectionName).useDummyDocumentView) {
-        docView = new DummyDocumentView();
-      } else {
-        docView = new SessionDocumentView();
-      }
-
-      self.documents.set(id, docView);
-    }
-    docView.existsIn.add(subscriptionHandle);
-    var changeCollector = {};
-    _.each(fields, function (value, key) {
-      docView.changeField(
-        subscriptionHandle, key, value, changeCollector, true);
-    });
-    if (added)
-      self.callbacks.added(self.collectionName, id, changeCollector);
-    else
-      self.callbacks.changed(self.collectionName, id, changeCollector);
-  },
-
-  changed: function (subscriptionHandle, id, changed) {
-    var self = this;
-    var changedResult = {};
-    var docView = self.documents.get(id);
-    if (!docView)
-      throw new Error("Could not find element with id " + id + " to change");
-    _.each(changed, function (value, key) {
-      if (value === undefined)
-        docView.clearField(subscriptionHandle, key, changedResult);
-      else
-        docView.changeField(subscriptionHandle, key, value, changedResult);
-    });
-    self.callbacks.changed(self.collectionName, id, changedResult);
-  },
-
-  removed: function (subscriptionHandle, id) {
-    var self = this;
-    var docView = self.documents.get(id);
-    if (!docView) {
-      var err = new Error("Removed nonexistent document " + id);
-      throw err;
-    }
-    docView.existsIn.delete(subscriptionHandle);
-    if (docView.existsIn.size === 0) {
-      // it is gone from everyone
-      self.callbacks.removed(self.collectionName, id);
-      self.documents.delete(id);
-    } else {
-      var changed = {};
-      // remove this subscription from every precedence list
-      // and record the changes
-      docView.dataByKey.forEach(function (precedenceList, key) {
-        docView.clearField(subscriptionHandle, key, changed);
-      });
-
-      self.callbacks.changed(self.collectionName, id, changed);
-    }
-  }
-});
 
 /******************************************************************************/
 /* Session                                                                    */
@@ -401,7 +181,7 @@ Object.assign(Session.prototype, {
     if (self._isSending) {
       self.send({msg: "ready", subs: subscriptionIds});
     } else {
-      _.each(subscriptionIds, function (subscriptionId) {
+      subscriptionIds.forEach(function (subscriptionId) {
         self._pendingReady.push(subscriptionId);
       });
     }
@@ -419,7 +199,7 @@ Object.assign(Session.prototype, {
   },
 
   sendChanged(collectionName, id, fields) {
-    if (_.isEmpty(fields))
+    if (isEmpty(fields))
       return;
 
     if (this._canSend(collectionName)) {
@@ -441,9 +221,9 @@ Object.assign(Session.prototype, {
   getSendCallbacks: function () {
     var self = this;
     return {
-      added: _.bind(self.sendAdded, self),
-      changed: _.bind(self.sendChanged, self),
-      removed: _.bind(self.sendRemoved, self)
+      added: self.sendAdded.bind(self),
+      changed: self.sendChanged.bind(self),
+      removed: self.sendRemoved.bind(self)
     };
   },
 
@@ -493,8 +273,8 @@ Object.assign(Session.prototype, {
     // Make a shallow copy of the set of universal handlers and start them. If
     // additional universal publishers start while we're running them (due to
     // yielding), they will run separately as part of Server.publish.
-    var handlers = _.clone(self.server.universal_publish_handlers);
-    _.each(handlers, function (handler) {
+    var handlers = [...self.server.universal_publish_handlers];
+    handlers.forEach(function (handler) {
       self._startSubscription(handler);
     });
   },
@@ -536,7 +316,7 @@ Object.assign(Session.prototype, {
 
       // Defer calling the close callbacks, so that the caller closing
       // the session isn't waiting for all the callbacks to complete.
-      _.each(self._closeCallbacks, function (callback) {
+      self._closeCallbacks.forEach(function (callback) {
         callback();
       });
     });
@@ -631,7 +411,7 @@ Object.assign(Session.prototype, {
           if (!blocked)
             return; // idempotent
           blocked = false;
-          processNext();
+          setImmediate(processNext);
         };
 
         self.server.onMessageHook.each(function (callback) {
@@ -639,7 +419,7 @@ Object.assign(Session.prototype, {
           return true;
         });
 
-        if (_.has(self.protocol_handlers, msg.msg)) {
+        if (msg.msg in self.protocol_handlers) {
           const result = self.protocol_handlers[msg.msg].call(
             self,
             msg,
@@ -674,7 +454,7 @@ Object.assign(Session.prototype, {
       // reject malformed messages
       if (typeof (msg.id) !== "string" ||
           typeof (msg.name) !== "string" ||
-          (('params' in msg) && !(msg.params instanceof Array))) {
+          ('params' in msg && !(msg.params instanceof Array))) {
         self.sendError("Malformed subscription", msg);
         return;
       }
@@ -743,7 +523,7 @@ Object.assign(Session.prototype, {
       // for forwards compatibility.
       if (typeof (msg.id) !== "string" ||
           typeof (msg.method) !== "string" ||
-          (('params' in msg) && !(msg.params instanceof Array)) ||
+          ('params' in msg && !(msg.params instanceof Array)) ||
           (('randomSeed' in msg) && (typeof msg.randomSeed !== "string"))) {
         self.sendError("Malformed method invocation", msg);
         return;
@@ -814,34 +594,16 @@ Object.assign(Session.prototype, {
           }
         }
 
-
-
-        const getCurrentMethodInvocationResult = () =>
-          DDP._CurrentMethodInvocation.withValue(
+        resolve(DDPServer._CurrentWriteFence.withValue(
+          fence,
+          () => DDP._CurrentMethodInvocation.withValue(
             invocation,
-            () =>
-              maybeAuditArgumentChecks(
-                handler,
-                invocation,
-                msg.params,
-                "call to '" + msg.method + "'"
-              ),
-            {
-              name: 'getCurrentMethodInvocationResult',
-              keyName: 'getCurrentMethodInvocationResult',
-            }
-          );
-
-        resolve(
-          DDPServer._CurrentWriteFence.withValue(
-            fence,
-            getCurrentMethodInvocationResult,
-            {
-              name: 'DDPServer._CurrentWriteFence',
-              keyName: '_CurrentWriteFence',
-            }
+            () => maybeAuditArgumentChecks(
+              handler, invocation, msg.params,
+              "call to '" + msg.method + "'"
+            )
           )
-        );
+        ));
       });
 
       async function finish() {
@@ -961,7 +723,7 @@ Object.assign(Session.prototype, {
     Meteor._noYieldsAllowed(function () {
       self._isSending = true;
       self._diffCollectionViews(beforeCVs);
-      if (!_.isEmpty(self._pendingReady)) {
+      if (!isEmpty(self._pendingReady)) {
         self.sendReady(self._pendingReady);
         self._pendingReady = [];
       }
@@ -1050,9 +812,9 @@ Object.assign(Session.prototype, {
       return self.socket.remoteAddress;
 
     var forwardedFor = self.socket.headers["x-forwarded-for"];
-    if (! _.isString(forwardedFor))
+    if (!isString(forwardedFor))
       return null;
-    forwardedFor = forwardedFor.trim().split(/\s*,\s*/);
+    forwardedFor = forwardedFor.split(',')
 
     // Typically the first value in the `x-forwarded-for` header is
     // the original IP address of the client connecting to the first
@@ -1063,9 +825,9 @@ Object.assign(Session.prototype, {
     // end of the list, we ensure that we get the IP address being
     // reported by *our* first proxy.
 
-    if (httpForwardedCount < 0 || httpForwardedCount > forwardedFor.length)
+    if (httpForwardedCount < 0 || httpForwardedCount !== forwardedFor.length)
       return null;
-
+    forwardedFor = forwardedFor.map((ip) => ip.trim());
     return forwardedFor[forwardedFor.length - httpForwardedCount];
   }
 });
@@ -1244,9 +1006,9 @@ Object.assign(Subscription.prototype, {
       // _publishCursor only returns after the initial added callbacks have run.
       // mark subscription as ready.
       self.ready();
-    } else if (_.isArray(res)) {
+    } else if (Array.isArray(res)) {
       // Check all the elements are cursors
-      if (! _.all(res, isCursor)) {
+      if (! res.every(isCursor)) {
         self.error(new Error("Publish function returned an array of non-Cursors"));
         return;
       }
@@ -1257,7 +1019,7 @@ Object.assign(Subscription.prototype, {
 
       for (var i = 0; i < res.length; ++i) {
         var collectionName = res[i]._getCollectionName();
-        if (_.has(collectionNames, collectionName)) {
+        if (collectionNames[collectionName]) {
           self.error(new Error(
             "Publish function returned multiple cursors for collection " +
               collectionName));
@@ -1302,7 +1064,7 @@ Object.assign(Subscription.prototype, {
     // Tell listeners, so they can clean up
     var callbacks = self._stopCallbacks;
     self._stopCallbacks = [];
-    _.each(callbacks, function (callback) {
+    callbacks.forEach(function (callback) {
       callback();
     });
   },
@@ -1637,9 +1399,9 @@ Object.assign(Server.prototype, {
     // The connect message must specify a version and an array of supported
     // versions, and it must claim to support what it is proposing.
     if (!(typeof (msg.version) === 'string' &&
-          _.isArray(msg.support) &&
-          _.all(msg.support, _.isString) &&
-          _.contains(msg.support, msg.version))) {
+          Array.isArray(msg.support) &&
+          msg.support.every(isString) &&
+          msg.support.includes(msg.version))) {
       socket.send(DDPCommon.stringifyDDP({msg: 'failed',
                                 version: DDPCommon.SUPPORTED_DDP_VERSIONS[0]}));
       socket.close();
@@ -1704,7 +1466,7 @@ Object.assign(Server.prototype, {
   publish: function (name, handler, options) {
     var self = this;
 
-    if (! _.isObject(name)) {
+    if (!isObject(name)) {
       options = options || {};
 
       if (name && name in self.publish_handlers) {
@@ -1752,7 +1514,7 @@ Object.assign(Server.prototype, {
       }
     }
     else{
-      _.each(name, function(value, key) {
+      Object.entries(name).forEach(function([key, value]) {
         self.publish(key, value, {});
       });
     }
@@ -1783,7 +1545,7 @@ Object.assign(Server.prototype, {
    */
   methods: function (methods) {
     var self = this;
-    _.each(methods, function (func, name) {
+    Object.entries(methods).forEach(function ([name, func]) {
       if (typeof func !== 'function')
         throw new Error("Method '" + name + "' must be a function");
       if (self.method_handlers[name])
@@ -1807,7 +1569,6 @@ Object.assign(Server.prototype, {
     const options = args[0]?.hasOwnProperty('returnStubValue')
       ? args.shift()
       : {};
-    DDP._CurrentMethodInvocation._set();
     DDP._CurrentMethodInvocation._setCallAsyncMethodRunning(true);
     const promise = new Promise((resolve, reject) => {
       DDP._CurrentCallAsyncInvocation._set({ name, hasCallAsyncParent: true });
@@ -1923,8 +1684,8 @@ Object.assign(Server.prototype, {
 
 var calculateVersion = function (clientSupportedVersions,
                                  serverSupportedVersions) {
-  var correctVersion = _.find(clientSupportedVersions, function (version) {
-    return _.contains(serverSupportedVersions, version);
+  var correctVersion = clientSupportedVersions.find(function (version) {
+    return serverSupportedVersions.includes(version);
   });
   if (!correctVersion) {
     correctVersion = serverSupportedVersions[0];
@@ -1964,8 +1725,7 @@ var wrapInternalException = function (exception, context) {
 
   // Did the error contain more details that could have been useful if caught in
   // server code (or if thrown from non-client-originated code), but also
-  // provided a "sanitized" version with more context than 500 Internal server
-  // error? Use that.
+  // provided a "sanitized" version with more context than 500 Internal server error? Use that.
   if (exception.sanitizedError) {
     if (exception.sanitizedError.isClientSafe)
       return exception.sanitizedError;
