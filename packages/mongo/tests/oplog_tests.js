@@ -280,7 +280,6 @@ async function oplogTailingOptionsTest({
 
     const myOplogHandle = new MongoInternals.OplogHandle(process.env.MONGO_OPLOG_URL, 'meteor');
     await myOplogHandle._startTrailingPromise;
-    MongoInternals.defaultRemoteCollectionDriver().mongo._setOplogHandle(myOplogHandle);
 
     const IncludeCollection = new Mongo.Collection(includeCollectionName);
     const ExcludeCollection = new Mongo.Collection(excludeCollectionName);
@@ -331,7 +330,6 @@ async function oplogTailingOptionsTest({
     if (stopRaw?.stop) await stopRaw.stop();
     // Reset:
     Meteor.settings.packages.mongo = { ...previousMongoPackageSettings };
-    MongoInternals.defaultRemoteCollectionDriver().mongo._setOplogHandle(defaultOplogHandle);
   }
 }
 
@@ -497,8 +495,8 @@ process.env.MONGO_OPLOG_URL && Tinytest.addAsync(
 process.env.MONGO_OPLOG_URL && Tinytest.addAsync(
   'mongo-livedata - oplog - oplogSettings - transaction - oplogExcludeCollections',
   async test => {
-    const collectionNameA = "oplog-a-massive-" + Random.id();
-    const collectionNameB = "oplog-b-massive-" + Random.id();
+    const collectionNameA = "oplog-a-transaction-" + Random.id();
+    const collectionNameB = "oplog-b-transaction-" + Random.id();
     const mongoPackageSettings = {
       oplogExcludeCollections: [collectionNameA]
     };
@@ -506,6 +504,24 @@ process.env.MONGO_OPLOG_URL && Tinytest.addAsync(
       test,
       includeCollectionName: collectionNameB,
       excludeCollectionName: collectionNameA,
+      mongoPackageSettings,
+      functionToRun: oplogInsertionTransaction
+    });
+  }
+);
+
+process.env.MONGO_OPLOG_URL && Tinytest.addAsync(
+  'mongo-livedata - oplog - oplogSettings - transaction - oplogIncludeCollections',
+  async test => {
+    const collectionNameA = "oplog-a-transaction-" + Random.id();
+    const collectionNameB = "oplog-b-transaction-" + Random.id();
+    const mongoPackageSettings = {
+      oplogIncludeCollections: [collectionNameA]
+    };
+    await oplogTailingOptionsTest({
+      test,
+      includeCollectionName: collectionNameA,
+      excludeCollectionName: collectionNameB,
       mongoPackageSettings,
       functionToRun: oplogInsertionTransaction
     });
