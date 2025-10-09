@@ -10,6 +10,8 @@ const HtmlRspackPlugin = require('./plugins/HtmlRspackPlugin.js');
 const { RequireExternalsPlugin } = require('./plugins/RequireExtenalsPlugin.js');
 const { generateEagerTestFile } = require("./lib/test.js");
 const { getMeteorIgnoreEntries, createIgnoreGlobConfig } = require("./lib/ignore");
+const { mergeMeteorRspackFragments } = require("./lib/meteorRspackConfigFactory.js");
+const { compileWithMeteor, compileWithRspack } = require("./lib/meteorRspackHelpers.js");
 
 // Safe require that doesn't throw if the module isn't found
 function safeRequire(moduleName) {
@@ -211,6 +213,13 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   // Determine build output and pass to Meteor
   const buildOutputDir = path.resolve(projectDir, buildContext, outputDir);
   Meteor.buildOutputDir = buildOutputDir;
+
+  // Expose Meteor's helpers to expand Rspack configs
+  Meteor.compileWithMeteor = deps => compileWithMeteor(deps);
+  Meteor.compileWithRspack = deps =>
+    compileWithRspack(deps, {
+      options: Meteor.swcConfigOptions,
+    });
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {
@@ -559,7 +568,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     }
   }
 
-  const config = isClient ? clientConfig : serverConfig;
+  const sideConfig = isClient ? clientConfig : serverConfig;
+  const config = mergeMeteorRspackFragments(sideConfig);
 
   if (Meteor.isDebug || Meteor.isVerbose) {
     console.log('Config:', inspect(config, { depth: null, colors: true }));
