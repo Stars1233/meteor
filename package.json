@@ -11,8 +11,6 @@
     "url": "https://github.com/meteor/meteor/issues"
   },
   "homepage": "https://www.meteor.com/",
-  "scripts": {
-  },
   "devDependencies": {
     "@babel/core": "^7.21.3",
     "@babel/eslint-parser": "^7.21.3",
