@@ -374,7 +374,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         if (isMainChunk) return `../${buildContext}/${outputPath}`;
         return chunkSuffix;
       },
-      libraryTarget: 'commonjs',
+      libraryTarget: 'commonjs2',
       publicPath: '/',
       chunkFilename: `${chunksContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
@@ -475,7 +475,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     output: {
       path: serverOutputDir,
       filename: () => `../${buildContext}/${outputPath}`,
-      libraryTarget: 'commonjs',
+      libraryTarget: 'commonjs2',
       chunkFilename: `${chunksContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
       ...(isProd && { clean: { keep: keepOutsideBuild() } }),
