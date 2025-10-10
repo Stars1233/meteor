@@ -361,8 +361,19 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     entry: path.resolve(process.cwd(), buildContext, entryPath),
     output: {
       path: clientOutputDir,
-      filename: () =>
-        isDevEnvironment ? outputFilename : `../${buildContext}/${outputPath}`,
+      filename: (_module) => {
+        const chunkName = _module.chunk?.name;
+        const isMainChunk = !chunkName || chunkName === "main";
+        const chunkSuffix = `${chunksContext}/[id]${
+          isProd ? '.[chunkhash]' : ''
+        }.js`;
+        if (isDevEnvironment) {
+          if (isMainChunk) return outputFilename;
+          return chunkSuffix;
+        }
+        if (isMainChunk) return `../${buildContext}/${outputPath}`;
+        return chunkSuffix;
+      },
       libraryTarget: 'commonjs',
       publicPath: '/',
       chunkFilename: `${chunksContext}/[id]${isProd ? '.[chunkhash]' : ''}.js`,
@@ -469,7 +480,11 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       assetModuleFilename: `${assetsContext}/[hash][ext][query]`,
       ...(isProd && { clean: { keep: keepOutsideBuild() } }),
     },
-    optimization: { usedExports: true },
+    optimization: {
+      usedExports: true,
+      splitChunks: false,
+      runtimeChunk: false,
+    },
     module: {
       rules: [swcConfigRule, ...extraRules],
       parser: {
@@ -552,13 +567,16 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         : projectConfig;
 
     const omitPaths = [
-      'name',
-      'target',
-      'entry',
-      'output.path',
-      'output.filename',
-      'output.publicPath',
-    ];
+      "name",
+      "target",
+      "entry",
+      "output.path",
+      "output.filename",
+      "output.publicPath",
+      ...(Meteor.isServer
+        ? ["optimization.splitChunks", "optimization.runtimeChunk"]
+        : []),
+    ].filter(Boolean);
     const warningFn = path => {
       console.warn(
         `[rspack.config.js] Ignored custom "${path}" — reserved for Meteor-Rspack integration.`,
