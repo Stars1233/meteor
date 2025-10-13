@@ -138,6 +138,43 @@ function createSwcConfig({
   };
 }
 
+function createRemoteDevServerConfig() {
+  const rootUrl = process.env.ROOT_URL;
+  let hostname;
+  let protocol;
+  let port;
+
+  if (rootUrl) {
+    try {
+      const url = new URL(rootUrl);
+      // Detect if it's remote (not localhost or 127.x)
+      const isLocal =
+        url.hostname.includes('localhost') ||
+        url.hostname.startsWith('127.') ||
+        url.hostname.endsWith('.local');
+      if (!isLocal) {
+        hostname = url.hostname;
+        protocol = url.protocol === 'https:' ? 'wss' : 'ws';
+        port = url.port ? Number(url.port) : (url.protocol === 'https:' ? 443 : 80);
+
+        return {
+          client: {
+            webSocketURL: {
+              hostname,
+              port,
+              protocol,
+            },
+          },
+        };
+      }
+    } catch (err) {
+      console.warn(`Invalid ROOT_URL "${rootUrl}", falling back to localhost`);
+    }
+  }
+
+  // If local doesn't provide any extra config
+  return {};
+}
 
 // Keep files outside of build folders
 function keepOutsideBuild() {
@@ -444,6 +481,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
     ...(isDevEnvironment && {
       devServer: {
+        ...createRemoteDevServerConfig(),
         static: { directory: clientOutputDir, publicPath: '/__rspack__/' },
         hot: true,
         liveReload: true,
