@@ -633,22 +633,27 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       );
     };
 
+    let nextUserConfig = cleanOmittedPaths(userConfig, {
+      omitPaths,
+      warningFn,
+    });
+    nextUserConfig = mergeMeteorRspackFragments(nextUserConfig);
+
     if (Meteor.isClient) {
       clientConfig = mergeSplitOverlap(
         clientConfig,
-        cleanOmittedPaths(userConfig, { omitPaths, warningFn }),
+        nextUserConfig
       );
     }
     if (Meteor.isServer) {
       serverConfig = mergeSplitOverlap(
         serverConfig,
-        cleanOmittedPaths(userConfig, { omitPaths, warningFn }),
+        nextUserConfig
       );
     }
   }
 
-  const sideConfig = isClient ? clientConfig : serverConfig;
-  const config = mergeMeteorRspackFragments(sideConfig);
+  const config = isClient ? clientConfig : serverConfig;
 
   if (Meteor.isDebug || Meteor.isVerbose) {
     console.log('Config:', inspect(config, { depth: null, colors: true }));

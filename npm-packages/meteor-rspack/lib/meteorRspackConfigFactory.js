@@ -42,11 +42,17 @@ function prepareMeteorRspackConfig(customConfig, opts = {}) {
  * Merge all `{prefix}<n>` fragments into `config` using `mergeSplitOverlap`,
  * then remove those temporary keys. Mutates `config`.
  *
- * Order: fragments are applied in ascending numeric order (1, 2, 3, ...).
+ * Position-aware merge:
+ * Walk the config in insertion order and fold:
+ *   - for a fragment key:  out = mergeSplitOverlap(out, fragment)
+ *   - for a normal key:    out = mergeSplitOverlap(out, { [key]: value })
+ *
+ * Result: fragments behave like spreads at their exact position;
+ * later inline keys override earlier ones (including fragments).
  *
  * @param {object} config
  * @param {{ prefix?: string }} [opts]
- * @returns {object} The same (mutated) config instance.
+ * @returns {object} same (mutated) config
  */
 function mergeMeteorRspackFragments(config, opts = {}) {
   if (!config || typeof config !== "object" || Array.isArray(config)) {
@@ -54,39 +60,36 @@ function mergeMeteorRspackFragments(config, opts = {}) {
   }
   const prefix = opts.prefix || DEFAULT_PREFIX;
 
-  // Collect fragment keys like "meteorRspackConfig12"
-  const tempKeys = Object.keys(config)
-    .filter((k) => k.startsWith(prefix) && /^\d+$/.test(k.slice(prefix.length)))
-    .map((k) => [k, parseInt(k.slice(prefix.length), 10)])
-    .sort((a, b) => a[1] - b[1])
-    .map(([k]) => k);
+  let out = {};
+  for (const key of Object.keys(config)) {
+    const val = config[key];
 
-  if (tempKeys.length === 0) return config;
+    const isFragment =
+      typeof key === "string" &&
+      key.startsWith(prefix) &&
+      /^\d+$/.test(key.slice(prefix.length));
 
-  // Apply each fragment with your merge policy
-  for (const k of tempKeys) {
-    const fragment = config[k];
-    if (!fragment || typeof fragment !== "object" || Array.isArray(fragment)) {
-      throw new Error(`Fragment "${k}" must be a plain object`);
+    if (isFragment) {
+      if (!val || typeof val !== "object" || Array.isArray(val)) {
+        throw new Error(`Fragment "${key}" must be a plain object`);
+      }
+      out = mergeSplitOverlap(out, val);
+    } else {
+      out = mergeSplitOverlap(out, { [key]: val });
     }
-    const merged = mergeSplitOverlap(config, fragment);
-
-    // Keep object identity: replace contents of `config` with `merged`
-    replaceObject(config, merged);
   }
 
-  // Strip the temp keys at the end
-  for (const k of tempKeys) delete config[k];
-
+  // keep object identity; fragments disappear because `out` doesn't include them
+  replaceObject(config, out);
   return config;
 }
 
 function replaceObject(target, source) {
-  for (const key of Object.keys(target)) {
-    if (!(key in source)) delete target[key];
+  for (const k of Object.keys(target)) {
+    if (!(k in source)) delete target[k];
   }
-  for (const key of Object.keys(source)) {
-    target[key] = source[key];
+  for (const k of Object.keys(source)) {
+    target[k] = source[k];
   }
 }
 
