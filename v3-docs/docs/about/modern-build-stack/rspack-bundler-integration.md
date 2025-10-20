@@ -287,14 +287,6 @@ If you use TypeScript, also update your `tsconfig.json` to support IDE autocompl
 
 You can also [configure aliases at the transpiler level](meteor-bundler-optimizations.md#import-aliases). For SWC, enable it through the `.swcrc` file (note that SWC aliases have some limitations when resolving files or `node_modules`). If you use Babel, you can rely on the [module-resolver plugin](https://www.npmjs.com/package/babel-plugin-module-resolver).
 
-### CSS, Less and SCSS
-
-Meteor-Rspack comes with built-in CSS support. You can import any CSS file into your code, and it will be processed and included in your HTML skeleton automatically. In addition, any CSS file placed in the same folder as your Meteor entry point will be processed and added as global styles without the need for explicit imports.
-
-Less support in Meteor-Rspack is limited. The [Meteor `less` package](https://github.com/meteor/meteor/tree/master/packages/non-core/less) compiles `.less` files automatically and merges them into the CSS bundle. With Rspack, you should configure Less directly and consider as replacement of the Meteor package. For details, check the [Rspack and Less guide](https://rspack.rs/guide/tech/css#less).
-
-SCSS support is available in Meteor-Rspack. You may need to replace the existing Meteor [`fourseven:scss` package](https://github.com/Meteor-Community-Packages/meteor-scss) or similar with the Rspack configuration. For details, check [the official Rspack and SCSS guide](https://rspack.rs/guide/tech/css#sass).
-
 ### React
 
 Meteor-Rspack supports React projects out of the box. Just install the `rspack` package and run your app. Meteor will detect it and automatically add the needed Rspack dependencies, including `react-refresh` for a full development experience.
@@ -394,7 +386,79 @@ Official Svelte support in the Meteor bundler was via [zodern:melte](https://git
 With the Meteor–Rspack integration, `zodern:melte` no longer works. Use the official Rspack Svelte integration instead. If you relied on melte-specific features like `$` or `$m`, you may need to update parts of your code. Create your own abstractions or migrate them to standard npm package.
 :::
 
-### Tailwind
+### CSS
+
+Meteor-Rspack comes with built-in CSS support. You can import any CSS file into your code, and it will be processed and included in your HTML skeleton automatically. In addition, any CSS file placed in the same folder as your Meteor entry point will be processed and added as global styles without the need for explicit imports.
+
+### Less
+
+Less support is available in Meteor-Rspack. You need to replace the existing [Meteor `less` package](https://github.com/meteor/meteor/tree/master/packages/non-core/less) or similar with the Rspack configuration.
+
+#### Install
+
+``` bash
+npm i -D less less-loader
+```
+
+#### Config
+
+``` js
+module.exports = defineConfig(Meteor => ({
+  module: {
+    rules: [
+      {
+        test: /\.less$/,
+        use: [
+          {
+            loader: 'less-loader',
+          },
+        ],
+        type: 'css/auto',
+      },
+    ],
+  },
+}));
+```
+
+For details, check [the official Rspack and Less guide](https://rspack.rs/guide/tech/css#less).
+
+### SCSS
+
+SCSS support is available in Meteor-Rspack. You need to replace the existing Meteor [`fourseven:scss`package](https://github.com/Meteor-Community-Packages/meteor-scss) or similar with the Rspack configuration.
+
+#### Install
+
+``` bash
+npm i -D sass-embedded sass-loader
+```
+
+#### Config
+
+``` js
+module.exports = defineConfig(Meteor => ({
+  module: {
+    rules: [
+      {
+        test: /\.scss$/i,
+        use: [
+          {
+            loader: 'sass-loader',
+            options: {
+              api: 'modern-compiler',
+              implementation: require.resolve('sass-embedded'),
+            },
+          },
+        ],
+        type: 'css/auto',
+      },
+    ],
+  },
+}));
+```
+
+For more details, check [the official Rspack and SCSS guide](https://rspack.rs/guide/tech/css#sass).
+
+### Tailwind & PostCSS
 
 Meteor-Rspack supports Tailwind projects out of the box. For details, check [the official Rspack and Tailwind guide](https://tailwindcss.com/docs/installation/framework-guides/rspack/react).
 
