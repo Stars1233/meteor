@@ -460,7 +460,7 @@ Use this when a dependency:
 * Needs to be reprocessed according to your SWC config.
 
 🔹 **Meteor.compileWithMeteor(deps: string[])**
-Marks the listed npm packages as externals, so they are skipped by Rspack and handled by Meteor during build and runtime.
+Marks the listed npm packages as externals, so they are skipped by Rspack and handled by Meteor/Node during build and runtime.
 
 Use this when facing issues and for:
 
