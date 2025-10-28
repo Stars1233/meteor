@@ -2436,7 +2436,7 @@ class JsImage {
     });
 
     var devOnlySkipPackages = [];
-    const trySkipDevModule = global.currentCommand?.name === 'build' && buildMode === 'production';
+    const trySkipDevModule = ['build', 'deploy'].includes(global.currentCommand?.name) && buildMode === 'production';
     if (trySkipDevModule) devOnlySkipPackages = getDevOnlyPackages();
 
     // If multiple load files share the same asset, only write one copy of
