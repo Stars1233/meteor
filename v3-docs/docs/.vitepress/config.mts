@@ -45,6 +45,10 @@ export default defineConfig({
                 link: "/tutorials/solid/index",
               },
               {
+                text: "Meteor.js 3 + Blaze",
+                link: "/tutorials/blaze/index",
+              },
+              {
                 text: "Meteor.js 3 + Svelte",
                 link: "/tutorials/svelte/index",
               },
@@ -480,9 +484,13 @@ export default defineConfig({
             link: "/tutorials/vue/meteorjs3-vue3-vue-meteor-tracker",
             text: "Meteor + Vue + vue-meteor-tracker",
           },
-          {
+          {           
             text: "Meteor.js 3 + Solid",
             link: "/tutorials/solid/index",
+          },
+          { 
+            text: "Meteor.js 3 + Blaze",
+            link: "/tutorials/blaze/index",
           },
           {
             text: "Meteor.js 3 + Svelte",
