@@ -506,43 +506,45 @@ This example adds meta tags to the HTML. For more options, see the [official Rsp
 You can still use HTML files near your Meteor client entry point to define customizations (for example, `./client/main.html` will generate correctly and apply the contents you add).
 :::
 
-### `compileWithRspack` and `compileWithMeteor`
+### Delegating Dependencies to Rspack
 
-Meteor provides two helpers to control how specific npm dependencies are handled by Rspack during the build.
+**Meteor.compileWithRspack(deps: string[])**
 
-They let you force or skip compilation for selected packages, which is useful in monorepos or when dealing with untranspiled or native modules.
-
-Available helpers in your `rspack.config.js`:
-
-🔹 **Meteor.compileWithRspack(deps: string[])**
-Forces Rspack (via SWC) to parse and transpile the listed npm packages.
+This helper forces **Rspack (via SWC and custom loaders)** to parse and transpile specific npm dependencies during the build.
 
 Use this when a dependency:
 
-* Uses modern syntax (ESM, TypeScript, etc.) not compatible with your target,
+* Uses modern syntax (ESM, TypeScript, etc.)
 * Lives inside a monorepo and isn’t precompiled,
-* Needs to be reprocessed according to your SWC config.
+* Needs to be reprocessed according to your SWC config
 
-🔹 **Meteor.compileWithMeteor(deps: string[])**
-Marks the listed npm packages as externals, so they are skipped by Rspack and handled by Meteor/Node during build and runtime.
-
-Use this when facing issues and for:
-
-* Native or binary modules (e.g. `sharp`),
-* npm dependencies used inside Meteor atmosphere packages that keep internal state,
-* Large or precompiled modules you prefer to offload to Meteor’s cache.
-
-``` json
+```js
 const { defineConfig } = require('@meteorjs/rspack');
-const { rspack } = require('@rspack/core');
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+
+module.exports = defineConfig(Meteor => ({
+  // Force-compile modern or local packages via SWC
+  ...Meteor.compileWithRspack(['grubba-rpc']),
+}));
+```
+
+### Delegating Dependencies to Meteor
+
+**Meteor.compileWithMeteor(deps: string[])**
+
+This helper marks specific npm dependencies as externals, meaning they are skipped by Rspack and instead handled by Meteor/Node at runtime.
+
+Use this when a dependency:
+
+* Contains native or binary code (e.g. sharp)
+* Belongs to a Meteor Atmosphere package that maintains internal state
+* Comes precompiled or is large enough to run better outside the bundle
+
+```js
+const { defineConfig } = require('@meteorjs/rspack');
 
 module.exports = defineConfig(Meteor => ({
   // Exclude native modules from the bundle (use Meteor runtime)
   ...(Meteor.isServer ? Meteor.compileWithMeteor(['sharp']) : {}),
-
-  // Force-compile modern or local packages via SWC
-  ...Meteor.compileWithRspack(['grubba-rpc']),
 }));
 ```
 
