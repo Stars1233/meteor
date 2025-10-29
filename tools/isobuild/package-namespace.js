@@ -46,6 +46,9 @@ export class PackageNamespace {
    * @param {String} options.documentation Optional Filepath to
    * documentation. Set to 'README.md' by default. Set this to null to submit
    * no documentation.
+   * @param {Boolean} options.devOnly A package with this flag set to true
+   * will ONLY be bundled as part of `meteor run`, and completely excluded
+   * from production builds with `meteor build`.
    * @param {Boolean} options.debugOnly A package with this flag set to true
    * will not be bundled into production builds. This is useful for packages
    * meant to be used in development only.
