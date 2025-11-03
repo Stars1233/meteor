@@ -105,6 +105,10 @@ You can still use these plugins to handle files inside Meteor atmosphere package
 
 Please report your plugin usage as [GitHub issues](https://github.com/meteor/meteor/issues?q=sort%3Aupdated-desc+is%3Aissue+is%3Aopen) or [forum posts](https://forums.meteor.com/), so we can suggest an Rspack alternative or assess compatibility.
 
+### Further migration
+
+Refer to the [Migration Topics](#migration-topics) section for more details on other specific requirements your app might have.
+
 ## Custom `rspack.config.js`
 
 Meteor-Rspack projects can be customized using the `rspack.config.js` file, which is automatically available when installing the `rspack` package. You can also use `rspack.config.mjs` or `rspack.config.cjs` if you prefer strict ESM or CommonJS formats.
@@ -506,45 +510,108 @@ This example adds meta tags to the HTML. For more options, see the [official Rsp
 You can still use HTML files near your Meteor client entry point to define customizations (for example, `./client/main.html` will generate correctly and apply the contents you add).
 :::
 
-### `compileWithRspack` and `compileWithMeteor`
+### Delegating Dependencies to Rspack
 
-Meteor provides two helpers to control how specific npm dependencies are handled by Rspack during the build.
+**Meteor.compileWithRspack(deps: string[])**
 
-They let you force or skip compilation for selected packages, which is useful in monorepos or when dealing with untranspiled or native modules.
-
-Available helpers in your `rspack.config.js`:
-
-🔹 **Meteor.compileWithRspack(deps: string[])**
-Forces Rspack (via SWC) to parse and transpile the listed npm packages.
+This helper forces **Rspack (via SWC and custom loaders)** to parse and transpile specific npm dependencies during the build.
 
 Use this when a dependency:
 
-* Uses modern syntax (ESM, TypeScript, etc.) not compatible with your target,
+* Uses modern syntax (ESM, TypeScript, etc.)
 * Lives inside a monorepo and isn’t precompiled,
-* Needs to be reprocessed according to your SWC config.
+* Needs to be reprocessed according to your SWC config
 
-🔹 **Meteor.compileWithMeteor(deps: string[])**
-Marks the listed npm packages as externals, so they are skipped by Rspack and handled by Meteor/Node during build and runtime.
+```js
+const { defineConfig } = require('@meteorjs/rspack');
 
-Use this when facing issues and for:
+module.exports = defineConfig(Meteor => ({
+  // Force-compile modern or local packages via SWC
+  ...Meteor.compileWithRspack(['grubba-rpc']),
+}));
+```
 
-* Native or binary modules (e.g. `sharp`),
-* npm dependencies used inside Meteor atmosphere packages that keep internal state,
-* Large or precompiled modules you prefer to offload to Meteor’s cache.
+### Delegating Dependencies to Meteor
 
-``` json
+**Meteor.compileWithMeteor(deps: string[])**
+
+This helper marks specific npm dependencies as externals, meaning they are skipped by Rspack and instead handled by Meteor/Node at runtime.
+
+Use this when a dependency:
+
+* Contains native or binary code (e.g. sharp)
+* Belongs to a Meteor Atmosphere package that maintains internal state
+* Comes precompiled or is large enough to run better outside the bundle
+
+```js
+const { defineConfig } = require('@meteorjs/rspack');
+
+module.exports = defineConfig(Meteor => ({
+  // Exclude native modules from the bundle (use Meteor runtime)
+  ...(Meteor.isServer ? Meteor.compileWithMeteor(['sharp']) : {}),
+}));
+```
+
+### Cache
+
+Meteor cache remains active and continues to handle Atmosphere packages and intermediate builds. There’s an additional cache layer managed by Rspack to speed up rebuilds for your app code.
+
+This Rspack cache is enabled by default in persistent mode. If you [encounter issues](https://github.com/web-infra-dev/rspack/issues/11804) or prefer to disable it, you can do so in your `rspack.config.js` using the helper:
+
+```json
 const { defineConfig } = require('@meteorjs/rspack');
 const { rspack } = require('@rspack/core');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 module.exports = defineConfig(Meteor => ({
-  // Exclude native modules from the bundle (use Meteor runtime)
-  ...(Meteor.isServer ? Meteor.compileWithMeteor(['sharp']) : {}),
-
-  // Force-compile modern or local packages via SWC
-  ...Meteor.compileWithRspack(['grubba-rpc']),
+  // Disable cache, or use 'memory' to switch to in-memory cache
+  ...Meteor.setCache(false),
 }));
+
+
 ```
+
+This helper provide a shortcut to apply the needed Rspack configuration and safely override defaults, so you don’t have to handle it manually.
+
+### Interop for Default Imports
+
+Meteor originally handled default imports from CommonJS modules automatically. This allowed you to write:
+```js
+import all from 'some-commonjs-lib';
+```
+even when the library used module.exports = ... under the hood.
+
+With Rspack and SWC, that behavior no longer happens by default, you now need to use:
+
+```js
+import * as all from 'some-commonjs-lib';
+```
+unless you re-enable interop support.
+
+If you prefer to restore Meteor’s earlier behavior, you can configure SWC like this in your `.swcrc`:
+
+``` json
+{
+  "jsx": { ... },
+  "module": {
+    "type": "commonjs",
+    "noInterop": false,
+    "importInterop": "node"
+  }
+}
+```
+
+* `"type": "commonjs"` tells SWC to emit CommonJS output (require, module.exports, etc.).
+* `"noInterop": false` injects interop helpers so default imports from CommonJS modules work properly.
+* `"importInterop": "node"` aligns behavior with how Node handles ESM and CJS interop.
+
+This configuration ensures compatibility for mixed module imports, allowing default imports from CommonJS packages to behave as the old Meteor-style import behavior.
+
+However, enabling this globally means SWC will convert all `import`/`export` statements into `require` calls. Rspack then loses access to ES module boundaries, preventing optimizations like tree-shaking and static analysis.
+
+In short, this option trades runtime compatibility for build-time optimization.
+
+We recommend migrating away from this pattern and using standard named or namespace imports (`import { ... }` or `import * as`...) for long-term compatibility and better build performance.
 
 ### Cache
 

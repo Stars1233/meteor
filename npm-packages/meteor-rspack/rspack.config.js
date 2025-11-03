@@ -613,10 +613,15 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       throw error;
     }
 
-    const userConfig =
+    const rawUserConfig =
       typeof projectConfig === 'function'
         ? projectConfig(Meteor, argv)
         : projectConfig;
+    const resolvedUserConfig = await Promise.resolve(rawUserConfig);
+    const userConfig =
+      resolvedUserConfig && '0' in resolvedUserConfig
+        ? resolvedUserConfig[0]
+        : resolvedUserConfig;
 
     const omitPaths = [
       "name",
