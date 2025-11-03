@@ -552,6 +552,30 @@ module.exports = defineConfig(Meteor => ({
 }));
 ```
 
+---
+
+A reported use case for this is with the `thread-stream` dependency, a transitive dependency of Mongo packages. If you get this error:
+
+``` shell
+Error: Cannot find module '/_build/main-dev/lib/worker.js'
+```
+
+It means the worker can’t be found. Let the Node/Meteor ecosystem handle this dependency so it can automatically pick the right worker.
+
+``` js
+module.exports = defineConfig((Meteor) => {
+  return {
+     // ..
+    ...Meteor.compileWithMeteor([
+      // ..
+      "thread-stream"
+    ]),
+  };
+});
+```
+
+More info in [this forum post](https://forums.meteor.com/t/new-3-4-beta-12-release-faster-builds-smaller-bundles-and-modern-setups-with-the-rspack-integration/64124/94).
+
 ### Cache
 
 Meteor cache remains active and continues to handle Atmosphere packages and intermediate builds. There’s an additional cache layer managed by Rspack to speed up rebuilds for your app code.
