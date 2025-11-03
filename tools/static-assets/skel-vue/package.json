@@ -19,8 +19,8 @@
   "devDependencies": {
     "@meteorjs/rspack": "^0.0.60",
     "@rsdoctor/rspack-plugin": "^1.2.3",
-    "@rspack/cli": "^1.5.3",
-    "@rspack/core": "^1.5.3",
+    "@rspack/cli": "^1.6.0",
+    "@rspack/core": "^1.6.0",
     "@tailwindcss/postcss": "^4.1.12",
     "@types/meteor": "^2.9.7",
     "postcss": "^8.5.6",
