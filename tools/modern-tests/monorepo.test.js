@@ -13,6 +13,7 @@ describe('Monorepo App Bundling /', () => {
       server: 'app/server/main.js',
       test: 'app/tests/main.test.js'
     },
+    configFile: 'rspack.config.cjs',
     customAssertions: {
       afterRunRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR output as enabled by default
