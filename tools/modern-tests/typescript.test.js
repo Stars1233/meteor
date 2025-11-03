@@ -15,7 +15,7 @@ describe('TypeScript App Bundling /', () => {
       testServer: 'tests/server.ts',
     },
     buildDir: 'build',
-    configFile: 'rspack.config.cjs',
+    configFile: 'rspack.config.ts',
     customAssertions: {
       afterRun: async ({ result, tempDir }) => {
         // SCSS styles support

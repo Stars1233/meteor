@@ -552,6 +552,30 @@ module.exports = defineConfig(Meteor => ({
 }));
 ```
 
+---
+
+A reported use case for this is with the `thread-stream` dependency, a transitive dependency of Mongo packages. If you get this error:
+
+``` shell
+Error: Cannot find module '/_build/main-dev/lib/worker.js'
+```
+
+It means the worker can’t be found. Let the Node/Meteor ecosystem handle this dependency so it can automatically pick the right worker.
+
+``` js
+module.exports = defineConfig((Meteor) => {
+  return {
+     // ..
+    ...Meteor.compileWithMeteor([
+      // ..
+      "thread-stream"
+    ]),
+  };
+});
+```
+
+More info in [this forum post](https://forums.meteor.com/t/new-3-4-beta-12-release-faster-builds-smaller-bundles-and-modern-setups-with-the-rspack-integration/64124/94).
+
 ### Cache
 
 Meteor cache remains active and continues to handle Atmosphere packages and intermediate builds. There’s an additional cache layer managed by Rspack to speed up rebuilds for your app code.
@@ -691,6 +715,19 @@ new GenerateSW({
   // ...
 })
 ```
+
+### Dev Server
+
+You can customize the Rspack dev server much like you would when using meteor run. Any [devServer option listed in the official Rspack guide](https://rspack.rs/config/dev-server) can be applied in your app’s [`rspack.config.js`](./rspack-bundler-integration.md#custom-rspackconfigjs).
+
+The only exception is the port configuration. To set a specific port for the Rspack dev server, use the `RSPACK_DEVSERVER_PORT` environment variable:
+
+```bash
+# Assign a specific port for the Rspack dev server
+RSPACK_DEVSERVER_PORT=3232 meteor run
+```
+
+The reason is that the Rspack dev server is handled by the Meteor so it can make both dev server works together, and the info of the port needs to be properly shared via the env.
 
 ## Benefits
 
