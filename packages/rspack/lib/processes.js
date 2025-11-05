@@ -118,6 +118,12 @@ export function getCustomConfigFilePath(basePath = getMeteorAppDir()) {
     return jsPath;
   }
 
+  // Check for .ts extension next
+  const tsPath = `${configBasePath}.ts`;
+  if (fs.existsSync(tsPath)) {
+    return tsPath;
+  }
+
   // Check for .mjs extension next
   const mjsPath = `${configBasePath}.mjs`;
   if (fs.existsSync(mjsPath)) {
@@ -158,7 +164,7 @@ export function getConfigFilePath() {
   }
 
   // If no config file is found, throw an error
-  throw new Error('Could not find rspack.config.js, rspack.config.mjs, or rspack.config.cjs. Make sure @meteorjs/rspack is installed correctly.');
+  throw new Error('Could not find rspack.config.js, rspack.config.ts, rspack.config.mjs, or rspack.config.cjs. Make sure @meteorjs/rspack is installed correctly.');
 }
 
 /**

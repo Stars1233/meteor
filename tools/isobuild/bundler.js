@@ -1989,6 +1989,23 @@ function hashOfFiles(files) {
   ClientTarget.prototype[method] = Profile(`ClientTarget#${method}`, ClientTarget.prototype[method]);
 });
 
+/**
+ * Collects all dev-only package names.
+ *
+ * @returns {string[]} Array of dev-only package names
+ */
+function getDevOnlyPackages() {
+  const targets = global.meteorBundlerTargets || {};
+  return ['client', 'server'].flatMap(target => {
+    const pkgMap = targets[target]?.packageMap?._map;
+    if (!pkgMap) {
+      return [];
+    }
+    return Object.entries(pkgMap)
+      .filter(([_, pkg]) => pkg.packageSource?.devOnly)
+      .map(([name]) => name);
+  });
+}
 
 //////////////////// JsImageTarget and JsImage  ////////////////////
 
@@ -2418,6 +2435,10 @@ class JsImage {
       addNodeModulesDirToObject(nmd, nodeModulesDirectories);
     });
 
+    var devOnlySkipPackages = [];
+    const trySkipDevModule = ['build', 'deploy'].includes(global.currentCommand?.name) && buildMode === 'production';
+    if (trySkipDevModule) devOnlySkipPackages = getDevOnlyPackages();
+
     // If multiple load files share the same asset, only write one copy of
     // each. (eg, for app assets).
     var assetFilesBySha = {};
@@ -2427,6 +2448,11 @@ class JsImage {
     for (const item of self.jsToLoad) {
       if (! item.targetPath) {
         throw new Error("No targetPath?");
+      }
+
+      // Skip dev-only packages on build for production
+      if (devOnlySkipPackages.some(_package => item?.targetPath?.includes(`${_package}.js`))) {
+        continue;
       }
 
       var loadItem = {
@@ -2542,6 +2568,11 @@ class JsImage {
     // appropriately specific arch.
     for (const nmd of Object.values(nodeModulesDirectories)) {
       assert.strictEqual(typeof nmd.preferredBundlePath, "string");
+
+      // Skip dev-only packages on build for production
+      if (devOnlySkipPackages.includes(nmd?.packageName)) {
+        continue;
+      }
 
       // Skip calculating isPortable in 'meteor run' since the
       // modules are never rebuilt
@@ -3465,6 +3496,11 @@ async function bundle({
     // Server
     if (! hasCachedBundle) {
       targets.server = await makeServerTarget(app, webArchs);
+    }
+
+    if (buildOptions.buildMode === 'production') {
+      // Store targets in global variable for access in JsImage.write
+      global.meteorBundlerTargets = targets;
     }
 
     if (outputPath !== null) {
