@@ -1,6 +1,6 @@
 {
   "name": "@meteorjs/rspack",
-  "version": "0.0.62",
+  "version": "0.0.63",
   "description": "Configuration logic for using Rspack in Meteor projects",
   "main": "index.js",
   "type": "commonjs",

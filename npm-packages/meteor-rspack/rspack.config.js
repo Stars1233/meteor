@@ -667,12 +667,15 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   }
 
   // Establish Angular overrides to ensure proper integration
-  const angularExpandConfig = isAngularEnabled ? {
-    mode: isProd ? 'production' : 'development',
-    devServer: { port: Meteor.devServerPort },
-    stats: { preset: 'normal' },
-    infrastructureLogging: { level: 'info' },
-  } : {};
+  const angularExpandConfig = isAngularEnabled
+    ? {
+        mode: isProd ? "production" : "development",
+        devServer: { port: Meteor.devServerPort },
+        stats: { preset: "normal" },
+        infrastructureLogging: { level: "info" },
+        ...(isProd && isClient && { output: { module: false } }),
+      }
+    : {};
 
   const config = mergeSplitOverlap(
     isClient ? clientConfig : serverConfig,
