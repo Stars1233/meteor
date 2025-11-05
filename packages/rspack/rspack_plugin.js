@@ -22,6 +22,7 @@ const {
 const {
   ensureRspackInstalled,
   checkReactInstalled,
+  checkAngularInstalled,
   checkTypescriptInstalled,
   ensureRspackReactInstalled,
 } = require('./lib/dependencies');
@@ -126,6 +127,9 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
         await ensureRspackReactInstalled();
       }
     }
+
+    // Check if Angular is installed
+    checkAngularInstalled();
 
     // Check if TypeScript is installed
     checkTypescriptInstalled();
