@@ -62,3 +62,12 @@ Meteor.startup(async () => {
     return LinksCollection.find();
   });
 });
+
+if (Meteor.isTest) {
+  let isAppTest = Meteor.isAppTest;
+  Meteor.methods({
+    "test.method": () => {
+      return { isAppTestInitial: isAppTest, isAppTestNow: Meteor.isAppTest };
+    }
+  });
+}
