@@ -90,7 +90,6 @@ function makeWebNodeBuiltinsAlias(extras = []) {
   // browser-safe allowlist (these we *don't* mark as false)
   const allowlist = new Set([
     "process",
-    "buffer",
     "util",
     "events",
     "path",
