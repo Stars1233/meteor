@@ -84,18 +84,35 @@ function setCache(
  * - Optional extras let you block non-core modules too
  */
 function makeWebNodeBuiltinsAlias(extras = []) {
-  // Strip potential 'node:' prefixes then add both forms
+  // Node core list, normalized (strip `node:` prefix)
   const core = new Set(builtinModules.map((m) => m.replace(/^node:/, "")));
+
+  // browser-safe allowlist (these we *don't* mark as false)
+  const allowlist = new Set([
+    "process",
+    "buffer",
+    "util",
+    "events",
+    "path",
+    "stream",
+    "assert",
+    "assert/strict",
+  ]);
 
   const names = new Set();
   for (const m of core) {
-    names.add(m); // e.g. 'fs'
-    names.add(`node:${m}`); // e.g. 'node:fs'
+    // Add both 'fs' and 'node:fs' variants
+    names.add(m);
+    names.add(`node:${m}`);
   }
   for (const x of extras) names.add(x);
 
-  // Map every name to false (causes hard error if imported)
-  return Object.fromEntries([...names].map((m) => [m, false]));
+  // ❌ Everything except the allowlist gets mapped to false
+  const entries = [...names]
+    .filter((m) => !allowlist.has(m.replace(/^node:/, "")))
+    .map((m) => [m, false]);
+
+  return Object.fromEntries(entries);
 }
 
 /**
