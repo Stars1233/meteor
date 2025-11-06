@@ -231,9 +231,11 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
       } = setupCompilationTracking();
 
       // When run test for full app, run Rspack app server as well
+      // isTestLike ensures the app runtime environment inherit test envs
       if (isMeteorAppTestFullApp()) {
         await runRspackBuild({
           isTest: false,
+          isTestLike: true,
           isServer: true,
           isClient: false,
         });
@@ -243,6 +245,7 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
             isServer: true,
             isClient: false,
             isTest: false,
+            isTestLike: true,
             watch: true,
           });
         }
@@ -273,6 +276,15 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
 
         // When testModule is specified as a single file or not specified
       } else {
+        runRspackBuild({
+          isTest: true,
+          isTestModule: true,
+          isClient: true,
+          isServer: false,
+          watch: isMeteorAppTestWatch(),
+          onCompile: onCompileClient,
+          label: 'Test',
+        });
         runRspackBuild({
           isTest: true,
           isTestModule: true,

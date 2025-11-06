@@ -136,7 +136,7 @@ function createSwcConfig({
   return {
     test: /\.(?:[mc]?js|jsx|[mc]?ts|tsx)$/i,
     exclude: /node_modules|\.meteor\/local/,
-    loader: 'builtin:swc-loader',
+    loader: "builtin:swc-loader",
     options: swcConfig,
   };
 }
@@ -217,6 +217,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isTestModule = !!Meteor.isTestModule;
   const isTestEager = !!Meteor.isTestEager;
   const isTestFullApp = !!Meteor.isTestFullApp;
+  const isTestLike = !!Meteor.isTestLike;
   const swcExternalHelpers = !!Meteor.swcExternalHelpers;
   const isNative = !!Meteor.isNative;
   const mode = isProd ? 'production' : 'development';
@@ -405,15 +406,33 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       ]
     : [];
 
-  const clientNameConfig = `[${(isTest && 'test-') || ''}${
-    (isTestModule && 'module') || 'client'
-  }-rspack]`;
+
+  const clientEntry =
+    isTest && isTestEager && isTestFullApp
+      ? generateEagerTestFile({
+        isAppTest: true,
+        projectDir,
+        buildContext,
+        ignoreEntries: [...meteorIgnoreEntries, '**/server/**'],
+        prefix: 'client',
+      })
+      : isTest && isTestEager
+        ? generateEagerTestFile({
+          isAppTest: false,
+          isClient: true,
+          projectDir,
+          buildContext,
+          ignoreEntries: [...meteorIgnoreEntries, '**/server/**'],
+          prefix: 'client',
+        })
+        : path.resolve(process.cwd(), buildContext, entryPath);
+  const clientNameConfig = `[${(isTest && 'test-') || ''}client-rspack]`;
   // Base client config
   let clientConfig = {
     name: clientNameConfig,
     target: 'web',
     mode,
-    entry: path.resolve(process.cwd(), buildContext, entryPath),
+    entry: clientEntry,
     output: {
       path: clientOutputDir,
       filename: (_module) => {
@@ -458,6 +477,15 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           : []),
         ...extraRules,
       ],
+      ...(Meteor.isTest && {
+        parser: {
+          javascript: {
+            dynamicImportMode: 'eager',
+            dynamicImportPrefetch: true,
+            dynamicImportPreload: true
+          },
+        },
+      }),
     },
     resolve: { extensions, alias, fallback },
     externals,
@@ -471,8 +499,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       new DefinePlugin({
         'Meteor.isClient': JSON.stringify(true),
         'Meteor.isServer': JSON.stringify(false),
-        'Meteor.isTest': JSON.stringify(isTest && !isTestFullApp),
-        'Meteor.isAppTest': JSON.stringify(isTest && isTestFullApp),
+        'Meteor.isTest': JSON.stringify(isTestLike && !isTestFullApp),
+        'Meteor.isAppTest': JSON.stringify(isTestLike && isTestFullApp),
         'Meteor.isDevelopment': JSON.stringify(isDev),
         'Meteor.isProduction': JSON.stringify(isProd),
       }),
@@ -502,26 +530,25 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     ...merge(cacheStrategy, { experiments: { css: true } })
   };
 
-
   const serverEntry =
     isTest && isTestEager && isTestFullApp
       ? generateEagerTestFile({
           isAppTest: true,
           projectDir,
           buildContext,
-          entries: meteorIgnoreEntries,
+          ignoreEntries: [...meteorIgnoreEntries, '**/client/**'],
+          prefix: 'server',
         })
       : isTest && isTestEager
       ? generateEagerTestFile({
           isAppTest: false,
           projectDir,
           buildContext,
-          entries: meteorIgnoreEntries,
+          ignoreEntries: [...meteorIgnoreEntries, '**/client/**'],
+          prefix: 'server',
         })
       : path.resolve(projectDir, buildContext, entryPath);
-  const serverNameConfig = `[${(isTest && 'test-') || ''}${
-    (isTestModule && 'module') || 'server'
-  }-rspack]`;
+  const serverNameConfig = `[${(isTest && 'test-') || ''}server-rspack]`;
   // Base server config
   let serverConfig = {
     name: serverNameConfig,
@@ -569,8 +596,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           : {
               'Meteor.isClient': JSON.stringify(false),
               'Meteor.isServer': JSON.stringify(true),
-              'Meteor.isTest': JSON.stringify(isTest && !isTestFullApp),
-              'Meteor.isAppTest': JSON.stringify(isTest && isTestFullApp),
+              'Meteor.isTest': JSON.stringify(isTestLike && !isTestFullApp),
+              'Meteor.isAppTest': JSON.stringify(isTestLike && isTestFullApp),
               'Meteor.isDevelopment': JSON.stringify(isDev),
               'Meteor.isProduction': JSON.stringify(isProd),
             },
