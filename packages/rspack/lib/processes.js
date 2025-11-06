@@ -204,6 +204,7 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     inputFilePath?.endsWith('.tsx');
 
   const isReactEnabled = process.env.METEOR_REACT_ENABLED === 'true';
+  const isAngularEnabled = process.env.METEOR_ANGULAR_ENABLED === 'true';
   const isTsxEnabled = isTypescriptEnabled && (inputFilePath?.endsWith('.tsx') || isReactEnabled);
   const isJsxEnabled = !isTypescriptEnabled && (inputFilePath?.endsWith('.jsx') || isReactEnabled);
 
@@ -248,11 +249,26 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest }) {
     ['devServerPort', process.env.RSPACK_DEVSERVER_PORT],
     ['projectConfigPath', projectConfigPath],
     ['configPath', configPath],
+    ...((isTest &&
+      initialEntrypoints.testClient &&
+      initialEntrypoints.testServer && [
+        ['testClientEntry', initialEntrypoints.testClient],
+        ['testServerEntry', initialEntrypoints.testServer],
+      ]) ||
+      (isTest &&
+        initialEntrypoints.testModule && [
+          ['testEntry', initialEntrypoints.testModule],
+      ]) || [
+        ['mainClientEntry', initialEntrypoints.mainClient],
+        ['mainClientHtmlEntry', initialEntrypoints.mainClientHtml],
+        ['mainServerEntry', initialEntrypoints.mainServer],
+    ]),
     ...(swcExternalHelpers &&  [['swcExternalHelpers', swcExternalHelpers]] || []),
     ...(isReactEnabled &&  [['isReactEnabled', isReactEnabled]] || []),
     ...(isBlazeEnabled &&  [['isBlazeEnabled', isBlazeEnabled]] || []),
     ...(isBlazeHotEnabled &&  [['isBlazeHotEnabled', isBlazeHotEnabled]] || []),
     ...(isTypescriptEnabled &&  [['isTypescriptEnabled', isTypescriptEnabled]] || []),
+    ...(isAngularEnabled &&  [['isAngularEnabled', isAngularEnabled]] || []),
     ...(isTsxEnabled &&  [['isTsxEnabled', isTsxEnabled]] || []),
     ...(isJsxEnabled &&  [['isJsxEnabled', isJsxEnabled]] || []),
     ...(isBundleVisualizerEnabled &&  [

@@ -95,6 +95,7 @@ function createSwcConfig({
   externalHelpers,
   isDevEnvironment,
   isClient,
+  isAngularEnabled,
 }) {
   const defaultConfig = {
     jsc: {
@@ -104,6 +105,7 @@ function createSwcConfig({
         syntax: isTypescriptEnabled ? 'typescript' : 'ecmascript',
         ...(isTsxEnabled && { tsx: true }),
         ...(isJsxEnabled && { jsx: true }),
+        ...(isAngularEnabled && { decorators: true }),
       },
       target: 'es2015',
       ...(isReactEnabled && {
@@ -228,6 +230,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isTsxEnabled =
     Meteor.isTsxEnabled || (isTypescriptEnabled && isReactEnabled) || false;
   const isBundleVisualizerEnabled = Meteor.isBundleVisualizerEnabled || false;
+  const isAngularEnabled = Meteor.isAngularEnabled || false;
 
   // Determine entry points
   const entryPath = Meteor.entryPath;
@@ -335,6 +338,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     externalHelpers: enableSwcExternalHelpers,
     isDevEnvironment,
     isClient,
+    isAngularEnabled,
   });
   // Expose swc config to use in custom configs
   Meteor.swcConfigOptions = swcConfigRule.options;
@@ -635,6 +639,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         : []),
     ].filter(Boolean);
     const warningFn = path => {
+      if (isAngularEnabled) return;
       console.warn(
         `[rspack.config.js] Ignored custom "${path}" — reserved for Meteor-Rspack integration.`,
       );
@@ -660,7 +665,21 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     }
   }
 
-  const config = isClient ? clientConfig : serverConfig;
+  // Establish Angular overrides to ensure proper integration
+  const angularExpandConfig = isAngularEnabled
+    ? {
+        mode: isProd ? "production" : "development",
+        devServer: { port: Meteor.devServerPort },
+        stats: { preset: "normal" },
+        infrastructureLogging: { level: "info" },
+        ...(isProd && isClient && { output: { module: false } }),
+      }
+    : {};
+
+  const config = mergeSplitOverlap(
+    isClient ? clientConfig : serverConfig,
+    angularExpandConfig
+  );
 
   if (Meteor.isDebug || Meteor.isVerbose) {
     console.log('Config:', inspect(config, { depth: null, colors: true }));

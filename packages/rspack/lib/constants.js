@@ -5,7 +5,7 @@
 
 export const DEFAULT_RSPACK_VERSION = '1.6.0';
 
-export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.61';
+export const DEFAULT_METEOR_RSPACK_VERSION = '0.0.64';
 
 export const DEFAULT_METEOR_RSPACK_REACT_HMR_VERSION = '1.4.3';
 
@@ -37,6 +37,7 @@ export const GLOBAL_STATE_KEYS = {
   RSPACK_DOCTOR_INSTALLATION_CHECKED: 'rspack.rspackDoctorInstallationChecked',
   REACT_CHECKED: 'rspack.reactChecked',
   TYPESCRIPT_CHECKED: 'rspack.typescriptChecked',
+  ANGULAR_CHECKED: 'rspack.angularChecked',
   INITIAL_ENTRYPONTS: 'meteor.initialEntrypoints',
   CLIENT_FIRST_COMPILE: 'rspack.clientFirstCompile',
   SERVER_FIRST_COMPILE: 'rspack.serverFirstCompile',
