@@ -3,7 +3,6 @@ Package.describe({
   version: '0.2.9',
   summary: 'Automatically update React components with HMR',
   documentation: 'README.md',
-  devOnly: true,
 });
 
 Npm.depends({
