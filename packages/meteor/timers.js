@@ -92,7 +92,9 @@ Meteor.defer = function (f) {
  * @param {Object} options The options object
  * @param {Array<String>} options.on Condition to determine whether to defer the function, you can pass an array of environments ['development', 'production', 'test']
  */
-Meteor.deferrable = function (f, { on }) {
+Meteor.deferrable = function (f, options) {
+  var on = (options && options.on) || [];
+
   // throw if on is not an array
   if (!Array.isArray(on)) {
     throw new Error("options.on must be an array");
