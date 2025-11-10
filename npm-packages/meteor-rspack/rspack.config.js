@@ -721,6 +721,69 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   );
   config = mergeSplitOverlap(config, testClientExpandConfig);
 
+  // Check for override config file
+  if (configPath) {
+    const configDir = path.dirname(configPath);
+    const configFileName = path.basename(configPath);
+    const configExt = path.extname(configFileName);
+    const configNameWithoutExt = configFileName.replace(configExt, '');
+    const overrideConfigPath = path.join(configDir, `${configNameWithoutExt}.override${configExt}`);
+
+    if (fs.existsSync(overrideConfigPath)) {
+      try {
+        let overrideConfig;
+        if (path.extname(overrideConfigPath) === '.mjs') {
+          // For ESM modules, we need to use dynamic import
+          const fileUrl = `file://${overrideConfigPath}`;
+          const module = await import(fileUrl);
+          overrideConfig = module.default || module;
+        } else {
+          // For CommonJS modules, we can use require
+          overrideConfig = require(overrideConfigPath)?.default || require(overrideConfigPath);
+        }
+
+        const rawOverrideConfig =
+          typeof overrideConfig === 'function'
+            ? overrideConfig(Meteor, argv)
+            : overrideConfig;
+        const resolvedOverrideConfig = await Promise.resolve(rawOverrideConfig);
+        const userOverrideConfig =
+          resolvedOverrideConfig && '0' in resolvedOverrideConfig
+            ? resolvedOverrideConfig[0]
+            : resolvedOverrideConfig;
+
+        const omitPaths = [
+          "name",
+          "target",
+          "entry",
+          "output.path",
+          "output.filename",
+          "output.publicPath",
+          ...(Meteor.isServer
+            ? ["optimization.splitChunks", "optimization.runtimeChunk"]
+            : []),
+        ].filter(Boolean);
+        const warningFn = path => {
+          if (isAngularEnabled) return;
+          console.warn(
+            `[override.config.js] Ignored custom "${path}" — reserved for Meteor-Rspack integration.`,
+          );
+        };
+
+        let nextOverrideConfig = cleanOmittedPaths(userOverrideConfig, {
+          omitPaths,
+          warningFn,
+        });
+        nextOverrideConfig = mergeMeteorRspackFragments(nextOverrideConfig);
+
+        // Apply override config as the last step
+        config = mergeSplitOverlap(config, nextOverrideConfig);
+      } catch (error) {
+        console.error(`Error loading override config from ${overrideConfigPath}:`, error);
+      }
+    }
+  }
+
   if (Meteor.isDebug || Meteor.isVerbose) {
     console.log('Config:', inspect(config, { depth: null, colors: true }));
   }
