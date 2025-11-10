@@ -604,83 +604,92 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       cacheStrategy),
   };
 
+  // Helper function to load and process config files
+  async function loadAndProcessConfig(configPath, configType, Meteor, argv, isAngularEnabled) {
+    try {
+      // Load the config file
+      let config;
+      if (path.extname(configPath) === '.mjs') {
+        // For ESM modules, we need to use dynamic import
+        const fileUrl = `file://${configPath}`;
+        const module = await import(fileUrl);
+        config = module.default || module;
+      } else {
+        // For CommonJS modules, we can use require
+        config = require(configPath)?.default || require(configPath);
+      }
+
+      // Process the config
+      const rawConfig = typeof config === 'function' ? config(Meteor, argv) : config;
+      const resolvedConfig = await Promise.resolve(rawConfig);
+      const userConfig = resolvedConfig && '0' in resolvedConfig ? resolvedConfig[0] : resolvedConfig;
+
+      // Define omitted paths and warning function
+      const omitPaths = [
+        "name",
+        "target",
+        "entry",
+        "output.path",
+        "output.filename",
+        "output.publicPath",
+        ...(Meteor.isServer ? ["optimization.splitChunks", "optimization.runtimeChunk"] : []),
+      ].filter(Boolean);
+
+      const warningFn = path => {
+        if (isAngularEnabled) return;
+        console.warn(
+          `[${configType}] Ignored custom "${path}" — reserved for Meteor-Rspack integration.`,
+        );
+      };
+
+      // Clean omitted paths and merge Meteor Rspack fragments
+      let nextConfig = cleanOmittedPaths(userConfig, {
+        omitPaths,
+        warningFn,
+      });
+      nextConfig = mergeMeteorRspackFragments(nextConfig);
+
+      return nextConfig;
+    } catch (error) {
+      console.error(`Error loading ${configType} from ${configPath}:`, error);
+      if (configType === 'rspack.config.js') {
+        throw error; // Only rethrow for project config
+      }
+      return null;
+    }
+  }
+
   // Load and apply project-level overrides for the selected build
   // Check if we're in a Meteor package directory by looking at the path
   const isMeteorPackageConfig = projectDir.includes('/packages/rspack');
+  console.log("--> (rspack.config.js-Line: 665)\n isMeteorPackageConfig: ", isMeteorPackageConfig);
   if (fs.existsSync(projectConfigPath) && !isMeteorPackageConfig) {
     // Check if there's a .mjs or .cjs version of the config file
     const mjsConfigPath = projectConfigPath.replace(/\.js$/, '.mjs');
     const cjsConfigPath = projectConfigPath.replace(/\.js$/, '.cjs');
 
-    let configPath = projectConfigPath;
+    let projectConfigPathToUse = projectConfigPath;
     if (fs.existsSync(mjsConfigPath)) {
-      configPath = mjsConfigPath;
+      projectConfigPathToUse = mjsConfigPath;
     } else if (fs.existsSync(cjsConfigPath)) {
-      configPath = cjsConfigPath;
+      projectConfigPathToUse = cjsConfigPath;
     }
 
-    // Use require for CommonJS modules and dynamic import for ES modules
-    let projectConfig;
-    try {
-      if (path.extname(configPath) === '.mjs') {
-        // For ESM modules, we need to use dynamic import
-        const fileUrl = `file://${configPath}`;
-        const module = await import(fileUrl);
-        projectConfig = module.default || module;
-      } else {
-        // For CommonJS modules, we can use require
-        projectConfig = require(configPath)?.default || require(configPath);
+    const nextUserConfig = await loadAndProcessConfig(
+      projectConfigPathToUse, 
+      'rspack.config.js', 
+      Meteor, 
+      argv, 
+      isAngularEnabled
+    );
+
+    if (nextUserConfig) {
+      if (Meteor.isClient) {
+        clientConfig = mergeSplitOverlap(clientConfig, nextUserConfig);
       }
-    } catch (error) {
-      console.error(`Error loading rspack config from ${configPath}:`, error);
-      throw error;
-    }
-
-    const rawUserConfig =
-      typeof projectConfig === 'function'
-        ? projectConfig(Meteor, argv)
-        : projectConfig;
-    const resolvedUserConfig = await Promise.resolve(rawUserConfig);
-    const userConfig =
-      resolvedUserConfig && '0' in resolvedUserConfig
-        ? resolvedUserConfig[0]
-        : resolvedUserConfig;
-
-    const omitPaths = [
-      "name",
-      "target",
-      "entry",
-      "output.path",
-      "output.filename",
-      "output.publicPath",
-      ...(Meteor.isServer
-        ? ["optimization.splitChunks", "optimization.runtimeChunk"]
-        : []),
-    ].filter(Boolean);
-    const warningFn = path => {
-      if (isAngularEnabled) return;
-      console.warn(
-        `[rspack.config.js] Ignored custom "${path}" — reserved for Meteor-Rspack integration.`,
-      );
-    };
-
-    let nextUserConfig = cleanOmittedPaths(userConfig, {
-      omitPaths,
-      warningFn,
-    });
-    nextUserConfig = mergeMeteorRspackFragments(nextUserConfig);
-
-    if (Meteor.isClient) {
-      clientConfig = mergeSplitOverlap(
-        clientConfig,
-        nextUserConfig
-      );
-    }
-    if (Meteor.isServer) {
-      serverConfig = mergeSplitOverlap(
-        serverConfig,
-        nextUserConfig
-      );
+      if (Meteor.isServer) {
+        serverConfig = mergeSplitOverlap(serverConfig, nextUserConfig);
+      }
     }
   }
 
@@ -721,65 +730,27 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   );
   config = mergeSplitOverlap(config, testClientExpandConfig);
 
-  // Check for override config file
-  if (configPath) {
-    const configDir = path.dirname(configPath);
-    const configFileName = path.basename(configPath);
+  // Check for override config file (extra file to override everything)
+  if (projectConfigPath) {
+    const configDir = path.dirname(projectConfigPath);
+    const configFileName = path.basename(projectConfigPath);
     const configExt = path.extname(configFileName);
     const configNameWithoutExt = configFileName.replace(configExt, '');
-    const overrideConfigPath = path.join(configDir, `${configNameWithoutExt}.override${configExt}`);
+    const configNameFull = `${configNameWithoutExt}.override${configExt}`;
+    const overrideConfigPath = path.join(configDir, configNameFull);
 
     if (fs.existsSync(overrideConfigPath)) {
-      try {
-        let overrideConfig;
-        if (path.extname(overrideConfigPath) === '.mjs') {
-          // For ESM modules, we need to use dynamic import
-          const fileUrl = `file://${overrideConfigPath}`;
-          const module = await import(fileUrl);
-          overrideConfig = module.default || module;
-        } else {
-          // For CommonJS modules, we can use require
-          overrideConfig = require(overrideConfigPath)?.default || require(overrideConfigPath);
-        }
+      const nextOverrideConfig = await loadAndProcessConfig(
+        overrideConfigPath,
+        configNameFull,
+        Meteor, 
+        argv, 
+        isAngularEnabled
+      );
 
-        const rawOverrideConfig =
-          typeof overrideConfig === 'function'
-            ? overrideConfig(Meteor, argv)
-            : overrideConfig;
-        const resolvedOverrideConfig = await Promise.resolve(rawOverrideConfig);
-        const userOverrideConfig =
-          resolvedOverrideConfig && '0' in resolvedOverrideConfig
-            ? resolvedOverrideConfig[0]
-            : resolvedOverrideConfig;
-
-        const omitPaths = [
-          "name",
-          "target",
-          "entry",
-          "output.path",
-          "output.filename",
-          "output.publicPath",
-          ...(Meteor.isServer
-            ? ["optimization.splitChunks", "optimization.runtimeChunk"]
-            : []),
-        ].filter(Boolean);
-        const warningFn = path => {
-          if (isAngularEnabled) return;
-          console.warn(
-            `[override.config.js] Ignored custom "${path}" — reserved for Meteor-Rspack integration.`,
-          );
-        };
-
-        let nextOverrideConfig = cleanOmittedPaths(userOverrideConfig, {
-          omitPaths,
-          warningFn,
-        });
-        nextOverrideConfig = mergeMeteorRspackFragments(nextOverrideConfig);
-
+      if (nextOverrideConfig) {
         // Apply override config as the last step
         config = mergeSplitOverlap(config, nextOverrideConfig);
-      } catch (error) {
-        console.error(`Error loading override config from ${overrideConfigPath}:`, error);
       }
     }
   }
