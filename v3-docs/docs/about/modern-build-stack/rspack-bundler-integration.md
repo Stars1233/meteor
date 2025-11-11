@@ -478,6 +478,12 @@ Meteor-Rspack supports Babel projects as an alternative to default SWC.
 
 Using Babel will increase build times. Prefer SWC. If you need Babel for specific files, limit Babel to those files, or use a hybrid with SWC and Babel. For example, [enabling React Compiler is available only via Babel using module rules](https://rspack.rs/guide/tech/react#react-compiler).
 
+### Angular
+
+Meteor-Rspack supports Angular projects. It’s experimental, but it already works in development, production, and with Meteor testing. We still need to refine it and add the Angular test suite and other details.
+
+> Use `meteor create --angular` to start with a preconfigured Rspack Angular app.
+
 ### HtmlRspackPlugin
 
 Meteor-Rspack includes its own HtmlRspackPlugin, enabled by default to attach chunks and assets to the HTML skeleton. Meteor then uses this HTML to generate the final index file.
