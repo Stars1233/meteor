@@ -43,21 +43,35 @@ Tinytest.addAsync(
       { on: [] }
     );
     test.equal(x, "b");
+    onComplete();
   }
 );
 
 Tinytest.addAsync(
-  "timers - defer works with async functions",
-  async function (test, onComplete) {
-    let x = "a";
+  "timers - deferrable works with async functions",
+  function (test, onComplete) {
+    let x = Meteor.deferrable(
+      function () {
+        return "start value";
+      },
+      { on: [] }
+    );
+    test.equal(x, "start value");
+
     Meteor.deferrable(
-      async function () {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        test.equal(x, "b");
+      function () {
+        test.equal(x, "value");
         onComplete();
       },
       { on: ["development", "production", "test"] }
     );
-    await Meteor.deferrable(async () => (x = "b"), { on: [] });
+
+    Meteor.deferrable(
+      async function () {
+        return "value";
+      },
+      { on: [] }
+    ).then((value) => (x = value));
+    
   }
 );
