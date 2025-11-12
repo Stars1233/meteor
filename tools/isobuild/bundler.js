@@ -1996,15 +1996,21 @@ function hashOfFiles(files) {
  */
 function getDevOnlyPackages() {
   const targets = global.meteorBundlerTargets || {};
-  return ['client', 'server'].flatMap(target => {
-    const pkgMap = targets[target]?.packageMap?._map;
-    if (!pkgMap) {
-      return [];
-    }
-    return Object.entries(pkgMap)
-      .filter(([_, pkg]) => pkg.packageSource?.devOnly)
-      .map(([name]) => name);
-  });
+  return [
+    ...new Set(
+        ['web.browser', 'server'].flatMap(target => {
+          const pkgMap = targets[target]?.unibuilds;
+
+          if (!pkgMap) {
+            return [];
+          }
+
+          return pkgMap
+              .filter(unibuild => unibuild?.pkg?.devOnly)
+              .map(unibuild => unibuild?.pkg.name);
+        })
+    )
+  ];
 }
 
 //////////////////// JsImageTarget and JsImage  ////////////////////
