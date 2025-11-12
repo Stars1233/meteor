@@ -1,6 +1,6 @@
 Package.describe({
   name: 'react-fast-refresh',
-  version: '0.2.9',
+  version: '0.3.0-beta340.13',
   summary: 'Automatically update React components with HMR',
   documentation: 'README.md',
 });
