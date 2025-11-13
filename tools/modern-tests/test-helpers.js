@@ -481,8 +481,6 @@ export function testMeteorRspackBundler(options) {
       // Wait for a margin
       await wait(500);
 
-      const isTestModule = filePaths.test && !filePaths.testClient && !filePaths.testServer;
-
       // Assert that the app files exists
       await assertFileExist(appDir, `${buildDir}/test/client-entry.js`);
       await assertFileExist(appDir, `${buildDir}/test/client-rspack.js`);
@@ -497,31 +495,15 @@ export function testMeteorRspackBundler(options) {
       }
 
       // Update the test code
-      if (isTestModule) {
-        await appendFileContent(tempDir, filePaths.test, {
-          content: customUpdates.test(customMessages.test),
-        });
-        await waitForMeteorOutput(
-          result.outputLines,
-          customMessages.test
-        );
-      } else {
-        await appendFileContent(tempDir, filePaths.testClient, {
-          content: customUpdates.test(customMessages.testClient),
-        });
-        await waitForMeteorOutput(
-          result.outputLines,
-          customMessages.testClient
-        );
+      await appendFileContent(tempDir, filePaths.testClient, {
+        content: customUpdates.test(customMessages.testClient),
+      });
+      await waitForMeteorOutput(result.outputLines, customMessages.testClient);
 
-        await appendFileContent(tempDir, filePaths.testServer, {
-          content: customUpdates.test(customMessages.testServer),
-        });
-        await waitForMeteorOutput(
-          result.outputLines,
-          customMessages.testServer
-        );
-      }
+      await appendFileContent(tempDir, filePaths.testServer, {
+        content: customUpdates.test(customMessages.testServer),
+      });
+      await waitForMeteorOutput(result.outputLines, customMessages.testServer);
 
       if (verbose) {
         await waitForMeteorOutput(
@@ -557,8 +539,6 @@ export function testMeteorRspackBundler(options) {
 
       // Wait for a margin
       await wait(500);
-
-      const isTestModule = filePaths.test && !filePaths.testClient && !filePaths.testServer;
 
       // Assert that the app files exists
       await assertFileExist(appDir, `${buildDir}/test/client-entry.js`);
