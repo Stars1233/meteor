@@ -348,7 +348,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   Meteor.swcConfigOptions = swcConfigRule.options;
 
   const externals = [
-    /^meteor.*/,
+    /^meteor\/.*/,
     ...(isReactEnabled ? [/^react$/, /^react-dom$/] : []),
     ...(isServer ? [/^bcrypt$/] : []),
   ];
