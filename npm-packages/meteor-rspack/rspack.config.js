@@ -226,6 +226,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const projectDir = process.cwd();
   const projectConfigPath = Meteor.projectConfigPath || path.resolve(projectDir, 'rspack.config.js');
   const configPath = Meteor.configPath;
+  const testEntry = Meteor.testEntry;
 
   const isTypescriptEnabled = Meteor.isTypescriptEnabled || false;
   const isJsxEnabled =
@@ -409,26 +410,27 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       ]
     : [];
 
-
   const clientEntry =
     isTest && isTestEager && isTestFullApp
       ? generateEagerTestFile({
-        isAppTest: true,
-        projectDir,
-        buildContext,
-        ignoreEntries: [...meteorIgnoreEntries, '**/server/**'],
-        prefix: 'client',
-      })
+          isAppTest: true,
+          projectDir,
+          buildContext,
+          ignoreEntries: [...meteorIgnoreEntries, "**/server/**"],
+          prefix: "client",
+        })
       : isTest && isTestEager
-        ? generateEagerTestFile({
+      ? generateEagerTestFile({
           isAppTest: false,
           isClient: true,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, '**/server/**'],
-          prefix: 'client',
+          ignoreEntries: [...meteorIgnoreEntries, "**/server/**"],
+          prefix: "client",
         })
-        : path.resolve(process.cwd(), buildContext, entryPath);
+      : isTest
+      ? path.resolve(process.cwd(), testEntry)
+      : path.resolve(process.cwd(), buildContext, entryPath);
   const clientNameConfig = `[${(isTest && 'test-') || ''}client-rspack]`;
   // Base client config
   let clientConfig = {
@@ -530,17 +532,19 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           isAppTest: true,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, '**/client/**'],
-          prefix: 'server',
+          ignoreEntries: [...meteorIgnoreEntries, "**/client/**"],
+          prefix: "server",
         })
       : isTest && isTestEager
       ? generateEagerTestFile({
           isAppTest: false,
           projectDir,
           buildContext,
-          ignoreEntries: [...meteorIgnoreEntries, '**/client/**'],
-          prefix: 'server',
+          ignoreEntries: [...meteorIgnoreEntries, "**/client/**"],
+          prefix: "server",
         })
+      : isTest
+      ? path.resolve(process.cwd(), testEntry)
       : path.resolve(projectDir, buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}server-rspack]`;
   // Base server config
