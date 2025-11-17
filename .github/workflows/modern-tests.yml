@@ -37,7 +37,10 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Install dependencies
+      - name: Install test deps
+        run: npm install
+
+      - name: Install test deps
         run: npm run install:modern
 
       - name: Install Playwright
