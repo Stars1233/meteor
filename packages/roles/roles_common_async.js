@@ -1052,6 +1052,8 @@ Object.assign(Roles, {
    * @return {Promise<Cursor>} Cursor of users in roles.
    */
   getUsersInRoleAsync: async function (roles, options, queryOptions) {
+    options = Roles._normalizeOptions(options)
+    
     const assignmentOptions = { ...options }
     delete assignmentOptions.queryOptions
 
