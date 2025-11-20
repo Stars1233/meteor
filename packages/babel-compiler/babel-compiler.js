@@ -231,11 +231,13 @@ BCp.processOneFileForTarget = function (inputFile, source) {
     sourceMap: null,
     bare: !! fileOptions.bare
   };
+  const arch = inputFile.getArch();
+  const isLegacyWebArch = arch.includes('legacy');
 
   // Check if the file is a Rspack output file
   // If it is, bypass SWC/Babel and just read the file and its map file
   // as the contents are already transpiled by Rspack.
-if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)) {
+  if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath) && !isLegacyWebArch) {
     try {
       // Get the full path to the file
       const fullPath = inputFile.getPathInPackage();
@@ -279,7 +281,6 @@ if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)) {
       ! excludedFileExtensionPattern.test(inputFilePath)) {
 
     const features = Object.assign({}, this.extraFeatures);
-    const arch = inputFile.getArch();
 
     const isNodeTarget = arch.startsWith("os.");
     if (isNodeTarget) {
@@ -418,7 +419,6 @@ if (Plugin?.rspackHelpers?.isRspackOutputFile(inputFilePath)) {
         const isNodeModulesCode = packageName == null && inputFilePath.includes("node_modules/");
         const isAppCode = packageName == null && !isNodeModulesCode;
         const isPackageCode = packageName != null;
-        const isLegacyWebArch = arch.includes('legacy');
 
         const transpConfig = getMeteorConfig()?.modern?.transpiler;
         const hasModernTranspiler = transpConfig != null && transpConfig !== false;
