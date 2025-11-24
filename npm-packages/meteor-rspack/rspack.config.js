@@ -285,6 +285,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     );
   Meteor.splitVendorChunk = () => splitVendorChunk();
   Meteor.extendSwcConfig = (customSwcConfig) => extendSwcConfig(customSwcConfig);
+  Meteor.extendConfig = (...configs) => mergeSplitOverlap(...configs);
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {

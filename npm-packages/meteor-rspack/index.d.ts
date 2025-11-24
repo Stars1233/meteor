@@ -61,6 +61,11 @@ type MeteorEnv = Record<string, any> & {
    * @returns A config object with SWC loader config
    */
   extendSwcConfig: (swcConfig: SwcLoaderOptions) => Record<string, object>;
+  /**
+   * Extend Rspack configs.
+   * @returns A config object with merged configs
+   */
+  extendConfig: (...configs: Record<string, object>[]) => Record<string, object>;
 }
 
 export type ConfigFactory = (
