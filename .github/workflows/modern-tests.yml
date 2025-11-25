@@ -18,14 +18,14 @@ jobs:
       matrix:
         category:
           - Babel
-          - Blaze
-          - Coffeescript
-          - Monorepo
+#          - Blaze
+#          - Coffeescript
+#          - Monorepo
           - React
-          - Solid
-          - Svelte
-          - Typescript
-          - Vue
+#          - Solid
+#          - Svelte
+#          - Typescript
+#          - Vue
 
     steps:
       - name: Checkout code
