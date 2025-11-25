@@ -30,6 +30,10 @@ import path from "path";
 import execa from "execa";
 import waitOn from "wait-on";
 
+const isCI = process.env.GITHUB_ACTIONS === "true";
+
+const WAIT_ON = isCI ? 2000 : 500;
+
 /**
  * Helper function to set up and run tests for the Meteor Bundler
  * @param {Object} options - Options for the test
@@ -197,7 +201,7 @@ export function testMeteorRspackBundler(options) {
       meteorProcess = result.meteorProcess;
 
       // Wait for a margin
-      await wait(1000);
+      await wait(WAIT_ON);
 
       // Assert that the config files exists
       await assertFileExist(appDir, '.gitignore', { content: buildDir });
@@ -235,7 +239,7 @@ export function testMeteorRspackBundler(options) {
       meteorProcess = result.meteorProcess;
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       // Assert that the app files exists
       await assertFileExist(appDir, `${buildDir}/main-dev/client-entry.js`);
@@ -305,7 +309,7 @@ export function testMeteorRspackBundler(options) {
       }
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
@@ -325,7 +329,7 @@ export function testMeteorRspackBundler(options) {
       meteorProcess = result.meteorProcess;
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       // Assert that the app files exists
       await assertFileExist(appDir, `${buildDir}/main-prod/client-entry.js`);
@@ -398,7 +402,7 @@ export function testMeteorRspackBundler(options) {
       }
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       // Kill the meteor process
       await killMeteorProcess(meteorProcess);
@@ -420,7 +424,7 @@ export function testMeteorRspackBundler(options) {
         meteorProcess = result.meteorProcess;
 
         // Wait for a margin
-        await wait(500);
+        await wait(WAIT_ON);
 
         // Assert that the app files exists
         await assertFileExist(appDir, `${buildDir}/main-prod/client-entry.js`);
@@ -456,7 +460,7 @@ export function testMeteorRspackBundler(options) {
         }
 
         // Wait for a margin
-        await wait(500);
+        await wait(WAIT_ON);
 
         // Kill the meteor process
         await killMeteorProcess(meteorProcess);
@@ -479,7 +483,7 @@ export function testMeteorRspackBundler(options) {
       meteorProcess = result.meteorProcess;
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       const isTestModule = filePaths.test && !filePaths.testClient && !filePaths.testServer;
 
@@ -553,7 +557,7 @@ export function testMeteorRspackBundler(options) {
       });
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       // Assert that the app files exists
       await assertFileExist(appDir, `${buildDir}/test/client-entry.js`);
@@ -592,7 +596,7 @@ export function testMeteorRspackBundler(options) {
       });
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       if (verbose) {
         await waitForMeteorOutput(
@@ -762,7 +766,7 @@ export function testMeteorSkeleton(options) {
       meteorProcess = result.meteorProcess;
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       // Assert that the Meteor app is running correctly
       await assertMeteorApp(port, { title });
@@ -796,7 +800,7 @@ export function testMeteorSkeleton(options) {
       meteorProcess = result.meteorProcess;
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       // Assert that the Meteor app is running correctly
       await assertMeteorApp(port, { title });
@@ -840,7 +844,7 @@ export function testMeteorSkeleton(options) {
       });
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       // Run custom assertions if provided
       if (customAssertions.afterTestOnce) {
@@ -859,7 +863,7 @@ export function testMeteorSkeleton(options) {
       });
 
       // Wait for a margin
-      await wait(500);
+      await wait(WAIT_ON);
 
       try {
         // Assert that the build output directory exists
