@@ -824,7 +824,9 @@ export function testMeteorSkeleton(options) {
     test(`"meteor test --once" / should run tests once for the ${skeletonName} app`, async () => {
       // Install playwright as a dev dependency
       console.log("Installing playwright as a dev dependency...");
-      await execa.command("meteor npm i --save-dev playwright", {
+      const repoRoot = path.resolve(process.cwd(), "..", "..");
+      const meteorBin = path.join(repoRoot, "meteor");
+      await execa.command(`${meteorBin} npm i --save-dev playwright`, {
         cwd: tempDir,
         stdio: "inherit",
         shell: true
