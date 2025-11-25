@@ -18,11 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         category:
-#          - Babel
+          - Babel
 #          - Blaze
 #          - Coffeescript
-#          - Monorepo
-          - React
+          - Monorepo
+#          - React
 #          - Solid
 #          - Svelte
 #          - Typescript
