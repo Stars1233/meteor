@@ -62,6 +62,7 @@ const {
 const {
   isMeteorAppRun,
   isMeteorAppBuild,
+  isMeteorAppUpdate,
   getMeteorInitialAppEntrypoints,
   getMeteorAppEntrypoints,
   isMeteorAppTest,
@@ -86,9 +87,9 @@ const {
   getYarnCommand,
   isYarnProject,
 } = require('meteor/tools-core/lib/npm');
-const { getMeteorAppConfig, hasMeteorAppConfigAutoInstallDeps } = require("../tools-core/lib/meteor");
+const { hasMeteorAppConfigAutoInstallDeps } = require("../tools-core/lib/meteor");
 
-if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
+if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest() || isMeteorAppUpdate()) {
   // Get entry points from Meteor configuration
   setGlobalState(GLOBAL_STATE_KEYS.INITIAL_ENTRYPONTS, getMeteorAppEntrypoints());
 
@@ -127,7 +128,14 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
         await ensureRspackReactInstalled();
       }
     }
+  } catch (error) {
+    logError(`Rspack plugin error: ${error.message}`);
+    throw error;
+  }
+}
 
+if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
+  try {
     // Check if Angular is installed
     checkAngularInstalled();
 

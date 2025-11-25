@@ -274,9 +274,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
 
   // Expose Meteor's helpers to expand Rspack configs
   Meteor.compileWithMeteor = deps => compileWithMeteor(deps);
-  Meteor.compileWithRspack = deps =>
+  Meteor.compileWithRspack = (deps, options = {}) =>
     compileWithRspack(deps, {
-      options: Meteor.swcConfigOptions,
+      options: mergeSplitOverlap(Meteor.swcConfigOptions, options),
     });
   Meteor.setCache = enabled =>
     setCache(
@@ -285,6 +285,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     );
   Meteor.splitVendorChunk = () => splitVendorChunk();
   Meteor.extendSwcConfig = (customSwcConfig) => extendSwcConfig(customSwcConfig);
+  Meteor.extendConfig = (...configs) => mergeSplitOverlap(...configs);
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {

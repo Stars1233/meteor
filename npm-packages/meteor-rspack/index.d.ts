@@ -43,7 +43,7 @@ type MeteorEnv = Record<string, any> & {
    * @param options - Optional configuration options
    * @returns A config object with module rules configuration
    */
-  compileWithRspack: (deps: RuleSetConditions) => Record<string, object>;
+  compileWithRspack: (deps: RuleSetConditions, options?: SwcLoaderOptions) => Record<string, object>;
   /**
    * Enable or disable Rspack cache config.
    * @param enabled - Whether to enable caching
@@ -61,6 +61,11 @@ type MeteorEnv = Record<string, any> & {
    * @returns A config object with SWC loader config
    */
   extendSwcConfig: (swcConfig: SwcLoaderOptions) => Record<string, object>;
+  /**
+   * Extend Rspack configs.
+   * @returns A config object with merged configs
+   */
+  extendConfig: (...configs: Record<string, object>[]) => Record<string, object>;
 }
 
 export type ConfigFactory = (

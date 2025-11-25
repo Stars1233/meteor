@@ -19,6 +19,7 @@ const {
   logError,
 } = require('meteor/tools-core/lib/log');
 const {
+  isMeteorAppUpdate,
   getMeteorAppDir,
 } = require('meteor/tools-core/lib/meteor');
 const {
@@ -142,6 +143,20 @@ async function ensureDependenciesInstalled(dependencies, globalStateKey, package
     }
 
     logSuccess(`✅ ${packageName} dependencies installed`);
+
+    if (isMeteorAppUpdate()) {
+      const isYarnProj = process.env.YARN_ENABLED === 'true';
+      const installCommand = isYarnProj ? 'yarn install' : 'npm install';
+
+      logInfo(`\n┌───────────────────────────────────────────────────────────────────────┐`);
+      logInfo(`│ 🔔 IMPORTANT: Project Stability Reminder                              │`);
+      logInfo(`├───────────────────────────────────────────────────────────────────────┤`);
+      logInfo(`│ After the Meteor update finishes, please run \`${installCommand}\` in your    │`);
+      logInfo(`│ project directory.                                                    │`);
+      logInfo(`│                                                                       │`);
+      logInfo(`│ This helps keep your dependencies correct and your project stable.    │`);
+      logInfo(`└───────────────────────────────────────────────────────────────────────┘`);
+    }
   }
 
   // Mark as checked

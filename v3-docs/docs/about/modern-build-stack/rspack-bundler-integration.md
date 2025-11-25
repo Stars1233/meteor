@@ -141,23 +141,24 @@ module.exports = defineConfig(Meteor => {
 
 You can use flags to control the final configuration based on the environment. The available flags are passed in the `Meteor` parameter.
 
-| Flag                | Type     | Description                                                                                               |
-|---------------------| -------- |-----------------------------------------------------------------------------------------------------------|
-| `isDevelopment`     | boolean  | True when running in development mode                                                                     |
-| `isProduction`      | boolean  | True when running in production mode                                                                      |
-| `isClient`          | boolean  | True when building or running client code                                                                 |
-| `isServer`          | boolean  | True when building or running server code                                                                 |
-| `isTest`            | boolean  | True when running in test mode                                                                            |
-| `isDebug`           | boolean  | True when debug mode is enabled                                                                           |
-| `isRun`             | boolean  | True when running the project with `meteor run`                                                           |
-| `isBuild`           | boolean  | True when building the project with `meteor build`                                                        |
-| `swcConfigOptions`  | object   | Project-level SWC config available for reusing                                                            |
-| `HtmlRspackPlugin`  | function | Custom HtmlRspackPlugin function for extending the config                                                 |
-| `compileWithMeteor` | function | Forces given npm deps ([Condition](https://rspack.rs/config/module#condition)[]) to be compiled by Meteor |
-| `compileWithRspack` | function | Forces given npm deps ([Condition](https://rspack.rs/config/module#condition)[]) to be compiled by Rspack |
-| `setCache`          | function | Enables or disables cache. Accepts true (persistent, default), false, or 'memory'                         |
-| `splitVendorChunk`  | function | Splits vendor libraries so they are automatically served from a separate chunk                            |
-| `extendSwcConfig`   | function | Extends the [SWC loader configuration](https://rspack.rs/guide/features/builtin-swc-loader#options) to apply only to the app code                                    |
+| Flag                | Type     | Description                                                                                                                       |
+|---------------------| -------- |-----------------------------------------------------------------------------------------------------------------------------------|
+| `isDevelopment`     | boolean  | True when running in development mode                                                                                             |
+| `isProduction`      | boolean  | True when running in production mode                                                                                              |
+| `isClient`          | boolean  | True when building or running client code                                                                                         |
+| `isServer`          | boolean  | True when building or running server code                                                                                         |
+| `isTest`            | boolean  | True when running in test mode                                                                                                    |
+| `isDebug`           | boolean  | True when debug mode is enabled                                                                                                   |
+| `isRun`             | boolean  | True when running the project with `meteor run`                                                                                   |
+| `isBuild`           | boolean  | True when building the project with `meteor build`                                                                                |
+| `swcConfigOptions`  | object   | Project-level SWC config available for reusing                                                                                    |
+| `HtmlRspackPlugin`  | function | Custom HtmlRspackPlugin function for extending the config                                                                         |
+| `compileWithMeteor` | function | Forces given npm deps ([Condition](https://rspack.rs/config/module#condition)[]) to be compiled by Meteor                         |
+| `compileWithRspack` | function | Forces given npm deps ([Condition](https://rspack.rs/config/module#condition)[]) to be compiled by Rspack                         |
+| `setCache`          | function | Enables or disables cache. Accepts true (persistent, default), false, or 'memory'                                                 |
+| `splitVendorChunk`  | function | Splits vendor libraries so they are automatically served from a separate chunk                                                    |
+| `extendSwcConfig`   | function | Extends the [SWC loader configuration](https://rspack.rs/guide/features/builtin-swc-loader#options) to apply only to the app code |
+| `extendConfig`      | function | Extends the config by applying merged object configs                                                                                 |
 
 Some configurations in the Rspack config are reserved for the Meteor-Rspack setup to work, such as Rspack options inside the `entry` and `output` objects. These will trigger warnings if modified. All other settings can be overridden, giving you the flexibility to make any setup compatible with the modern bundler.
 
@@ -520,7 +521,7 @@ You can still use HTML files near your Meteor client entry point to define custo
 
 ### Delegating Dependencies to Rspack
 
-**Meteor.compileWithRspack(deps: [Condition](https://rspack.rs/config/module#condition)[])**
+**Meteor.compileWithRspack(deps: [Condition](https://rspack.rs/config/module#condition)[], options?: [SwcLoaderOptions](https://v0.rspack.dev/guide/features/builtin-swc-loader#options))**
 
 This helper forces **Rspack (via SWC and custom loaders)** to parse and transpile specific npm dependencies during the build.
 
@@ -536,6 +537,8 @@ const { defineConfig } = require('@meteorjs/rspack');
 module.exports = defineConfig(Meteor => ({
   // Force-compile modern or local packages via SWC
   ...Meteor.compileWithRspack(['grubba-rpc']),
+  // Force-compile zod with ES5 target
+  ...Meteor.compileWithRspack(['zod'], { jsc: { target: 'es5' } }),
 }));
 ```
 
