@@ -49,5 +49,8 @@ jobs:
       - name: Install npm dependencies
         run: npm install
 
+      - name: Install Puppeteer
+        run: ./meteor npm install -g puppeteer@23.6.0
+
       - name: Run test-in-console suite (Travis parity)
         run: ./packages/test-in-console/run.sh
