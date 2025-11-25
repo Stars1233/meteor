@@ -32,6 +32,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            packages/**/.npm
+            .meteor
+            dev_bundle
+            .babel-cache
+          key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-meteor-
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
