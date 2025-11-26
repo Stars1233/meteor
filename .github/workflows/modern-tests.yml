@@ -23,9 +23,9 @@ jobs:
           - Coffeescript
           - Monorepo
 #          - React
-#          - Solid
-#          - Svelte
-#          - Typescript
+          - Solid
+          - Svelte
+          - Typescript
           - Vue
 
     steps:
