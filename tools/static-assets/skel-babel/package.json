@@ -17,7 +17,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.23.3",
-    "@meteorjs/rspack": "^0.2.50",
+    "@meteorjs/rspack": "^0.2.51",
     "@rsdoctor/rspack-plugin": "^1.2.3",
     "@rspack/cli": "^1.6.0",
     "@rspack/core": "^1.6.0",
