@@ -421,6 +421,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           buildContext,
           ignoreEntries: [...meteorIgnoreEntries, "**/server/**"],
           prefix: "client",
+          extraEntry: path.resolve(process.cwd(), Meteor.mainClientEntry),
         })
       : isTest && isTestEager
       ? generateEagerTestFile({

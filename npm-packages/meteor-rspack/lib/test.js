@@ -9,6 +9,7 @@ const { createIgnoreRegex, createIgnoreGlobConfig } = require("./ignore.js");
  * @param {string} options.projectDir - The project directory
  * @param {string} options.buildContext - The build context
  * @param {string[]} options.ignoreEntries - Array of ignore patterns
+ * @param {string} options.extraEntry - Extra entry to load
  * @returns {string} The path to the generated file
  */
 const generateEagerTestFile = ({
@@ -17,6 +18,7 @@ const generateEagerTestFile = ({
   buildContext,
   ignoreEntries: inIgnoreEntries = [],
   prefix: inPrefix = '',
+  extraEntry,
 }) => {
   const distDir = path.resolve(projectDir, ".meteor/local/test");
   if (!fs.existsSync(distDir)) {
@@ -38,7 +40,7 @@ const generateEagerTestFile = ({
     createIgnoreGlobConfig(ignoreEntries)
   );
 
-  const prefix = inPrefix && `${inPrefix}-` || '';
+  const prefix = (inPrefix && `${inPrefix}-`) || "";
   const filename = isAppTest
     ? `${prefix}eager-app-tests.mjs`
     : `${prefix}eager-tests.mjs`;
@@ -47,7 +49,8 @@ const generateEagerTestFile = ({
     ? "/\\.app-(?:test|spec)s?\\.[^.]+$/"
     : "/\\.(?:test|spec)s?\\.[^.]+$/";
 
-  const content = `{
+  const content = `${extraEntry ? `import path from 'path';` : ''}
+  {
   const ctx = import.meta.webpackContext('/', {
     recursive: true,
     regExp: ${regExp},
@@ -55,6 +58,18 @@ const generateEagerTestFile = ({
     mode: 'eager',
   });
   ctx.keys().forEach(ctx);
+  ${
+    extraEntry
+      ? `const extra = import.meta.webpackContext('${path.dirname(
+          extraEntry
+        )}', {
+    recursive: false,
+    regExp: new RegExp(\`^\\\\./${path.basename(extraEntry)}$\`),
+    mode: 'eager',
+  });
+  extra.keys().forEach(extra);`
+      : ''
+  }
 }`;
 
   fs.writeFileSync(filePath, content);
