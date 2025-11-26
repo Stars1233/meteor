@@ -18,7 +18,8 @@ jobs:
       PUPPETEER_DOWNLOAD_PATH: /home/runner/.npm/chromium
       TEST_PACKAGES_EXCLUDE: stylus
       METEOR_MODERN: true
-      TINYTEST_FILTER: "email"
+      TINYTEST_FILTER: email
+      NODE_ENV: CI
 
     steps:
       - name: Checkout repository
