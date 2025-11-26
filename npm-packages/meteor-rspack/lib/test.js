@@ -64,7 +64,7 @@ const generateEagerTestFile = ({
           extraEntry
         )}', {
     recursive: false,
-    regExp: new RegExp(\`^\\\\./${path.basename(extraEntry)}$\`),
+    include: new RegExp(\`^\\\\./${path.basename(extraEntry)}$\`),
     mode: 'eager',
   });
   extra.keys().forEach(extra);`
