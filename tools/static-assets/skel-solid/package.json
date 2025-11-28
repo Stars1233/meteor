@@ -16,8 +16,8 @@
   "devDependencies": {
     "@meteorjs/rspack": "^0.2.54",
     "@rsdoctor/rspack-plugin": "^1.2.3",
-    "@rspack/cli": "^1.6.0",
-    "@rspack/core": "^1.6.0",
+    "@rspack/cli": "^1.6.5",
+    "@rspack/core": "^1.6.5",
     "babel-loader": "10.0.0",
     "babel-preset-solid": "^1.8.15",
     "solid-js": "^1.9.4",
