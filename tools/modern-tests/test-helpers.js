@@ -189,6 +189,9 @@ export function testMeteorRspackBundler(options) {
       // Setup the Meteor app
       tempDir = (await setupMeteorApp(appName, { isMonorepo }))?.tempDir;
 
+      // Wait for a margin
+      await wait(WAIT_ON);
+
       // Add Rspack package
       appDir = isMonorepo ? path.join(tempDir, 'app') : tempDir;
       await runMeteorCommand('add', ['rspack'], appDir, { checkExitCode: true });

@@ -9,6 +9,7 @@ on:
       - 'npm-packages/meteor-rspack/**'
       - 'tools/static-assets/skel-**'
       - '.github/workflows/modern-tests.yml'
+
 concurrency:
   group: modern-tests-${{ github.ref }}
   cancel-in-progress: true
