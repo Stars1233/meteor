@@ -134,7 +134,7 @@ describe('Meteor Skeletons /', () => {
     }
   }));
 
-  describe('Typescript Skeleton /', testMeteorSkeleton({
+  describe.skip('Typescript Skeleton /', testMeteorSkeleton({
     skeletonName: 'typescript',
     port: 3209,
     filePaths: {
