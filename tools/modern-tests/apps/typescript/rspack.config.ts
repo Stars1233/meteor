@@ -58,6 +58,12 @@ export default defineConfig(Meteor => {
                 { file: 'tests/**/*.ts' },
                 { file: 'tests/**/*.tsx' },
               ],
+              exclude: [
+                { file: '.meteor/**/*.ts' },
+                { file: '.meteor/**/*.tsx' },
+                { file: 'node_modules/**/*.ts' },
+                { file: 'node_modules/**/*.tsx' },
+              ],
             },
           })
         : new TsCheckerRspackPlugin(),
