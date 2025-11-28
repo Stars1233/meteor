@@ -2,8 +2,6 @@ import { defineConfig } from '@meteorjs/rspack';
 import { createRequire } from 'node:module';
 import { TsCheckerRspackPlugin } from 'ts-checker-rspack-plugin';
 
-const isCI = process.env.GITHUB_ACTIONS === 'true';
-
 const require = createRequire(import.meta.url);
 
 /**
@@ -44,28 +42,6 @@ export default defineConfig(Meteor => {
         },
       ],
     },
-    plugins: [
-      isCI
-        ? new TsCheckerRspackPlugin({
-            issue: {
-              include: [
-                { file: 'import/**/*.ts' },
-                { file: 'import/**/*.tsx' },
-                { file: 'server/**/*.ts' },
-                { file: 'server/**/*.tsx' },
-                { file: 'client/**/*.ts' },
-                { file: 'client/**/*.tsx' },
-                { file: 'tests/**/*.ts' },
-                { file: 'tests/**/*.tsx' },
-              ],
-              exclude: [
-                { file: '.meteor/**' },
-                { file: 'node_modules/**' },
-                { file: '_build/**' },
-              ],
-            },
-          })
-        : new TsCheckerRspackPlugin(),
-    ],
+    plugins: [new TsCheckerRspackPlugin()],
   };
 });

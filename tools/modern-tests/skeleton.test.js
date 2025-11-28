@@ -185,8 +185,7 @@ describe('Meteor Skeletons /', () => {
         afterCreate({ tempDir }) {
           if (isCI) {
             const rspackConfigPath = path.join(tempDir, 'rspack.config.ts');
-            // Remove the default plugin line since we have a custom configuration for CI
-            // TsCheckerRspackPlugin is tested through modern-tests/apps/typescript
+            // Remove the TsCheckerRspackPlugin plugin as is resource-intense, CI gets exhausted and fails
             let configContent = fs.readFileSync(rspackConfigPath, 'utf8');
             configContent = configContent.replace(
               /\s*new\s+TsCheckerRspackPlugin\(\)/,

@@ -192,6 +192,11 @@ export function testMeteorRspackBundler(options) {
       // Wait for a margin
       await wait(WAIT_ON);
 
+      // Run custom assertions if provided
+      if (customAssertions.afterCreate) {
+        await customAssertions.afterCreate({ tempDir });
+      }
+
       // Add Rspack package
       appDir = isMonorepo ? path.join(tempDir, 'app') : tempDir;
       await runMeteorCommand('add', ['rspack'], appDir, { checkExitCode: true });
