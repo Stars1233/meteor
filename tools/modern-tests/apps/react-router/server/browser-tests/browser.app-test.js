@@ -15,9 +15,6 @@ describe("Run browser tests", () => {
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--enable-unsafe-swiftshader",
-        "--disable-gpu",
-        // Optional but very helpful in CI:
-        "--disable-dev-shm-usage",
       ]
     };
     if (process.env.CHROME_COMMAND_LOCATION) {
