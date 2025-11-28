@@ -19,10 +19,10 @@ jobs:
       matrix:
         category:
           - Babel
-#          - Blaze
+          - Blaze
           - Coffeescript
           - Monorepo
-#          - React
+          - React
           - Solid
           - Svelte
           - Typescript
