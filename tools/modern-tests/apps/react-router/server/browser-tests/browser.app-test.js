@@ -12,9 +12,11 @@ describe("Run browser tests", () => {
       defaultViewport: { width, height },
       args: [
         `--window-size=${width},${height}`,
-        "–no-sandbox",
-        "-disable-setuid-sandbox",
-        "--enable-unsafe-swiftshader"
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--enable-unsafe-swiftshader",
+        // Optional but very helpful in CI:
+        "--disable-dev-shm-usage",
       ]
     };
     if (process.env.CHROME_COMMAND_LOCATION) {
