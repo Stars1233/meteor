@@ -38,6 +38,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
+            tools/modern-tests/node_modules
             packages/**/.npm
             .meteor
             dev_bundle
@@ -58,9 +59,6 @@ jobs:
 
       - name: Install test deps
         run: npm run install:modern
-
-      - name: Install Playwright
-        run: npx playwright install
 
       - name: Prepare Meteor
         run: ./meteor --get-ready
