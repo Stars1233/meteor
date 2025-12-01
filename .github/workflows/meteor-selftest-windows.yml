@@ -40,6 +40,21 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            dev_bundle
+            .babel-cache
+            .meteor
+            ~\.npm
+            node_modules
+            tools\modern-tests\node_modules
+            packages\**\.npm
+          key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json', 'meteor') }}
+          restore-keys: |
+            ${{ runner.os }}-meteor-
+
       - name: Install dependencies
         shell: pwsh
         run: |
@@ -51,12 +66,3 @@ jobs:
         run: |
           $env:PATH = "C:\Program Files\7-Zip;$env:PATH"
           .\scripts\windows\ci\test.ps1
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            .\dev_bundle
-            .\.babel-cache
-            .\.meteor
-          key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json') }}
