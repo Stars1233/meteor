@@ -76,8 +76,7 @@ export function testMeteorBundler(options) {
 
     beforeEach(async () => {
       // Ensure any process on the port is killed
-      await killProcessByPort(port);
-      await killProcessByPort('8080');
+      await killProcessByPort([port, '8080']);
     });
 
     test(`"meteor run" / should start the app`, async () => {
@@ -183,8 +182,7 @@ export function testMeteorRspackBundler(options) {
       }
 
       // Ensure any process on the port is killed
-      await killProcessByPort(port);
-      await killProcessByPort('8080');
+      await killProcessByPort([port, '8080']);
 
       // Setup the Meteor app
       tempDir = (await setupMeteorApp(appName, { isMonorepo }))?.tempDir;
@@ -230,8 +228,7 @@ export function testMeteorRspackBundler(options) {
       await killMeteorProcess(meteorProcess);
 
       // Ensure any process on the port is killed
-      await killProcessByPort(port);
-      await killProcessByPort('8080');
+      await killProcessByPort([port, '8080']);
     });
 
     afterAll(async () => {
@@ -246,8 +243,7 @@ export function testMeteorRspackBundler(options) {
 
     beforeEach(async () => {
       // Ensure any process on the port is killed
-      await killProcessByPort(port);
-      await killProcessByPort('8080');
+      await killProcessByPort([port, '8080']);
     });
 
     test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
@@ -335,8 +331,7 @@ export function testMeteorRspackBundler(options) {
       await killMeteorProcess(meteorProcess);
 
       // Ensure any process on the port is killed
-      await killProcessByPort(port);
-      await killProcessByPort('8080');
+      await killProcessByPort([port, '8080']);
     });
 
     test(`"meteor run --production" / should run and rebuild the app with Rspack in production`, async () => {
@@ -428,8 +423,7 @@ export function testMeteorRspackBundler(options) {
       await killMeteorProcess(meteorProcess);
 
       // Ensure any process on the port is killed
-      await killProcessByPort(port);
-      await killProcessByPort('8080');
+      await killProcessByPort([port, '8080']);
     });
 
     // Conditional test for bundle-visualizer in production mode
@@ -486,10 +480,7 @@ export function testMeteorRspackBundler(options) {
         await killMeteorProcess(meteorProcess);
 
         // Ensure any process on the port is killed
-        await killProcessByPort(port);
-        await killProcessByPort('8080');
-        // await killProcessByPort('8081');
-        // await killProcessByPort('8082');
+        await killProcessByPort([port, '8080']);
       });
     }
 
@@ -756,8 +747,7 @@ export function testMeteorSkeleton(options) {
 
     beforeEach(async () => {
       // Ensure any process on the port is killed
-      await killProcessByPort(port);
-      await killProcessByPort('8080');
+      await killProcessByPort([port, '8080']);
     });
 
     test(`"meteor create --${skeletonName}" / should create a new Meteor ${skeletonName} app`, async () => {
