@@ -1055,7 +1055,7 @@ Object.assign(Roles, {
     options = Roles._normalizeOptions(options)
     
     const assignmentOptions = { ...options }
-    delete assignmentOptions.queryOptions
+   assignmentOptions.queryOptions = undefined 
 
     const ids = (
       await Roles.getUserAssignmentsForRole(roles, assignmentOptions).fetchAsync()
