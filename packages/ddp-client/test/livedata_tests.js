@@ -1,5 +1,7 @@
-import { DDP } from '../common/namespace.js';
+import { Meteor } from 'meteor/meteor';
 import { Connection } from '../common/livedata_connection.js';
+import { DDP } from '../common/namespace.js';
+import { FlickerCollection, FlickerCollectionName } from './allow_deny_setup.js';
 
 const callWhenSubReady = async (subName, handle, cb = () => {}) => {
   let control = 0;
@@ -1192,6 +1194,168 @@ testAsyncMulti('livedata - methods with nested stubs', [
     }
   },
 ]);
+
+const collName = `test-collection`;
+const coll = new Mongo.Collection(collName);
+
+if (Meteor.isServer) {
+  Meteor.publish(`pub-${collName}`, function () {
+    return coll.find();
+  });
+}
+
+Meteor.methods({
+  [`insert-${collName}`]: async function() {
+    return await coll.insertAsync({ value: 1 });
+  },
+  [`update-${collName}`]: async function(id) {
+    return await coll.updateAsync(id, { $set: { value: 2 } });
+  },
+  [`remove-${collName}`]: async function(id) {
+    return await coll.removeAsync(id);
+  }
+});
+
+if (Meteor.isClient) {
+  Tinytest.addAsync('livedata - method updated message with subscriptions', async function (test) {
+    let messages = [];
+
+    const onMessage = message => messages.push(EJSON.parse(message));
+
+    Meteor.connection._stream.on('message', onMessage);
+
+    const sub = Meteor.subscribe(`pub-${collName}`);
+
+    await new Promise(resolve => {
+      const id = setInterval(() => {
+        if (sub.ready()) {
+          clearInterval(id);
+          resolve();
+        }
+      }, 10);
+    });
+
+    let insertId;
+    let resultId
+
+    try {
+      for (let i = 0; i < 250; i++) {
+        messages = [];
+
+        insertId = await Meteor.callAsync(`insert-${collName}`);
+
+        const hasResult = messages.some(msg => msg.msg === 'result');
+
+        resultId = messages.find(msg => msg.msg === 'result').id;
+
+        const hasAdded = messages.some(msg => msg.msg === 'added');
+        const hasUpdated = messages.some(msg =>
+          msg.msg === 'updated' && msg.methods?.includes(resultId)
+        );
+
+        test.isTrue(hasResult, `Iteration ${i}: Should receive RESULT message for insert`);
+        test.isTrue(hasAdded, `Iteration ${i}: Should receive ADDED message for insert`);
+        test.isTrue(hasUpdated, `Iteration ${i}: Should receive UPDATED message for insert`);
+
+        messages = [];
+
+        await Meteor.callAsync(`update-${collName}`, insertId);
+
+        const hasUpdateResult = messages.some(msg => msg.msg === 'result');
+
+        resultId = messages.find(msg => msg.msg === 'result').id;
+
+        const hasChanged = messages.some(msg => msg.msg === 'changed');
+        const hasUpdateUpdated = messages.some(msg =>
+          msg.msg === 'updated' && msg.methods?.includes(resultId)
+        );
+
+        test.isTrue(hasUpdateResult, `Iteration ${i}: Should receive RESULT message for update`);
+        test.isTrue(hasChanged, `Iteration ${i}: Should receive CHANGED message`);
+        test.isTrue(hasUpdateUpdated, `Iteration ${i}: Should receive UPDATED message for update`);
+
+        messages = [];
+
+        await Meteor.callAsync(`remove-${collName}`, insertId);
+
+        const hasRemoveResult = messages.some(msg => msg.msg === 'result');
+
+        resultId = messages.find(msg => msg.msg === 'result').id;
+
+        const hasRemoved = messages.some(msg => msg.msg === 'removed');
+        const hasRemoveUpdated = messages.some(msg =>
+          msg.msg === 'updated' && msg.methods?.includes(resultId)
+        );
+
+        test.isTrue(hasRemoveResult, `Iteration ${i}: Should receive RESULT message for remove`);
+        test.isTrue(hasRemoved, `Iteration ${i}: Should receive REMOVED message`);
+        test.isTrue(hasRemoveUpdated, `Iteration ${i}: Should receive UPDATED message for remove`);
+      }
+    } finally {
+      sub.stop();
+    }
+  });
+}
+
+if (Meteor.isClient) {
+  testAsyncMulti('livedata - allow/deny - no flicker with isomorphic calls', [
+    async function(test, expect) {
+      const docId = await FlickerCollection.insertAsync({
+        value: ['initial'],
+        test: test.runId()
+      });
+
+      let changeCount = 0;
+      const messages = [];
+
+      const handle = await FlickerCollection.find({ _id: docId }).observeChanges({
+        added(id, fields) {
+          messages.push(['added', id, fields]);
+        },
+        changed(id, fields) {
+          changeCount++;
+          messages.push(['changed', id, fields]);
+          
+          if (changeCount > 1) {
+            test.fail('Multiple changes detected - flicker occurred');
+          }
+
+          test.equal(fields.value.length, 2);
+          test.isTrue(fields.value.includes('updated'));
+        }
+      });
+
+      const sub = Meteor.subscribe(`pub-${FlickerCollectionName}`);
+      
+      await new Promise(resolve => {
+        const checkReady = setInterval(() => {
+          console.log('sub.ready()', sub.ready());
+          if (sub.ready()) {
+            clearInterval(checkReady);
+            resolve();
+          }
+        }, 10);
+      });
+
+      await FlickerCollection.updateAsync(docId, {
+        $addToSet: {
+          value: 'updated'
+        }
+      });
+
+      await Meteor._sleepForMs(200);
+
+      handle.stop();
+      sub.stop();
+      
+      test.equal(changeCount, 1, 'Expected exactly one change notification');
+      
+      test.equal(messages.length, 2);
+      test.equal(messages[0][0], 'added');
+      test.equal(messages[1][0], 'changed');
+    }
+  ]);
+}
 
 // TODO [FIBERS] - check if this still makes sense to have
 
