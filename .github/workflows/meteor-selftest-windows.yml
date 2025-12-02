@@ -40,6 +40,11 @@ jobs:
         with:
           node-version: 22.x
 
+      - name: Prefer Windows tar over Git tar
+        shell: pwsh
+        run: |
+          "C:\Windows\System32" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
