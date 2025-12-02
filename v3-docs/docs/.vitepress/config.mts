@@ -321,6 +321,10 @@ export default defineConfig({
                 link: "/packages/roles",
               },
               {
+                text: "service-configuration",
+                link: "/packages/service-configuration",
+              },
+              {
                 text: "oauth-encryption",
                 link: "/packages/oauth-encryption",
               },
