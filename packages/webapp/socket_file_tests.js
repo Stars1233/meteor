@@ -178,7 +178,8 @@ testAsyncMulti(
 
       if (!groupToUse) {
         // Skip when no writable group could be determined for the current user.
-        test.isTrue(true);
+        // test.isTrue(true);
+        test.fail(`fail test: no writable group could be determined for the current user.`);
         return;
       }
 
