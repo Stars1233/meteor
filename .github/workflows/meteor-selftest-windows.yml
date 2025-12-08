@@ -44,7 +44,7 @@ jobs:
             .babel-cache/
             .meteor/
             ~/.npm
-            node_modules
+            node_modules/
             packages/**/.npm
           key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json', 'meteor') }}
           restore-keys: |
