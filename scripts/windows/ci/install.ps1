@@ -35,7 +35,7 @@ while ($attempt -gt 0 -and -not $success) {
   # By redirecting error to host, we avoid a shocking/false error color,
   # since --get-ready and --version can print (anything) to STDERR and
   # PowerShell will interpret that as something being terribly wrong.
-  & "$meteorBat" --get-ready
+  # & "$meteorBat" --get-ready
 
   If ($LASTEXITCODE -eq 0) {
     $success = $true
