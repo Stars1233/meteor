@@ -40,13 +40,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            dev_bundle
-            .babel-cache
-            .meteor
-            ~\.npm
+            dev_bundle/
+            .babel-cache/
+            .meteor/
+            ~/.npm
             node_modules
-            tools\modern-tests\node_modules
-            packages\**\.npm
+            packages/**/.npm
           key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json', 'meteor') }}
           restore-keys: |
             ${{ runner.os }}-meteor-
