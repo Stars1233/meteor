@@ -1,4 +1,4 @@
-name: Meteor Selftest Windows
+name: Windows Selftest
 
 on:
   pull_request:
