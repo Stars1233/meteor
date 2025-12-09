@@ -66,7 +66,7 @@ describe('Meteor Skeletons /', () => {
   );
 
   describe(
-    'ChakraUI Skeleton /',
+    'ChakraUI Library Skeleton /',
     testMeteorSkeleton({
       skeletonName: 'chakra-ui',
       port: 3203,
@@ -93,7 +93,7 @@ describe('Meteor Skeletons /', () => {
   );
 
   describe(
-    'Full Skeleton /',
+    'Full Library Skeleton /',
     testMeteorSkeleton({
       skeletonName: 'full',
       port: 3204,
@@ -145,7 +145,7 @@ describe('Meteor Skeletons /', () => {
   );
 
   describe(
-    'Tailwind Skeleton /',
+    'Tailwind Library Skeleton /',
     testMeteorSkeleton({
       skeletonName: 'tailwind',
       port: 3208,
