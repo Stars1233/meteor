@@ -6,10 +6,20 @@ on:
       - opened
       - reopened
       - synchronize
+    paths:
+      - 'meteor'
+      - 'meteor.bat'
+      - 'tools/**'
+      - 'packages/babel-compiler/**'
+      - 'packages/dynamic-import/**'
+      - 'packages/meteor/**'
+      - 'packages/meteor-tool/**'
+      - '.github/workflows/windows-selftest.yml'
+
   push:
     branches:
       - devel
-      - 2.x.x
+      - release-**
 
 env:
   METEOR_PRETTY_OUTPUT: 0
@@ -37,6 +47,7 @@ jobs:
           node-version: 22.x
 
       - name: Cache dependencies
+        id: meteor-cache
         uses: actions/cache@v4
         with:
           path: |
@@ -49,6 +60,14 @@ jobs:
           key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json', 'meteor') }}
           restore-keys: |
             ${{ runner.os }}-meteor-
+
+      # 👇 Run ONLY when the cache was NOT restored!
+      - name: Prepare Meteor (cache miss)
+        if: steps.meteor-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $env:PATH = "C:\Program Files\7-Zip;$env:PATH"
+          .\meteor.bat --get-ready
 
       - name: Install dependencies
         shell: pwsh
