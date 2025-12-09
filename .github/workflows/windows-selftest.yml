@@ -14,7 +14,7 @@ on:
       - 'packages/dynamic-import/**'
       - 'packages/meteor/**'
       - 'packages/meteor-tool/**'
-      - '.github/workflows/windows-selftest.yml'
+      - 'windows-selftest.yml'
 
   push:
     branches:
