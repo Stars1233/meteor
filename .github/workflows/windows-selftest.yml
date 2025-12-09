@@ -19,7 +19,6 @@ on:
   push:
     branches:
       - devel
-      - release-**
 
 env:
   METEOR_PRETTY_OUTPUT: 0
