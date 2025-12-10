@@ -151,7 +151,8 @@ password-based users or from an external service login flow. `options` may come
 from an untrusted client so make sure to validate any values you read from
 it. The `user` argument is created on the server and contains a
 proposed user object with all the automatically generated fields
-required for the user to log in, including the `_id`.
+required for the user to log in, including a temporary `_id` (the final _id is
+generated upon document insertion and not available in this function).
 
 The function should return the user document (either the one passed in or a
 newly-created object) with whatever modifications are desired. The returned
@@ -297,7 +298,7 @@ The function will be called with a single argument, the info object:
 {% enddtdd %}
 
 {% dtdd name:"options" type:"Exception" %}
-  An optional arugment passed down from the oauth service that may contain
+  An optional argument passed down from the oauth service that may contain
   additional user profile information. As the data in `options` comes from an
   external source, make sure you validate any values you read from it.
 {% enddtdd %}
