@@ -66,9 +66,7 @@ jobs:
           $env:PATH = "C:\Program Files\7-Zip;$env:PATH"
           .\scripts\windows\ci\install.ps1
 
-      # Run ONLY when the cache was NOT restored
-      - name: Prepare Meteor (cache miss)
-        if: steps.meteor-cache.outputs.cache-hit != 'true'
+      - name: Prepare Meteor
         shell: pwsh
         run: |
           $env:PATH = "C:\Program Files\7-Zip;$env:PATH"
