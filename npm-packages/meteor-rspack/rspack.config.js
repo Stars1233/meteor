@@ -662,7 +662,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         "entry",
         "output.path",
         "output.filename",
-        "output.publicPath",
         ...(Meteor.isServer ? ["optimization.splitChunks", "optimization.runtimeChunk"] : []),
       ].filter(Boolean);
 
