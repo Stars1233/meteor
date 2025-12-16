@@ -761,6 +761,25 @@ RSPACK_DEVSERVER_PORT=3232 meteor run
 
 The reason is that the Rspack dev server is handled by the Meteor so it can make both dev server works together, and the info of the port needs to be properly shared via the env.
 
+### Disable Plugins
+
+Meteor allows disabling Rspack plugins that are added by default or through presets. This is useful when troubleshooting build issues or replacing a plugin with a custom implementation.
+
+Plugins are matched by name (constructor name) and can be specified as a string, RegExp, a predicate function, or an array of all.
+
+``` js
+const { defineConfig } = require('@meteorjs/rspack');
+
+module.exports = defineConfig(Meteor => ({
+    // Disable one or more Rspack plugins
+    ...Meteor.disablePlugins([
+        'DefinePlugin',
+        /Html/i,
+        p => p?.constructor?.name === 'CustomConsoleLogPlugin',
+    ]),
+}));
+```
+
 ## Benefits
 
 Meteor–Rspack integration sends your app code to Rspack to use modern bundler features. Meteor then uses Rspack’s output to handle Meteor-specific tasks (like Atmosphere package compilation) and create the final bundle.
