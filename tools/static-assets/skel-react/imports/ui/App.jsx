@@ -1,10 +1,11 @@
-import { Hello } from './Hello.jsx';
+import { Counter } from './Counter.jsx';
 import { Info } from './Info.jsx';
+import { Header } from './Header.jsx';
 
 export const App = () => (
-  <div>
-    <h1>Welcome to Meteor!</h1>
-    <Hello/>
+  <div className="home-page">
+    <Header/>
+    <Counter/>
     <Info/>
   </div>
 );

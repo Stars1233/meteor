@@ -1,0 +1,117 @@
+/* this file is imported in client/main.jsx */
+
+:root {
+  --primary-color: #007bff;
+  --secondary-color: #6c757d;
+  --hover-color: #0056b3;
+  --background-color: #white;
+  --text-color: #212529;
+  --selection-bg-color: #339af0;
+  --selection-text-color: #ffffff;
+}
+
+::selection {
+  background-color: var(--selection-bg-color);
+  color: var(--selection-text-color);
+}
+
+.home-page {
+  background-color: var(--background-color);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+}
+
+.header {
+  display: flex;
+  justify-self: center;
+  font-weight: bold;
+  width: 100%;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.logo {
+  width: 5rem;
+  height: 5rem;
+}
+
+.button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: var(--hover-color);
+}
+
+.link {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.link:hover {
+  color: var(--hover-color);
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+
+  background-color: var(--background-color);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.links-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1rem;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.links-list .link {
+  text-decoration: none;
+  color: var(--text-color);
+
+  font-weight: 500;
+  padding: 0.5rem;
+
+  border-radius: 0.25rem;
+  transition: background-color 0.3s ease;
+
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.links-list .section {
+  transition: box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.links-list .section:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.about-page {
+  padding: 1.5rem;
+  background-color: var(--background-color);
+  border-radius: 0.5rem;
+}
+
+.about-page p {
+  line-height: 1.6;
+}
