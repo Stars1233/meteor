@@ -469,7 +469,10 @@ export function addWatchRoot(absPath: string) {
 
     // TODO: check if there are any existing watchers that are children of this
     // watcher and stop them
-nsfwLib(
+
+    const fireNames = getFireNames();
+
+    nsfwLib(
         convertToOSPath(absPath),
         (events) => {
             events.forEach(event => {
