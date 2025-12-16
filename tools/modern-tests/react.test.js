@@ -195,16 +195,15 @@ export async function assertImagesExistAndLoad() {
       // Check both images and background image
       const generatedResult = await checkImageStatus(imageGenerated.src);
       const publicResult = await checkImageStatus(imagePublic.src);
-
-      let backgroundResult = { ok: true };
-      if (backgroundImageUrl) {
-        backgroundResult = await checkImageStatus(backgroundImageUrl);
-      } else {
-        backgroundResult = { 
+      
+      if (!backgroundImageUrl) {
+        return { 
           ok: false, 
           error: 'No background image URL found on body element' 
-        };
-      }
+         };
+      } 
+      
+      const backgroundResult = await checkImageStatus(backgroundImageUrl);
 
       return {
         success: generatedResult.ok && publicResult.ok && backgroundResult.ok,
