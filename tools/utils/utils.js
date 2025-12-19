@@ -105,7 +105,7 @@ exports.hasScheme = function (str) {
 
 exports.isIPv4Address = function (str) {
   return REGEX_IPV4_ADDRESS.test(str);
-}
+};
 
 // XXX: Move to e.g. formatters.js?
 // Prints a package list in a nice format.
@@ -482,7 +482,7 @@ exports.isUrlWithSha = function (x) {
   // a URL like isNpmUrl(), there are a variety of problems with this,
   // see https://github.com/meteor/meteor/pull/5562
   return REGEX_URL_WITH_SHA.test(x);
-}
+};
 
 exports.isNpmUrl = function (x) {
   // These are the various protocols that NPM supports, which we use to download NPM dependencies
