@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg id="Camada_1" data-name="Camada 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 800">
+<svg id="c1" data-name="c 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 800">
   <defs>
     <style>
       .cls-1 {
-        fill: url(#Gradiente_sem_nome_3);
+        fill: url(#g3);
       }
     </style>
-    <linearGradient id="Gradiente_sem_nome_3" data-name="Gradiente sem nome 3" x1="149.34" y1="168.23" x2="650.29" y2="637.76" gradientUnits="userSpaceOnUse">
+    <linearGradient id="g3" data-name="g3" x1="149.34" y1="168.23" x2="650.29" y2="637.76" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#cb180a"/>
       <stop offset=".37" stop-color="#cd1909"/>
       <stop offset=".6" stop-color="#d61d07"/>

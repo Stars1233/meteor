@@ -8,11 +8,17 @@ export const Counter = () => {
   };
 
   return (
-    <div className="section">
-      <button className="button" onClick={increment}>
-        Click Me
-      </button>
-      <p>You've pressed the button {counter} times.</p>
+    <div className="card counter-card">
+      <div className="counter-content">
+        <button className="button" onClick={increment}>
+          Click Me
+        </button>
+        <p className="counter-text">
+          You've pressed the button{" "}
+          <span className="counter-value">{counter}</span>{" "}
+          {counter === 1 ? "time" : "times"}.
+        </p>
+      </div>
     </div>
   );
 };

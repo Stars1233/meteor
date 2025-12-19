@@ -3,9 +3,11 @@ import { Header } from "./Header.jsx";
 import { Info } from "./Info.jsx";
 
 export const App = () => (
-  <div className="home-page">
+  <div className="page">
     <Header />
-    <Counter />
-    <Info />
+    <main className="main">
+      <Counter />
+      <Info />
+    </main>
   </div>
 );
