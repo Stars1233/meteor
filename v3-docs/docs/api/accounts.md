@@ -1066,6 +1066,47 @@ for account emails. Override these to customize the URL format.
 | `enrollAccount` | `(token, extraParams?) => string` | Account enrollment URL |
 | `loginToken` | `(selector, token, extraParams?) => string` | Login token URL |
 
+#### Async URL Generation
+
+The URL methods can also return **Promises** that resolve to strings. This is useful when
+URL generation requires asynchronous operations, such as:
+- Looking up user data from the database
+- Calling external services (e.g., URL shorteners)
+- Generating signed URLs from cloud providers
+
+The email-sending functions (`Accounts.sendResetPasswordEmail`, `Accounts.sendEnrollmentEmail`,
+and `Accounts.sendVerificationEmail`) handle both synchronous and asynchronous URL methods
+transparently.
+
+**Example: Async URL with database lookup**
+
+```js
+// Server-side
+import { Accounts } from 'meteor/accounts-base';
+import { Meteor } from 'meteor/meteor';
+
+Accounts.urls.resetPassword = async (token, extraParams) => {
+  // Example: Look up user preference for custom domain
+  const user = await Meteor.users.findOneAsync({ 'services.password.reset.token': token });
+  const domain = user?.profile?.preferredDomain || Meteor.absoluteUrl();
+
+  return `${domain}reset-password/${token}`;
+};
+```
+
+**Example: Using a URL shortener service**
+
+```js
+// Server-side
+Accounts.urls.verifyEmail = async (token) => {
+  const longUrl = Meteor.absoluteUrl(`verify-email/${token}`);
+
+  // Shorten the URL using an external service
+  const shortUrl = await shortenUrl(longUrl);
+  return shortUrl;
+};
+```
+
 **Example: Using Clean URLs Instead of Hash Fragments**
 
 If your router doesn't handle hash fragments well, you can override `Accounts.urls`

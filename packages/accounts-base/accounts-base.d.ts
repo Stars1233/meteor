@@ -6,16 +6,17 @@ import { DDP } from 'meteor/ddp';
 /**
  * Object containing functions that generate URLs for account-related emails.
  * Override these to customize URLs in password reset, enrollment, and verification emails.
+ * URL methods can return either a string or a Promise that resolves to a string.
  */
 export interface URLS {
-  /** Generates the URL for password reset emails. */
-  resetPassword: (token: string, extraParams?: Record<string, string>) => string;
-  /** Generates the URL for email verification emails. */
-  verifyEmail: (token: string, extraParams?: Record<string, string>) => string;
-  /** Generates the URL for login token emails. */
-  loginToken: (selector: string, token: string, extraParams?: Record<string, string>) => string;
-  /** Generates the URL for account enrollment emails. */
-  enrollAccount: (token: string, extraParams?: Record<string, string>) => string;
+  /** Generates the URL for password reset emails. Can return a Promise for async URL generation. */
+  resetPassword: (token: string, extraParams?: Record<string, string>) => string | Promise<string>;
+  /** Generates the URL for email verification emails. Can return a Promise for async URL generation. */
+  verifyEmail: (token: string, extraParams?: Record<string, string>) => string | Promise<string>;
+  /** Generates the URL for login token emails. Can return a Promise for async URL generation. */
+  loginToken: (selector: string, token: string, extraParams?: Record<string, string>) => string | Promise<string>;
+  /** Generates the URL for account enrollment emails. Can return a Promise for async URL generation. */
+  enrollAccount: (token: string, extraParams?: Record<string, string>) => string | Promise<string>;
 }
 
 export interface EmailFields {
