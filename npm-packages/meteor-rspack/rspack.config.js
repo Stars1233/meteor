@@ -427,6 +427,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         }),
       ]
     : [];
+  // Not supported in Meteor yet (Rspack 1.7+ is enabled by default)
+  const lazyCompilationConfig = { lazyCompilation: false };
 
   const clientEntry =
     isTest && isTestEager && isTestFullApp
@@ -545,7 +547,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         },
       },
     }),
-    ...merge(cacheStrategy, { experiments: { css: true } })
+    ...merge(cacheStrategy, { experiments: { css: true } }),
+    ...lazyCompilationConfig,
   };
 
   const serverEntry =
@@ -633,6 +636,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     devtool: isDevEnvironment || isNative || isTest ? 'source-map' : 'hidden-source-map',
     ...((isDevEnvironment || (isTest && !isTestEager) || isNative) &&
       cacheStrategy),
+    ...lazyCompilationConfig,
   };
 
   // Helper function to load and process config files
