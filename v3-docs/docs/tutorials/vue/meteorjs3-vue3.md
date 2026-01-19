@@ -58,7 +58,7 @@ To run your app, use:
 meteor npm run start
 ```
 
-Your Vue code will be located in the `imports/ui directory`, with `App.vue` as the root component of your app.
+Your Vue code will be located in the `imports/ui` directory, with `App.vue` as the root component of your app.
 
 Take a moment to explore the files created by Meteor. You don’t have to understand everything right away, but it helps to know where they are.
 
