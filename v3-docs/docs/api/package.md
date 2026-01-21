@@ -168,7 +168,7 @@ This way we avoid having to call a specific code before another specific code in
 ## Build Plugins API {#build-plugin-api}
 
 ::: warning
-Starting with Meteor 3.4+, most build plugins won't work for application code when [the Rspack bundler](../about/modern-build-stack/rspack-bundler-integration.md) is enabled (which is the default). However, they will still work for Atmosphere package code and any code specifically set for Meteor bundler processing. You can still use build plugins for controlling and scripting independent app source code processing, as well as for linting purposes. Many of these functionalities can now be handled more effectively through Rspack's plugin system and lifecycle management, which offers more modern and flexible ways to process your source code.
+Starting with Meteor 3.4+, most build plugins won't work for application code when [the Rspack bundler](../about/modern-build-stack/rspack-bundler-integration.md) is enabled (which is the default). However, they will still work for Atmosphere package code and any code specifically set for Meteor bundler processing. You can still use build plugins for scripting independent app processing. Many of these functionalities can now be handled more effectively through Rspack's plugin system and lifecycle management, which offers more modern and flexible ways to process your app source code.
 :::
 
 Meteor packages can provide build plugins - programs that integrate with the
@@ -354,7 +354,7 @@ package (compiles ES2015+ to JavaScript that can run in the browsers).
 ## Minifiers {#build-plugin-minifiers}
 
 ::: warning
-In Meteor 3.4+ [with Rspack enabled](../about/modern-build-stack/rspack-bundler-integration.md), minifier build plugins won't be used for application code by default. Rspack includes its own optimization and minification capabilities through plugins like TerserPlugin for JavaScript and CssMinimizerPlugin for CSS. These provide efficient minification with modern optimizations and are integrated directly into the Rspack build process.
+In Meteor 3.4+ [with Rspack enabled](../about/modern-build-stack/rspack-bundler-integration.md), minifier build plugins won't be used for application code by default. Rspack includes its own optimization and minification capabilities through plugins like SwcJsMinimizerRspackPlugin for JavaScript and SwcJsMinimizerRspackPlugin for CSS. These provide efficient minification with modern optimizations and are integrated directly into the Rspack build process.
 :::
 
 Minifiers run last after the sources has been compiled and JavaScript code has
