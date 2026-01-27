@@ -42,11 +42,7 @@ Meteor will create all the necessary files for you. The `--vue` flag generates a
 We provide the final version of the app built in this tutorial for both the Rspack and the Meteor bundler versions. By following the guide, you will reach that same state at the end.
 
 ::: info
-You can find the final version of this app using the Rspack bundler in our [GitHub repository](https://github.com/meteor/meteor3-vue3/tree/3.4-rspack).
-:::
-
-::: info
-You can find the final version of this app using the Meteor bundler in our [GitHub repository](https://github.com/meteor/meteor3-vue3/tree/3.4-meteor).
+You can find the final version of this app in our GitHub repository using either the [Rspack bundler](https://github.com/meteor/meteor3-vue3/tree/3.4-rspack) or the [Meteor bundler](https://github.com/meteor/meteor3-vue3/tree/3.4-meteor).
 :::
 
 You will find the `client` directory contains files for your client-side setup. Inside, you can see for example `client/main.jsx` where Meteor is rendering your App main component into the HTML.
@@ -1373,11 +1369,7 @@ You have completed the tutorial!
 By now, you should have a good understanding of working with Meteor and Vue.
 
 ::: info
-You can find the final version of this app using the Rspack bundler in our [GitHub repository](https://github.com/meteor/meteor3-vue3/tree/3.4-rspack).
-:::
-
-::: info
-You can find the final version of this app using the Meteor bundler in our [GitHub repository](https://github.com/meteor/meteor3-vue3/tree/3.4-meteor).
+You can find the final version of this app in our GitHub repository using either the [Rspack bundler](https://github.com/meteor/meteor3-vue3/tree/3.4-rspack) or the [Meteor bundler](https://github.com/meteor/meteor3-vue3/tree/3.4-meteor).
 :::
 
 Here are some options for what you can do next:
