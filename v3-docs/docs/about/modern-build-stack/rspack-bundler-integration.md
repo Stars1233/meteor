@@ -796,7 +796,13 @@ A typical Docker step would look like this:
 RUN (meteor update --npm 2>/dev/null || true) && meteor npm install && meteor build [...]
 ```
 
+> Adding the `meteor update --npm` command in the same Docker step as `meteor build` or `meteor deploy` is important. If you forget to commit and push the NPM bumps, the docker environment can apply them on the fly and avoid errors. When using multiple Docker steps, each step is isolated, so NPM bumps will not carry over between steps.
+
 The `(meteor update --npm 2>/dev/null || true)` part is added for compatibility. The `--npm` option was introduced in Meteor 3.4. Older Meteor versions don’t support it and would fail. Redirecting the error and allowing the command to continue ensures the same Docker step works across versions, without breaking deployments on older Meteor releases.
+
+:: info
+The error in this section means the NPM bumps were not committed during the app update, and the Docker environment can't do it safely. Run `meteor update --npm` locally, or run the app once after upgrading Meteor, then commit and push both the Meteor update and the updated NPM dependencies.
+::
 
 ## Benefits
 
