@@ -108,7 +108,7 @@ The priorities listed below represent tasks that are large enough to be consider
 
 We will expand their descriptions and open feedback channels once we have time to address them.
 
-Beyond these, we also track smaller tasks delivered in each release. These focus on improving existing areas in Meteor (like Node 24, OpenTelemetry, and Express Auth integration), Meteor core code quality (linting and standards), easing contributions through documentation and engagement programs, and reviewing and validating existing and incoming community contributions.
+Beyond these, we also track smaller tasks delivered in each release. These focus on improving existing areas in Meteor (such as Node 24, OpenTelemetry, Express Auth integration, and more), enforcing Meteor core code quality (linting and standards), easing contributions through documentation and engagement programs, and reviewing and validating existing and new community contributions.
 
 ---
 
