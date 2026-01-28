@@ -88,13 +88,23 @@ We plan to document the changes in the Meteor documentation, including:
 
 ## Next project: Change streams
 
-> Provide a unified API for MongoDB change notifications to improve efficiency and consistency.
+> Meteor reactivity works based on polling the database for changes or via oplog mongo system. This approach can be inefficient and lead to performance issues compared with the newst techlogies we have in 2026 (especially with large datasets or high-frequency updates), so we want to leverage MongoDB Change Streams to provide real-time updates to Meteor applications in a more efficient way.
 
 **Feedback and discussion**
 
 🔗 [MongoDB Change Streams support in Meteor](https://forums.meteor.com/t/mongodb-change-streams-support-in-meteor/63681)
 
-### TODO Develop the sections of release phases
+### Phase 1: Opined implementation
+
+**Target Release:** 3.5 ⏳
+**Goal:** Implement a first version for MongoDB Change Streams in Meteor, allowing developers to opt-in to using change streams for real-time updates with a simple configuration option.
+
+### Phase 2: Configurable implementation + feedbacks
+
+**Target Release:** 3.5.x ⏳
+
+**Goal:** Make MongoDB Change Streams more configurable to bring better performance in specific scenarios for real-time updates in Meteor, while gathering feedback from the community to refine and improve the implementation based on real-world usage.
+
 
 ## Next priorities
 
@@ -102,13 +112,14 @@ The priorities listed below represent tasks that are large enough to be consider
 
 * Mobile/Capacitor Support
 * Release CI/CD Speed & Reliability
+* Open telemetry & Observability support ([PR](https://github.com/meteor/meteor/pull/14086))
 * TypeScript Improvements
 * Client-side Type Safety
 * Test Support Improvements
 
 We will expand their descriptions and open feedback channels once we have time to address them.
 
-Beyond these, we also track smaller tasks delivered in each release. These focus on improving existing areas in Meteor (such as Node 24, OpenTelemetry, Express Auth integration, and more), enforcing Meteor core code quality (linting and standards), easing contributions through documentation and engagement programs, and reviewing and validating existing and new community contributions.
+Beyond these, we also track smaller tasks delivered in each release. These focus on improving existing areas in Meteor (such as Node 24, Express Auth integration, and more), enforcing Meteor core code quality (linting and standards), easing contributions through documentation and engagement programs, and reviewing and validating existing and new community contributions.
 
 ---
 
