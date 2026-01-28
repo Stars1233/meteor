@@ -88,7 +88,7 @@ We plan to document the changes in the Meteor documentation, including:
 
 ## Next project: Change streams
 
-> Meteor reactivity works based on polling the database for changes or via oplog mongo system. This approach can be inefficient and lead to performance issues compared with the newst techlogies we have in 2026 (especially with large datasets or high-frequency updates), so we want to leverage MongoDB Change Streams to provide real-time updates to Meteor applications in a more efficient way.
+> Change Streams is the official way to listen to changes in MongoDB, btw Meteor reactivity works based on polling the database for changes or via oplog mongo system that can be inefficient and lead to performance issues compared with the newst techlogies we have in 2026 (especially with large datasets or high-frequency updates), so we want to leverage MongoDB Change Streams to provide real-time updates to Meteor applications in a more efficient way.
 
 **Feedback and discussion**
 
@@ -98,7 +98,7 @@ We plan to document the changes in the Meteor documentation, including:
 ### Phase 1: Opined implementation
 
 **Target Release:** 3.5 ⏳
-**Goal:** Implement a first version for MongoDB Change Streams in Meteor, allowing developers to opt-in to using change streams for real-time updates with a simple configuration option.
+**Goal:** Implement a first version for MongoDB Change Streams in Meteor, allowing developers to opt-in to using change streams for real-time updates with a simple configuration option. This version should be transparent to existing applications, allowing them to continue using the current reactivity system while providing an easy path to switch to change streams via settings.json file or environment variable.
 
 ### Phase 2: Configurable implementation + feedbacks
 
