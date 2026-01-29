@@ -780,30 +780,6 @@ module.exports = defineConfig(Meteor => ({
 }));
 ```
 
-### Docker
-
-When running a Meteor app inside Docker using a Dockerfile that calls `meteor build`, `meteor deploy`, or `meteor run`, you may need an extra step before installing dependencies.
-
-In some setups, it’s recommended to run `meteor update --npm` before `meteor npm install`.
-
-This command checks that the NPM dependencies expected by the Meteor tool meet the minimum supported versions. Each Meteor release requires specific minimum versions of tools like Rspack and other NPM packages. Running this ensures your project aligns with the Meteor version in use, helping avoid build and deploy issues.
-
-If you encounter an error like `Rspack plugin error: Could not find rspack.config.js`, it’s often a sign that this step is missing.
-
-A typical Docker step would look like this:
-
-```dockerfile
-RUN (meteor update --npm 2>/dev/null || true) && meteor npm install && meteor build [...]
-```
-
-> Adding the `meteor update --npm` command in the same Docker step as `meteor build` or `meteor deploy` is important. If you forget to commit and push the NPM bumps, the docker environment can apply them on the fly and avoid errors. When using multiple Docker steps, each step is isolated, so NPM bumps will not carry over between steps.
-
-The `(meteor update --npm 2>/dev/null || true)` part is added for compatibility. The `--npm` option was introduced in Meteor 3.4. Older Meteor versions don’t support it and would fail. Redirecting the error and allowing the command to continue ensures the same Docker step works across versions, without breaking deployments on older Meteor releases.
-
-:: info
-The error in this section means the NPM bumps were not committed during the app update, and the Docker environment can't do it safely. Run `meteor update --npm` locally, or run the app once after upgrading Meteor, then commit and push both the Meteor update and the updated NPM dependencies.
-::
-
 ## Benefits
 
 Meteor–Rspack integration sends your app code to Rspack to use modern bundler features. Meteor then uses Rspack’s output to handle Meteor-specific tasks (like Atmosphere package compilation) and create the final bundle.
@@ -876,3 +852,21 @@ module.exports = defineConfig(Meteor => ({
 You can combine both solutions: raise the heap limit with `NODE_OPTIONS` and disable persistent cache to reduce overall memory pressure.
 
 Rspack itself has reported plans to optimize persistent cache and overall RAM consumption in [Rspack 2.0](https://rspack.rs/misc/planning/roadmap), which should improve memory behavior in future Meteor-Rspack releases.
+
+### Docker
+
+When building or deploying a Meteor-Rspack app inside Docker, you may encounter errors like `Rspack plugin error: Could not find rspack.config.js`. This typically means the NPM dependencies expected by Meteor are not aligned with the Meteor version in use.
+
+Each Meteor release requires specific minimum versions of NPM packages like Rspack. If these were not committed after upgrading Meteor locally, the Docker environment won't have them. To fix this, run `meteor update --npm` before `meteor npm install` in your Dockerfile:
+
+```dockerfile
+RUN (meteor update --npm 2>/dev/null || true) && meteor npm install && meteor build [...]
+```
+
+The `(meteor update --npm 2>/dev/null || true)` wrapper is for compatibility. The `--npm` option was introduced in Meteor 3.4. Older versions don't support it and would fail, so redirecting the error and allowing the command to continue ensures the same Docker step works across Meteor versions.
+
+> Keep `meteor update --npm` in the same Docker step as `meteor build` or `meteor deploy`. If you forget to commit and push the NPM bumps locally, this lets the Docker environment apply them on the fly. When using multiple Docker steps, each step is isolated, so NPM bumps won't carry over between steps.
+
+:::info
+To avoid this issue entirely, run `meteor update --npm` locally after upgrading Meteor, or run the app once so the bumps are applied, then commit and push both the Meteor update and the updated NPM dependencies.
+:::
