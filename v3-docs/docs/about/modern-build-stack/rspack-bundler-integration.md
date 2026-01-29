@@ -867,6 +867,6 @@ The `(meteor update --npm 2>/dev/null || true)` wrapper is for compatibility. Th
 
 > Keep `meteor update --npm` in the same Docker step as `meteor build` or `meteor deploy`. If you forget to commit and push the NPM bumps locally, this lets the Docker environment apply them on the fly. When using multiple Docker steps, each step is isolated, so NPM bumps won't carry over between steps.
 
-:::info
+::: info
 To avoid this issue entirely, run `meteor update --npm` locally after upgrading Meteor, or run the app once so the bumps are applied, then commit and push both the Meteor update and the updated NPM dependencies.
 :::
