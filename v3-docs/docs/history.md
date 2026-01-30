@@ -66,7 +66,7 @@ N/A
 Please run the following command to update your project:
 
 ```bash
-meteor update --release 3.4-rc.3
+meteor update --release 3.4
 ```
 
 To apply `react-meteor-data` changes:
