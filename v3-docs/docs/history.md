@@ -97,11 +97,11 @@ meteor add rspack
 
 Check out [the requirements for Rspack Bundler integration](https://docs.meteor.com/about/modern-build-stack/rspack-bundler-integration.html#requirements) on existing apps.
 
-### [📃 Modern Build Stack docs](https://docs.meteor.com/about/modern-build-stack.html)
+### 📃 [Modern Build Stack docs](https://docs.meteor.com/about/modern-build-stack.html)
 
-### [☄️ Meteor Bundler optimizations docs](https://docs.meteor.com/about/modern-build-stack/meteor-bundler-optimizations.html)
+### ☄️ [Meteor Bundler optimizations docs](https://docs.meteor.com/about/modern-build-stack/meteor-bundler-optimizations.html)
 
-### [⚡ Rspack Bundler integration docs](https://docs.meteor.com/about/modern-build-stack/rspack-bundler-integration.html)
+### ⚡ [Rspack Bundler integration docs](https://docs.meteor.com/about/modern-build-stack/rspack-bundler-integration.html)
 
 If you find any issues, please report them to the [Meteor issues tracker](https://github.com/meteor/meteor).
 
