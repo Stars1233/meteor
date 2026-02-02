@@ -115,7 +115,7 @@ Meteor.deferrable = function (f, options) {
 
 /**
  * @memberOf Meteor
- * @summary Defer execution of a function to run asynchronously in the background in development (similar to Meteor.isDevelopment ? Meteor.defer(fn) : Meteor.startup(fn)).
+ * @summary Wrap a function to run in the background in development (similar to Meteor.isDevelopment ? Meteor.defer(fn) : Meteor.startup(fn)).
  * @locus Anywhere
  * @param {Function} func The function to run
  * @param {Object} options The options object
@@ -126,7 +126,7 @@ Meteor.deferDev = function (f) {
 
 /**
  * @memberOf Meteor
- * @summary Defer execution of a function to run asynchronously in the background in production (similar to Meteor.isProduction ? Meteor.defer(fn) : Meteor.startup(fn)).
+ * @summary Wrap a function to run in the background in production (similar to Meteor.isProduction ? Meteor.defer(fn) : Meteor.startup(fn)).
  * @locus Anywhere
  * @param {Function} func The function to run
  * @param {Object} options The options object
