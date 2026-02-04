@@ -39,6 +39,94 @@ function safeRequire(moduleName) {
   }
 }
 
+/**
+ * Extract local file dependencies from a config file by parsing require/import statements
+ * @param {string} configFilePath - Path to the config file to parse
+ * @returns {string[]} - Array of absolute paths to local dependencies
+ */
+function extractLocalDependencies(configFilePath) {
+  if (!configFilePath || !fs.existsSync(configFilePath)) {
+    return [];
+  }
+
+  try {
+    const content = fs.readFileSync(configFilePath, 'utf-8');
+    const dependencies = [];
+    const configDir = path.dirname(configFilePath);
+    const projectDir = process.cwd();
+
+    // Regex patterns to match require() and import statements
+    const requirePattern = /require\s*\(\s*[`'"]([^`'"]+)[`'"]\s*\)/g;
+    const importPattern = /import\s+.*?\s+from\s+[`'"]([^`'"]+)[`'"]/g;
+    const dynamicImportPattern = /import\s*\(\s*[`'"]([^`'"]+)[`'"]\s*\)/g;
+
+    // Extract all matches
+    let match;
+    const patterns = [requirePattern, importPattern, dynamicImportPattern];
+    
+    for (const pattern of patterns) {
+      while ((match = pattern.exec(content)) !== null) {
+        const modulePath = match[1];
+        const resolvedPath = resolveLocalModule(modulePath, configDir, projectDir);
+        if (resolvedPath) {
+          dependencies.push(resolvedPath);
+        }
+      }
+    }
+
+    // Remove duplicates
+    return [...new Set(dependencies)];
+  } catch (error) {
+    console.warn('[Rspack Cache] Failed to parse config dependencies:', error.message);
+    return [];
+  }
+}
+
+/**
+ * Resolve a module path to an absolute path if it's a local file
+ * @param {string} modulePath - Module path from require/import statement
+ * @param {string} configDir - Directory containing the config file
+ * @param {string} projectDir - Project root directory
+ * @returns {string|null} - Resolved absolute path or null
+ */
+function resolveLocalModule(modulePath, configDir, projectDir) {
+  // Only process relative paths (starts with . or /)
+  if (!modulePath.startsWith('.') && !modulePath.startsWith('/')) {
+    return null;
+  }
+
+  try {
+    let resolvedPath = path.resolve(configDir, modulePath);
+
+    // Try common extensions if file doesn't exist as-is
+    if (!fs.existsSync(resolvedPath)) {
+      const extensions = ['.js', '.mjs', '.cjs', '.ts', '.json'];
+      for (const ext of extensions) {
+        const pathWithExt = resolvedPath + ext;
+        if (fs.existsSync(pathWithExt)) {
+          resolvedPath = pathWithExt;
+          break;
+        }
+      }
+    }
+
+    // Verify file exists and is within project (not node_modules)
+    if (fs.existsSync(resolvedPath)) {
+      const normalizedResolved = path.normalize(resolvedPath);
+      const normalizedProject = path.normalize(projectDir);
+      
+      if (normalizedResolved.startsWith(normalizedProject) && 
+          !normalizedResolved.includes('node_modules')) {
+        return resolvedPath;
+      }
+    }
+  } catch (error) {
+    // Silently ignore resolution errors
+  }
+
+  return null;
+}
+
 // Persistent filesystem cache strategy
 function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {}) {
   // Check for configuration files
@@ -59,10 +147,16 @@ function createCacheStrategy(mode, side, { projectConfigPath, configPath } = {})
   const yarnLockPath = path.join(process.cwd(), 'yarn.lock');
   const hasYarnLock = fs.existsSync(yarnLockPath);
 
+  // Extract local dependencies from project config (e.g., plugin files)
+  const localDependencies = projectConfigPath 
+    ? extractLocalDependencies(projectConfigPath) 
+    : [];
+
   // Build dependencies array
   const buildDependencies = [
     ...(projectConfigPath ? [projectConfigPath] : []),
     ...(configPath ? [configPath] : []),
+    ...localDependencies,
     ...(hasTsconfig ? [tsconfigPath] : []),
     ...(hasBabelRcConfig ? [babelRcConfig] : []),
     ...(hasBabelJsConfig ? [babelJsConfig] : []),
