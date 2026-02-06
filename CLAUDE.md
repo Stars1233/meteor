@@ -1,0 +1,13 @@
+Read [AGENTS.md](AGENTS.md) before starting any task.
+
+## Skills
+
+Load these for detailed context on specific topics:
+
+| Skill | When to use |
+|-------|-------------|
+| [codebase](.github/skills/codebase/SKILL.md) | Build system, CLI, isobuild, tools/ directory |
+| [conventions](.github/skills/conventions/SKILL.md) | Writing packages, CLI commands, code patterns |
+| [testing](.github/skills/testing/SKILL.md) | Writing tests, debugging failures, test infrastructure |
+| [packages](.github/skills/packages/SKILL.md) | Finding packages by feature, understanding dependencies |
+| [modern-tools](.github/skills/modern-tools/SKILL.md) | tools-core utilities, rspack, modern integrations |
