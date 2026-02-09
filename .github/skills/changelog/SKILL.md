@@ -1,6 +1,6 @@
 ---
 name: changelog
-description: Use when writing, reviewing, editing, or generating Meteor release changelog entries. Defines source location, file naming, required structure, formatting rules, PR-based generation workflow, and common patterns used in v3-docs/docs/generators/changelog/versions/.
+description: Use for writing, reviewing, editing, or generating Meteor release changelog entries. Defines canonical file locations, naming rules, required section structure, formatting conventions, PR-based generation workflow (with gh CLI and web fallback), incremental updates, and common entry patterns. Applies to files under v3-docs/docs/generators/changelog/versions/.
 ---
 
 # Meteor Changelog Rules
@@ -182,13 +182,9 @@ meteor update --release <VERSION>
 
 Use merged PRs targeting the release branch.
 
-### PR Feed
-
-```
-https://github.com/meteor/meteor/pulls?q=is%3Apr+is%3Amerged+base%3Arelease-<VERSION>
-```
-
 ### Fetch PRs
+
+**Primary — `gh` CLI:**
 
 ```bash
 gh pr list --repo meteor/meteor \
@@ -197,6 +193,31 @@ gh pr list --repo meteor/meteor \
   --limit 200 \
   --json number,title,labels,author,body,url
 ```
+
+**Fallback — when `gh` is unavailable:**
+
+Use WebFetch to retrieve the PR list from GitHub:
+
+```
+https://github.com/meteor/meteor/pulls?q=is%3Apr+is%3Amerged+base%3Arelease-<VERSION>
+```
+
+Or fetch JSON from the GitHub REST API:
+
+```
+https://api.github.com/repos/meteor/meteor/pulls?base=release-<VERSION>&state=closed&per_page=100
+```
+
+Filter results to only merged PRs (`merged_at` is not null).
+
+### Incremental Updates
+
+When the changelog file already exists with content:
+
+1. Parse existing Highlights for PR numbers (extract from `PR#NNNN` links)
+2. Compare fetched PRs against the existing set
+3. **Skip PRs already present** — only process newly detected PRs
+4. Append new entries to the appropriate sections without duplicating existing ones
 
 ### Categorization Signals
 
@@ -208,15 +229,11 @@ gh pr list --repo meteor/meteor \
     * CI/test-only PRs
     * Dependabot PRs unless user-facing
 
----
-
 ### Breaking Change Detection
 
 Scan PR title, body, labels, and phrases such as:
 
-* “breaking”, “removed”, “renamed”, “is now async”
-
----
+* "breaking", "removed", "renamed", "is now async"
 
 ### Assembly Order
 
