@@ -42,12 +42,24 @@ Examples:
 All sections are required and must appear **in this exact order**.
 Use `N/A` when a section has no content.
 
+**Major / minor releases** (`X.0.0`, `X.Y.0`) — use subheaders under Highlights:
+
 ````markdown
 ## v<VERSION>, <YYYY-MM-DD>
 
 ### Highlights
 
-- Summary of change
+#### Features
+
+- New capability or API
+
+#### Improvements
+
+- Enhancement to existing behavior
+
+#### Fixes
+
+- Bug fix
 
 #### Breaking Changes
 N/A
@@ -75,6 +87,14 @@ N/A
 N/A
 ````
 
+**Patch releases** (`X.Y.Z`, Z > 0) — flat list, no subheaders:
+
+````markdown
+### Highlights
+
+- Summary of change
+````
+
 ---
 
 ## Formatting Rules
@@ -85,8 +105,13 @@ N/A
 - Always H2
 
 ### Highlights
-- Bullet list (`-`)
-- Concise, imperative voice
+
+**Major / minor** — group entries under `#### Features`, `#### Improvements`, `#### Fixes` (H4 subheaders inside Highlights). Omit a subheader only if it would be empty.
+
+**Patch** — flat bullet list, no subheaders.
+
+General rules:
+- Bullet list (`-`), concise, imperative voice
 - Include PR links inline
 
 ```markdown
@@ -223,6 +248,10 @@ When the changelog file already exists with content:
 
 * **Labels** (`Project:*`, `Type:*`) are primary
 * **Titles** supplement labels
+* For **major/minor**, classify each PR into one of:
+    * **Features** — new APIs, new packages, new capabilities
+    * **Improvements** — enhancements, optimizations, DX upgrades to existing behavior
+    * **Fixes** — bug fixes, correctness patches
 * Exclude:
     * Release tooling only
     * Docs-only PRs
@@ -238,7 +267,9 @@ Scan PR title, body, labels, and phrases such as:
 ### Assembly Order
 
 1. Version header
-2. Highlights (grouped, most impactful first)
+2. Highlights
+   - **Major/minor**: Features → Improvements → Fixes (as H4 subheaders)
+   - **Patch**: flat list, most impactful first
 3. All merged PRs link (if needed)
 4. Breaking Changes
 5. Internal API changes
