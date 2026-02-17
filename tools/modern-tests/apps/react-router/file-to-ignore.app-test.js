@@ -1,4 +1,4 @@
-describe("react-router* pattern", () => {
+describe("file-to-ignore.app-test.js pattern", () => {
   it("should not run as ignored", () => {
     throw new Error("test should be ignored by eager test loading");
   });

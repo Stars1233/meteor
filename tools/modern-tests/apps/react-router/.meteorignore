@@ -1,1 +1,6 @@
 react-router*
+folder-to-ignore/
+file-to-ignore.app-test.js
+**/glob-ignore/*.app-test.js
+prefix-*
+*-suffix
