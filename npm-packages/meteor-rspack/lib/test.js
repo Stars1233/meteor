@@ -9,6 +9,7 @@ const { createIgnoreRegex, createIgnoreGlobConfig } = require("./ignore.js");
  * @param {string} options.projectDir - The project directory
  * @param {string} options.buildContext - The build context
  * @param {string[]} options.ignoreEntries - Array of ignore patterns
+ * @param {string[]} options.meteorIgnoreEntries - Array of meteor ignore patterns
  * @param {string} options.extraEntry - Extra entry to load
  * @returns {string} The path to the generated file
  */
@@ -17,6 +18,7 @@ const generateEagerTestFile = ({
   projectDir,
   buildContext,
   ignoreEntries: inIgnoreEntries = [],
+  meteorIgnoreEntries: inMeteorIgnoreEntries = [],
   prefix: inPrefix = '',
   extraEntry,
   globalImportPath,
@@ -41,6 +43,15 @@ const generateEagerTestFile = ({
     createIgnoreGlobConfig(ignoreEntries)
   );
 
+  const excludeMeteorIgnoreRegex = createIgnoreRegex(
+    createIgnoreGlobConfig(inMeteorIgnoreEntries)
+  );
+  console.log(
+    "--> (test.js-Line: 41)\n createIgnoreGlobConfig(ignoreEntries): ",
+    createIgnoreGlobConfig(ignoreEntries),
+    excludeFoldersRegex.toString()
+  );
+
   const prefix = (inPrefix && `${inPrefix}-`) || "";
   const filename = isAppTest
     ? `${prefix}eager-app-tests.mjs`
@@ -51,15 +62,20 @@ const generateEagerTestFile = ({
     : "/\\.(?:test|spec)s?\\.[^.]+$/";
 
   const content = `${
-    globalImportPath ? `import '${globalImportPath}';\n\n` : ''
-  }{
-  const ctx = import.meta.webpackContext('/', {
+    globalImportPath ? `import '${globalImportPath}';\n\n` : ""
+  }
+  const MeteorIgnoreRegex = ${excludeMeteorIgnoreRegex.toString()};
+  {
+  const ctx = import.meta.webpackContext('${projectDir}', {
     recursive: true,
     regExp: ${regExp},
     exclude: ${excludeFoldersRegex.toString()},
     mode: 'eager',
   });
-  ctx.keys().forEach(ctx);
+  ctx.keys().filter((k) => {
+    // Only exclude based on *relative* path segments.
+    return !MeteorIgnoreRegex.test(rel);
+  }).forEach(ctx);
   ${
     extraEntry
       ? `const extra = import.meta.webpackContext('${path.dirname(
