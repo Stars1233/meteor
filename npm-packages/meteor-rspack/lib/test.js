@@ -73,6 +73,9 @@ const generateEagerTestFile = ({
     mode: 'eager',
   });
   ctx.keys().filter((k) => {
+    // Make the check strictly relative to the context root.
+    // If k is absolute and starts with root, strip it; if it's already relative, leave it.
+    const rel = k.startsWith('${projectDir}') ? k.slice(${projectDir.length}) : k.replace(/^\\.\\//, '');
     // Only exclude based on *relative* path segments.
     return !MeteorIgnoreRegex.test(rel);
   }).forEach(ctx);
