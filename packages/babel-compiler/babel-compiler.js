@@ -101,16 +101,17 @@ let lastModifiedSwcConfigTime;
 BCp.initializeMeteorAppSwcrc = function () {
   const hasSwcRc = fs.existsSync(`${getMeteorAppDir()}/.swcrc`);
   const hasSwcJs = !hasSwcRc && fs.existsSync(`${getMeteorAppDir()}/swc.config.js`);
-  if (!lastModifiedSwcConfig && !hasSwcRc && !hasSwcJs) {
+  const hasSwcTs = !hasSwcRc && !hasSwcJs && fs.existsSync(`${getMeteorAppDir()}/swc.config.ts`);
+  if (!lastModifiedSwcConfig && !hasSwcRc && !hasSwcJs && !hasSwcTs) {
     return;
   }
-  const swcFile = hasSwcJs ? 'swc.config.js' : '.swcrc';
+  const swcFile = hasSwcTs ? 'swc.config.ts' : hasSwcJs ? 'swc.config.js' : '.swcrc';
   const filePath = `${getMeteorAppDir()}/${swcFile}`;
   const fileStats = fs.statSync(filePath);
   const fileModTime = fileStats?.mtime?.getTime();
 
   let currentLastModifiedConfigTime;
-  if (hasSwcJs) {
+  if (hasSwcJs || hasSwcTs) {
     // For dynamic JS files, first get the resolved configuration
     const resolvedConfig = lastModifiedSwcConfigTime?.includes(`${fileModTime}`)
       ? lastModifiedSwcConfig || getMeteorAppSwcrc(swcFile)
@@ -1073,8 +1074,40 @@ function getMeteorAppPackageJson() {
 function getMeteorAppSwcrc(file = '.swcrc') {
   try {
     const filePath = `${getMeteorAppDir()}/${file}`;
-    if (file.endsWith('.js')) {
+    if (file.endsWith('.js') || file.endsWith('.ts')) {
       let content = fs.readFileSync(filePath, 'utf-8');
+      
+      if (file.endsWith('.ts')) {
+        try {
+          const swc = require('@meteorjs/swc-core');
+          const result = swc.transformSync(content, {
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+              },
+              target: 'es2015',
+            },
+            module: {
+              type: 'commonjs',
+            },
+          });
+          content = result.code;
+        } catch (swcError) {
+          content = content
+            .replace(/import\s+type\s+.*?from\s+['"][^'"]+['"];?/g, '')
+            .replace(/import\s+.*?from\s+['"][^'"]+['"];?/g, '')
+            .replace(/import\s+['"][^'"]+['"];?/g, '')
+            .replace(/export\s+default\s+/, 'module.exports = ')
+            .replace(/export\s+/g, '')
+            .replace(/:\s*\w+(\[\])?(\s*=)/g, '$2')
+            .replace(/\(([^)]*?):\s*\w+(\[\])?\)/g, '($1)')
+            .replace(/\):\s*\w+(\[\])?\s*\{/g, ') {')
+            .replace(/interface\s+\w+\s*\{[^}]*\}/g, '')
+            .replace(/type\s+\w+\s*=\s*[^;]+;/g, '')
+            .replace(/as\s+\w+(\[\])?/g, '');
+        }
+      }
+      
       // Check if the content uses ES module syntax (export default)
       if (content.includes('export default')) {
         // Transform ES module syntax to CommonJS

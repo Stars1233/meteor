@@ -14,14 +14,20 @@ function getMeteorAppSwcrc(file = '.swcrc') {
       
       if (file.endsWith('.ts')) {
         try {
-          const esbuild = require('esbuild');
-          const result = esbuild.transformSync(content, {
-            loader: 'ts',
-            format: 'cjs',
-            target: 'node14',
+          const swc = require('@swc/core');
+          const result = swc.transformSync(content, {
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+              },
+              target: 'es2015',
+            },
+            module: {
+              type: 'commonjs',
+            },
           });
           content = result.code;
-        } catch (esbuildError) {
+        } catch (swcError) {
           content = content
             .replace(/import\s+type\s+.*?from\s+['"][^'"]+['"];?/g, '')
             .replace(/import\s+.*?from\s+['"][^'"]+['"];?/g, '')
@@ -35,6 +41,10 @@ function getMeteorAppSwcrc(file = '.swcrc') {
             .replace(/type\s+\w+\s*=\s*[^;]+;/g, '')
             .replace(/as\s+\w+(\[\])?/g, '');
         }
+      }
+      
+      if (content.includes('export default')) {
+        content = content.replace(/export\s+default\s+/, 'module.exports = ');
       }
       const script = new vm.Script(`
         (function() {
