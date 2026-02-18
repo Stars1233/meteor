@@ -452,11 +452,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       : isClient && isTest && testEntry
       ? path.resolve(process.cwd(), testEntry)
       : path.resolve(process.cwd(), buildContext, entryPath);
-  console.log(
-    "--> (rspack.config.js-Line: 431)\n clientEntry: ",
-    clientEntry,
-    entryPath
-  );
   const clientNameConfig = `[${(isTest && 'test-') || ''}client-rspack]`;
   // Base client config
   let clientConfig = {
@@ -577,11 +572,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       ? path.resolve(process.cwd(), testEntry)
       : path.resolve(projectDir, buildContext, entryPath);
   const serverNameConfig = `[${(isTest && 'test-') || ''}server-rspack]`;
-  console.log(
-    "--> (rspack.config.js-Line: 576)\n serverEntry: ",
-    serverEntry,
-    entryPath
-  );
   // Base server config
   let serverConfig = {
     name: serverNameConfig,
