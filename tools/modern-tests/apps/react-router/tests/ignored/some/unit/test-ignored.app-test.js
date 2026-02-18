@@ -1,4 +1,4 @@
-describe("file-with-multiple-extensions-ignored.app-test.js pattern", () => {
+describe("tests/ignored/some/unit/test-ignored.app-test.js pattern", () => {
   it("should not run as ignored", () => {
     throw new Error("test should be ignored by eager test loading");
   });
