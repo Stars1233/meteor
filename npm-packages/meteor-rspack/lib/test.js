@@ -42,6 +42,7 @@ const generateEagerTestFile = ({
   const excludeFoldersRegex = createIgnoreRegex(
     createIgnoreGlobConfig(ignoreEntries)
   );
+  console.log("inMeteorIgnoreEntries", inMeteorIgnoreEntries);
   // Create regex from meteor ignore entries
   const excludeMeteorIgnoreRegex = inMeteorIgnoreEntries.length > 0
     ? createIgnoreRegex(createIgnoreGlobConfig(inMeteorIgnoreEntries))

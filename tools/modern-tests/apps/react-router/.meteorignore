@@ -1,6 +1,16 @@
-react-router*
-folder-to-ignore/
-file-to-ignore.app-test.js
-**/glob-ignore/*.app-test.js
-prefix-*
-*-suffix
+# Folder combination patterns
+react-router*-ignored
+folder-to-ignored/
+file-to-ignored.app-test.js
+**/glob-ignored/*.app-test.js
+prefix-*-ignored
+*-ignored-suffix
+
+# File combination patterns
+specific-file-ignored.app-test.js
+*.temp-ignored.app-test.js
+**/unit/*.app-test.js
+integration/*-ignored.app-test.js
+!important.app-test.js
+test-*-ignored.app-test.js
+file-with-multiple-extensions-ignored.app-test.js
