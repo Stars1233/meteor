@@ -67,6 +67,7 @@ import {
   shouldLogVerbose,
   stripRspackLabel,
 } from "./logging";
+import { isMeteorAppProfile } from "../../tools-core/lib/meteor";
 
 /**
  * Calculates the devServerPort based on process.env.PORT
@@ -231,29 +232,52 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest, isTestLike:
   const isBlazeHotEnabled = isMeteorBlazeHotProject();
   const isBundleVisualizerEnabled = isMeteorBundleVisualizerProject();
 
+  const isProfile = isMeteorAppProfile();
+
   const swcExternalHelpers = checkNpmDependencyExists('@swc/helpers');
 
   const configPath = getConfigFilePath();
   const projectConfigPath = getCustomConfigFilePath();
 
   const pairs = [
-    ['isDevelopment', isMeteorAppDevelopment()],
-    ['isProduction', isMeteorAppProduction()],
-    ['isDebug', isMeteorAppDebug()],
-    ['isVerbose', isMeteorAppConfigModernVerbose()],
-    ['isTest', isTest],
-    ...(isTestLike ? [['isTestLike', isTestLike || isTest]] : []),
-    ...(isTestLike && isTestFullApp &&  [['isTestFullApp', isTestFullApp]] || []),
-    ...(isTestLike && isTestModule &&  [['isTestModule', isTestModule]] || []),
-    ...(isTestLike && isTestEager &&  [['isTestEager', isTestEager]] || []),
-    ['isRun', isMeteorAppRun()],
-    ['isBuild', isMeteorAppBuild()],
-    ['isNative', isMeteorAppNative()],
-    ['isClient', isClient],
-    ['isServer', isServer],
-    ['entryPath', getBuildFilePath({ ...module, ...env, ...side, isTestModule, role: FILE_ROLE.entry }) ],
-    ['outputPath', getBuildFilePath({ ...module, ...env, ...side, isTestModule, role: FILE_ROLE.output }) ],
-    ['outputFilename',
+    ["isDevelopment", isMeteorAppDevelopment()],
+    ["isProduction", isMeteorAppProduction()],
+    ["isDebug", isMeteorAppDebug()],
+    ["isVerbose", isMeteorAppConfigModernVerbose()],
+    ...((isProfile && [["isProfile", isMeteorAppProfile()]]) || []),
+    ["isTest", isTest],
+    ...(isTestLike ? [["isTestLike", isTestLike || isTest]] : []),
+    ...((isTestLike && isTestFullApp && [["isTestFullApp", isTestFullApp]]) ||
+      []),
+    ...((isTestLike && isTestModule && [["isTestModule", isTestModule]]) || []),
+    ...((isTestLike && isTestEager && [["isTestEager", isTestEager]]) || []),
+    ["isRun", isMeteorAppRun()],
+    ["isBuild", isMeteorAppBuild()],
+    ["isNative", isMeteorAppNative()],
+    ["isClient", isClient],
+    ["isServer", isServer],
+    [
+      "entryPath",
+      getBuildFilePath({
+        ...module,
+        ...env,
+        ...side,
+        isTestModule,
+        role: FILE_ROLE.entry,
+      }),
+    ],
+    [
+      "outputPath",
+      getBuildFilePath({
+        ...module,
+        ...env,
+        ...side,
+        isTestModule,
+        role: FILE_ROLE.output,
+      }),
+    ],
+    [
+      "outputFilename",
       getBuildFilePath({
         ...env,
         ...side,
@@ -262,41 +286,49 @@ export function getRspackEnv({ isClient, isServer, isTest: inIsTest, isTestLike:
         onlyFilename: true,
       }),
     ],
-    ['runPath', getBuildFilePath({ ...module, ...env, ...side, ...commandRole }) ],
-    ['buildContext', RSPACK_BUILD_CONTEXT],
-    ['chunksContext', RSPACK_CHUNKS_CONTEXT],
-    ['assetsContext', RSPACK_ASSETS_CONTEXT],
-    ['devServerPort', process.env.RSPACK_DEVSERVER_PORT],
-    ['projectConfigPath', projectConfigPath],
-    ['configPath', configPath],
+    [
+      "runPath",
+      getBuildFilePath({ ...module, ...env, ...side, ...commandRole }),
+    ],
+    ["buildContext", RSPACK_BUILD_CONTEXT],
+    ["chunksContext", RSPACK_CHUNKS_CONTEXT],
+    ["assetsContext", RSPACK_ASSETS_CONTEXT],
+    ["devServerPort", process.env.RSPACK_DEVSERVER_PORT],
+    ["projectConfigPath", projectConfigPath],
+    ["configPath", configPath],
     ...((isTest &&
       initialEntrypoints.testClient &&
       initialEntrypoints.testServer && [
-        ['testClientEntry', initialEntrypoints.testClient],
-        ['testServerEntry', initialEntrypoints.testServer],
+        ["testClientEntry", initialEntrypoints.testClient],
+        ["testServerEntry", initialEntrypoints.testServer],
       ]) ||
       (isTest &&
         initialEntrypoints.testModule && [
-          ['testEntry', initialEntrypoints.testModule],
-      ]) || [
-        ['mainClientEntry', initialEntrypoints.mainClient],
-        ['mainClientHtmlEntry', initialEntrypoints.mainClientHtml],
-        ['mainServerEntry', initialEntrypoints.mainServer],
-    ]),
-    ...(swcExternalHelpers &&  [['swcExternalHelpers', swcExternalHelpers]] || []),
-    ...(isReactEnabled &&  [['isReactEnabled', isReactEnabled]] || []),
-    ...(isBlazeEnabled &&  [['isBlazeEnabled', isBlazeEnabled]] || []),
-    ...(isBlazeHotEnabled &&  [['isBlazeHotEnabled', isBlazeHotEnabled]] || []),
-    ...(isTypescriptEnabled &&  [['isTypescriptEnabled', isTypescriptEnabled]] || []),
-    ...(isAngularEnabled &&  [['isAngularEnabled', isAngularEnabled]] || []),
-    ...(isTsxEnabled &&  [['isTsxEnabled', isTsxEnabled]] || []),
-    ...(isJsxEnabled &&  [['isJsxEnabled', isJsxEnabled]] || []),
-    ...(isBundleVisualizerEnabled &&  [
-      ['isBundleVisualizerEnabled', isBundleVisualizerEnabled],
-      ['rsdoctorClientPort', process.env.RSDOCTOR_CLIENT_PORT],
-      ['rsdoctorServerPort', process.env.RSDOCTOR_SERVER_PORT],
-    ] || []),
-
+          ["testEntry", initialEntrypoints.testModule],
+        ]) || [
+        ["mainClientEntry", initialEntrypoints.mainClient],
+        ["mainClientHtmlEntry", initialEntrypoints.mainClientHtml],
+        ["mainServerEntry", initialEntrypoints.mainServer],
+      ]),
+    ...((swcExternalHelpers && [["swcExternalHelpers", swcExternalHelpers]]) ||
+      []),
+    ...((isReactEnabled && [["isReactEnabled", isReactEnabled]]) || []),
+    ...((isBlazeEnabled && [["isBlazeEnabled", isBlazeEnabled]]) || []),
+    ...((isBlazeHotEnabled && [["isBlazeHotEnabled", isBlazeHotEnabled]]) ||
+      []),
+    ...((isTypescriptEnabled && [
+      ["isTypescriptEnabled", isTypescriptEnabled],
+    ]) ||
+      []),
+    ...((isAngularEnabled && [["isAngularEnabled", isAngularEnabled]]) || []),
+    ...((isTsxEnabled && [["isTsxEnabled", isTsxEnabled]]) || []),
+    ...((isJsxEnabled && [["isJsxEnabled", isJsxEnabled]]) || []),
+    ...((isBundleVisualizerEnabled && [
+      ["isBundleVisualizerEnabled", isBundleVisualizerEnabled],
+      ["rsdoctorClientPort", process.env.RSDOCTOR_CLIENT_PORT],
+      ["rsdoctorServerPort", process.env.RSDOCTOR_SERVER_PORT],
+    ]) ||
+      []),
   ].filter(Boolean);
 
   // Create environment variables object with bannerOutput

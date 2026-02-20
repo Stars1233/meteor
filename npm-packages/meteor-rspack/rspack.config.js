@@ -227,6 +227,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const isTestLike = !!Meteor.isTestLike;
   const swcExternalHelpers = !!Meteor.swcExternalHelpers;
   const isNative = !!Meteor.isNative;
+  const isProfile = !!Meteor.isProfile;
   const mode = isProd ? 'production' : 'development';
   const projectDir = process.cwd();
   const projectConfigPath = Meteor.projectConfigPath || path.resolve(projectDir, 'rspack.config.js');
@@ -429,7 +430,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     : [];
   // Not supported in Meteor yet (Rspack 1.7+ is enabled by default)
   const lazyCompilationConfig = { lazyCompilation: false };
-  const loggingConfig = { stats: 'none', infrastructureLogging: { level: "none"  } };
+  const loggingConfig = isProfile
+    ? {}
+    : { stats: 'none', infrastructureLogging: { level: 'none' } };
 
   const clientEntry =
     isClient && isTest && isTestEager && isTestFullApp
