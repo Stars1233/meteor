@@ -158,7 +158,7 @@ Object.assign(RunLog.prototype, {
       self.consecutiveRestartMessages = 1;
     }
 
-    var message = "=> Meteor server restarted at: " + options.rootUrl;
+    var message = "=> Meteor server restarted at " + options.rootUrl;
     if (self.consecutiveRestartMessages > 1) {
       message += " (x" + self.consecutiveRestartMessages + ")";
     }
