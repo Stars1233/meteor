@@ -168,7 +168,7 @@ If you want to see the final Rspack config applying your overrides, you can enab
 
 Starting with Meteor 3.4.1, the log output for the default Meteor-Rspack app is simplified to stay as close as possible to Meteor's native experience. By default, logs are less verbose and only show essential information like server restarts and client modifications.
 
-If there are any warnings or errors, Rspack logs will be shown with their own style and colors.
+If there are any compilation warnings or errors, Rspack logs will be shown with their own style and colors.
 
 ### Enable Verbose Mode
 
