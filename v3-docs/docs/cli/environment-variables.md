@@ -95,6 +95,20 @@ This way each command only processes the files it actually needs, reducing build
 `METEOR_IGNORE` is automatically set when using the [Rspack bundler integration](../about/modern-build-stack/rspack-bundler-integration.md). Since Rspack handles the client and server app bundling, Meteor's bundler should only worry about what it strictly needs for the Meteor-Rspack integration. By using `METEOR_IGNORE` to exclude folders and dependencies that Rspack already manages or that are irrelevant to Meteor's side of the build, you ensure the most speed is gained from the Rspack delegation.
 :::
 
+## METEOR_LOCAL_DIR
+(_development_)
+
+This environment variable allows you to change the location of the `.meteor/local` directory, which Meteor uses to store its build cache and other local state. This is useful for running multiple instances of the same app with different local states or for redirecting the local directory to a different drive or path.
+
+When using the [Rspack bundler integration](../about/modern-build-stack/rspack-bundler-integration.md), `METEOR_LOCAL_DIR` also influences the Rspack build context. It extracts the name of the folder represented in the path and appends it as a suffix to the following Rspack constants:
+- `RSPACK_BUILD_CONTEXT`
+- `RSPACK_CHUNKS_CONTEXT`
+- `RSPACK_ASSETS_CONTEXT`
+
+For example, if `METEOR_LOCAL_DIR` is set to `/path/to/.meteor/local-custom`, Rspack will use `_build-local-custom`, `build-chunks-local-custom`, and `build-assets-local-custom` as its context directories, ensuring that build artifacts remain isolated for that specific local environment.
+
+For more information, see the [Running Multiple Instances](../about/modern-build-stack/rspack-bundler-integration.md#running-multiple-instances) section in the Rspack documentation.
+
 ## METEOR_PROFILE
 (_development_)
 

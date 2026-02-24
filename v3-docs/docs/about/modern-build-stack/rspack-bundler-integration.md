@@ -782,6 +782,22 @@ module.exports = defineConfig(Meteor => ({
 }));
 ```
 
+### Running Multiple Instances
+
+By default, Meteor and Rspack use fixed directories for their build caches (`.meteor/local` and `_build`). If you try to run multiple instances of the same app simultaneously, they may conflict by attempting to write to the same folders.
+
+To run multiple instances, you can use the `METEOR_LOCAL_DIR` environment variable to specify a unique local directory for each instance. When this variable is set, the Meteor-Rspack integration automatically extracts the directory name and uses it as a suffix for Rspack's build contexts (`_build`, `build-chunks`, and `build-assets`), ensuring complete isolation between instances.
+
+```bash
+# Instance 1
+PORT=3000 METEOR_LOCAL_DIR=.meteor/local-1 meteor run
+
+# Instance 2
+PORT=3001 METEOR_LOCAL_DIR=.meteor/local-2 meteor run
+```
+
+For more details on how this variable affects Rspack, see the [`METEOR_LOCAL_DIR`](../../cli/environment-variables.md#meteor_local_dir) documentation.
+
 ## Benefits
 
 Meteor–Rspack integration sends your app code to Rspack to use modern bundler features. Meteor then uses Rspack’s output to handle Meteor-specific tasks (like Atmosphere package compilation) and create the final bundle.
