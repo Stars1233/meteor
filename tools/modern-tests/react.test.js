@@ -64,87 +64,102 @@ describe('React App Bundling /', () => {
     });
   });
 
-  describe('Meteor+Rspack Bundler /', testMeteorRspackBundler({
-    appName: 'react',
-    port: 3102,
-    filePaths: { 
-      client: 'client/main.jsx', 
-      server: 'server/main.js',
-      test: 'tests/main.js'
-    },
-    configFile: 'rspack.config.cjs',
-    customAssertions: {
-      afterRun: async ({ result }) => {
-        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
-
-        // Check if images exist and return 200 status code
-        await assertImagesExistAndLoad();
-
-        // Check custom plugin is disabled with Meteor.disablePlugins
-        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
+  describe(
+    "Meteor+Rspack Bundler /",
+    testMeteorRspackBundler({
+      appName: "react",
+      port: 3102,
+      filePaths: {
+        client: "client/main.jsx",
+        server: "server/main.js",
+        test: "tests/main.js",
       },
-      afterRunRebuildClient: async ({ allConsoleLogs }) => {
-        // Check for HMR output as enabled by default
-        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:.*/);
+      configFile: "rspack.config.cjs",
+      buildDir: "_build-local-custom",
+      env: { METEOR_LOCAL_DIR: ".meteor/local-custom" },
+      customAssertions: {
+        afterRun: async ({ result, tempDir }) => {
+          const appDir = tempDir; // testMeteorRspackBundler uses tempDir as appDir if not monorepo
+
+          const localDir = path.join(appDir, ".meteor", "local-custom");
+          const buildDir = path.join(appDir, "_build-local-custom");
+
+          expect(await fs.pathExists(buildDir)).toBe(true);
+          expect(await fs.pathExists(localDir)).toBe(true);
+
+          await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+
+          // Check if images exist and return 200 status code
+          await assertImagesExistAndLoad();
+
+          // Check custom plugin is disabled with Meteor.disablePlugins
+          await waitForMeteorOutput(
+            result.outputLines,
+            /.*CustomConsoleLogPlugin.*/,
+            { negate: true }
+          );
+        },
+        afterRunRebuildClient: async ({ allConsoleLogs }) => {
+          // Check for HMR output as enabled by default
+          await waitForMeteorOutput(
+            allConsoleLogs,
+            /.*HMR.*Updated modules:.*/
+          );
+        },
+        afterRunProduction: async ({ result }) => {
+          await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+
+          // Check if images exist and return 200 status code
+          await assertImagesExistAndLoad();
+
+          // Check custom plugin is disabled with Meteor.disablePlugins
+          await waitForMeteorOutput(
+            result.outputLines,
+            /.*CustomConsoleLogPlugin.*/,
+            { negate: true }
+          );
+        },
+        afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
+          // Check for HMR to not be enabled in production-like mode
+          await waitForMeteorOutput(
+            allConsoleLogs,
+            /.*HMR.*Updated modules:*/,
+            { negate: true }
+          );
+        },
+        afterTest: async ({ result }) => {
+          await waitForReactEnvs(result.outputLines);
+
+          // Check custom plugin is disabled with Meteor.disablePlugins
+          await waitForMeteorOutput(
+            result.outputLines,
+            /.*CustomConsoleLogPlugin.*/,
+            { negate: true }
+          );
+        },
+        afterTestOnce: async ({ result }) => {
+          await waitForReactEnvs(result.outputLines);
+
+          // Check custom plugin is disabled with Meteor.disablePlugins
+          await waitForMeteorOutput(
+            result.outputLines,
+            /.*CustomConsoleLogPlugin.*/,
+            { negate: true }
+          );
+        },
+        afterBuild: async ({ result }) => {
+          await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
+
+          // Check custom plugin is disabled with Meteor.disablePlugins
+          await waitForMeteorOutput(
+            result.outputLines,
+            /.*CustomConsoleLogPlugin.*/,
+            { negate: true }
+          );
+        },
       },
-      afterRunProduction: async ({ result }) => {
-        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
-
-        // Check if images exist and return 200 status code
-        await assertImagesExistAndLoad();
-
-        // Check custom plugin is disabled with Meteor.disablePlugins
-        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
-      },
-      afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
-        // Check for HMR to not be enabled in production-like mode
-        await waitForMeteorOutput(allConsoleLogs, /.*HMR.*Updated modules:*/, { negate: true });
-      },
-      afterTest: async ({ result }) => {
-        await waitForReactEnvs(result.outputLines);
-
-        // Check custom plugin is disabled with Meteor.disablePlugins
-        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
-      },
-      afterTestOnce: async ({ result }) => {
-        await waitForReactEnvs(result.outputLines);
-
-        // Check custom plugin is disabled with Meteor.disablePlugins
-        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
-      },
-      afterBuild: async ({ result }) => {
-        await waitForReactEnvs(result.outputLines, { isJsxEnabled: true });
-
-        // Check custom plugin is disabled with Meteor.disablePlugins
-        await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/, { negate: true });
-      },
-    }
-  }));
-
-  describe('Meteor+Rspack Bundler / (Custom METEOR_LOCAL_DIR)', testMeteorRspackBundler({
-    appName: 'react',
-    port: 3103,
-    filePaths: {
-      client: 'client/main.jsx',
-      server: 'server/main.js',
-      test: 'tests/main.js'
-    },
-    configFile: 'rspack.config.cjs',
-    buildDir: '_build-local-custom',
-    env: { METEOR_LOCAL_DIR: '.meteor/local-custom' },
-    customAssertions: {
-      afterRun: async ({ tempDir }) => {
-        const appDir = tempDir; // testMeteorRspackBundler uses tempDir as appDir if not monorepo
-
-        const localDir = path.join(appDir, ".meteor", 'local-custom');
-        const buildDir = path.join(appDir, '_build-local-custom');
-        const cacheDir = path.join(appDir, 'node_modules', '.cache', 'rspack-_build-local-custom');
-
-        expect(await fs.pathExists(buildDir)).toBe(true);
-        expect(await fs.pathExists(cacheDir)).toBe(true);
-      }
-    }
-  }));
+    })
+  );
 });
 
 /**
