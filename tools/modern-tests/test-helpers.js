@@ -892,6 +892,7 @@ export function testMeteorSkeleton(options) {
         waitForOutput: "=> App running at",
         commandOptions: ["--once"],
         checkTestResults: true,
+        testClient: true,
       });
 
       // Wait for a margin
