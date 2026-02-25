@@ -181,7 +181,7 @@ async function killSingleProcessByPort(port) {
     // Different commands based on OS
     const command = process.platform === 'win32'
       ? `FOR /F "tokens=5" %a in ('netstat -ano ^| find "LISTENING" ^| find ":${port}"') do taskkill /F /PID %a`
-      : `lsof -i :${port} -t | xargs -r kill -9`;
+      : `lsof -i :${port} -t | grep -v ^${process.pid}$ | xargs -r kill -9`;
 
     console.log(`Killing process on port ${port}...`);
     try {

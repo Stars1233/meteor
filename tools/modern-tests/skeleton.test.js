@@ -53,6 +53,17 @@ describe('Meteor Skeletons /', () => {
   );
 
   describe(
+    "Other / Bare Skeleton /",
+    testMeteorSkeleton({
+      skeletonName: "bare",
+      port: 3219,
+      checkAppTitle: false,
+      checkBodyStyles: false,
+      skipTestClient: true,
+    })
+  );
+
+  describe(
     'Blaze Skeleton /',
     testMeteorSkeleton({
       skeletonName: 'blaze',

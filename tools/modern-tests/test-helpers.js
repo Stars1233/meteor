@@ -735,6 +735,9 @@ export function testMeteorRspackBundler(options) {
  * @param {Function} options.customAssertions.afterRunProduction - Custom assertions to run after running the app in production mode
  * @param {Function} options.customAssertions.afterTestOnce - Custom assertions to run after running tests once
  * @param {Function} options.customAssertions.afterBuild - Custom assertions to run after building the app
+ * @param {boolean} options.checkBodyStyles - Whether to check the body styles (default: true)
+ * @param {boolean} options.checkAppTitle - Whether to check the Meteor app title (default: true)
+ * @param {Object} options.bodyStyles - Expected CSS styles for the body
  * @param {boolean} options.skipTestClient - Whether to skip client-side tests (default: false)
  * @param {string[]} options.checkBundleFilePaths - Array of file paths to check for existence in the bundle
  * @param {Function} options.beforeAllBehavior - Additional behavior to run in beforeAll
@@ -753,6 +756,7 @@ export function testMeteorSkeleton(options) {
     },
     customAssertions = {},
     checkBodyStyles = true,
+    checkAppTitle = true,
     bodyStyles,
     skipTestClient = false,
     checkBundleFilePaths = [],
@@ -826,7 +830,9 @@ export function testMeteorSkeleton(options) {
       await wait(WAIT_ON);
 
       // Assert that the Meteor app is running correctly
-      await assertMeteorApp(port, { title });
+      if (checkAppTitle) {
+        await assertMeteorApp(port, { title });
+      }
 
       if (checkBodyStyles) {
         // Assert that the body has the expected CSS styles
@@ -860,7 +866,9 @@ export function testMeteorSkeleton(options) {
       await wait(WAIT_ON);
 
       // Assert that the Meteor app is running correctly
-      await assertMeteorApp(port, { title });
+      if (checkAppTitle) {
+        await assertMeteorApp(port, { title });
+      }
 
       if (checkBodyStyles) {
         // Assert that the body has the expected CSS styles
@@ -895,7 +903,7 @@ export function testMeteorSkeleton(options) {
 
       // Run tests once for the app
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: "=> App running at",
+        waitForOutput: skipTestClient ? "TEST_CLIENT=0" : "=> App running at",
         commandOptions: ["--once"],
         checkTestResults: true,
         testClient: !skipTestClient,
