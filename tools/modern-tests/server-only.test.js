@@ -10,9 +10,9 @@ describe('Other / Server-only App Bundling /', () => {
       appName: 'server-only',
       port: 3123,
       skipClient: true,
+      skipTestClient: true,
       filePaths: {
         server: 'server/main.js',
-        test: null,
       },
       customAssertions: {
         afterRun: async ({ result }) => {

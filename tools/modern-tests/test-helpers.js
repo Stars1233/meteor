@@ -119,6 +119,8 @@ export function testMeteorBundler(options) {
  * @param {boolean} options.verbose - Whether to enable verbose output (default: true)
  * @param {boolean} options.testFullApp - Whether to run tests with the --full-app flag (default: false)
  * @param {boolean} options.testBundleVisualizer - Whether to run tests with bundle-visualizer in production mode (default: false)
+ * @param {boolean} options.skipClient - Whether to skip client-specific assertions (default: false)
+ * @param {boolean} options.skipTestClient - Whether to skip client-side tests (default: false)
  * @param {string[]} options.checkBundleFilePaths - Array of file paths to check for existence in the bundle
  * @param {Function} options.beforeAllBehavior - Additional behavior to run in beforeAll
  * @param {Function} options.afterAllBehavior - Additional behavior to run in afterAll
@@ -170,6 +172,8 @@ export function testMeteorRspackBundler(options) {
     configFile = 'rspack.config.js',
     // Whether to skip client-specific assertions
     skipClient = false,
+    // Whether to skip client-side tests
+    skipTestClient = false,
   } = options;
 
   return () => {
@@ -506,13 +510,13 @@ export function testMeteorRspackBundler(options) {
 
     test(`"meteor test${testFullApp ? ' --full-app' : ''}" / should run tests with Rspack`, async () => {
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: !filePaths.testClient
+        waitForOutput: skipTestClient
           ? 'TEST_CLIENT=0'
           : '=> App running at',
         commandOptions: testFullApp ? ["--full-app"] : [],
         checkTestResults: false,
         isMonorepo,
-        testClient: !!filePaths.testClient,
+        testClient: !skipTestClient,
       });
       meteorProcess = result.meteorProcess;
 
@@ -592,13 +596,13 @@ export function testMeteorRspackBundler(options) {
     test(`"meteor test${testFullApp ? ' --full-app' : ''} --once" / should run tests once with Rspack`, async () => {
       // Test the app with Rspack once
       const result = await runMeteorTests(tempDir, port, {
-        waitForOutput: !filePaths.testClient
+        waitForOutput: skipTestClient
           ? 'TEST_CLIENT=0'
           : '=> App running at',
         commandOptions: testFullApp ? ['--full-app', '--once'] : ['--once'],
         checkTestResults: true,
         isMonorepo,
-        testClient: !!filePaths.testClient,
+        testClient: !skipTestClient,
       });
 
       // Wait for a margin
@@ -731,6 +735,7 @@ export function testMeteorRspackBundler(options) {
  * @param {Function} options.customAssertions.afterRunProduction - Custom assertions to run after running the app in production mode
  * @param {Function} options.customAssertions.afterTestOnce - Custom assertions to run after running tests once
  * @param {Function} options.customAssertions.afterBuild - Custom assertions to run after building the app
+ * @param {boolean} options.skipTestClient - Whether to skip client-side tests (default: false)
  * @param {string[]} options.checkBundleFilePaths - Array of file paths to check for existence in the bundle
  * @param {Function} options.beforeAllBehavior - Additional behavior to run in beforeAll
  * @param {Function} options.afterAllBehavior - Additional behavior to run in afterAll
@@ -749,6 +754,7 @@ export function testMeteorSkeleton(options) {
     customAssertions = {},
     checkBodyStyles = true,
     bodyStyles,
+    skipTestClient = false,
     checkBundleFilePaths = [],
     beforeAllBehavior,
     afterAllBehavior,
@@ -892,7 +898,7 @@ export function testMeteorSkeleton(options) {
         waitForOutput: "=> App running at",
         commandOptions: ["--once"],
         checkTestResults: true,
-        testClient: true,
+        testClient: !skipTestClient,
       });
 
       // Wait for a margin
