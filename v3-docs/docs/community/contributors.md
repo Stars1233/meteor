@@ -11,6 +11,8 @@ const technicalCommittee = [
   { login: 'nachocodoner', avatar_url: 'https://github.com/nachocodoner.png', html_url: 'https://github.com/nachocodoner', contributions: 0 },
   { login: 'fredmaiaarantes', avatar_url: 'https://github.com/fredmaiaarantes.png', html_url: 'https://github.com/fredmaiaarantes', contributions: 0 },
   { login: 'henriquealbert', avatar_url: 'https://github.com/henriquealbert.png', html_url: 'https://github.com/henriquealbert', contributions: 0 },
+  { login: 'aquinoit', avatar_url: 'https://github.com/aquinoit.png', html_url: 'https://github.com/aquinoit', contributions: 0 },
+  { login: 'MarlomSouza', avatar_url: 'https://github.com/MarlomSouza.png', html_url: 'https://github.com/MarlomSouza', contributions: 0 },
 ]
 
 const coreMaintainers = [
