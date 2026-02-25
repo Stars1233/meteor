@@ -89,11 +89,12 @@ const {
 const { hasMeteorAppConfigAutoInstallDeps } = require("../tools-core/lib/meteor");
 
 // Get entry points from Meteor configuration
-const initialEntrypoints = getMeteorInitialAppEntrypoints();
+let initialEntrypoints;
 if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest() || isMeteorAppUpdate()) {
+  initialEntrypoints = getMeteorInitialAppEntrypoints();
 
   // Check if mainClient and mainServer exist
-  if (!initialEntrypoints.mainServer) {
+  if (!initialEntrypoints?.mainServer) {
     logError(`\n┌─────────────────────────────────────────────────`);
     logError(`│ ❌ Missing Required Entry Points`);
     logError(`└─────────────────────────────────────────────────`);
@@ -229,14 +230,14 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
 
       // For 'run' command, start Rspack in appropriate modes with distinct callbacks
       if (isMeteorAppDevelopment() && !isMeteorAppNative()) {
-        if (initialEntrypoints.mainClient) {
+        if (initialEntrypoints?.mainClient) {
           startRspackClientServe({ onCompile: onCompileClient });
         }
-        if (initialEntrypoints.mainServer) {
+        if (initialEntrypoints?.mainServer) {
           startRspackServerWatch({ onCompile: onCompileServer });
         }
       } else if (isMeteorAppProduction() || isMeteorAppNative()) {
-        if (initialEntrypoints.mainClient) {
+        if (initialEntrypoints?.mainClient) {
           runRspackBuild({
             isClient: true,
             isServer: false,
@@ -244,7 +245,7 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
             onCompile: onCompileClient,
           });
         }
-        if (initialEntrypoints.mainServer) {
+        if (initialEntrypoints?.mainServer) {
           runRspackBuild({
             isServer: true,
             isClient: false,
