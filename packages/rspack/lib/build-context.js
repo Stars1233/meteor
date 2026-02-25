@@ -492,7 +492,7 @@ ${AUTO_GENERATED_WARNING}
  * @returns {string} The HMR code or empty string
  */
 function getHmrCode(config, role) {
-  if (!config?.entryFile) {
+  if (!config?.entryFile && !config?.isTest) {
     return '';
   }
 
@@ -511,7 +511,7 @@ if (module.hot) {
  */
 function getImportContent(config, side, role) {
   if (!config?.entryFile && !config?.isTest) {
-    return "";
+    return '';
   }
 
   if (role === FILE_ROLE.entry) {
