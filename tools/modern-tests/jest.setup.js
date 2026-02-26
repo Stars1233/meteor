@@ -12,8 +12,6 @@ process.env.RSPACK_DEVSERVER_PORT = '8080';
 process.env.RSDOCTOR_CLIENT_PORT = '8888';
 process.env.RSDOCTOR_SERVER_PORT = '8889';
 
-console.log('NODE_ENV is', process.env.NODE_ENV);
-
 // This runs before each test
 beforeEach(() => {
   const name = expect.getState().currentTestName;

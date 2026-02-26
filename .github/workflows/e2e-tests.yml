@@ -68,9 +68,6 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Print NODE_ENV
-        run: echo "NODE_ENV is ${{ env.NODE_ENV }}"
-
       - name: Install deps
         run: npm install
 
