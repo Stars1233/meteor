@@ -20,6 +20,7 @@ const {
   extendSwcConfig,
   makeWebNodeBuiltinsAlias,
   disablePlugins,
+  enablePortableBuild,
 } = require('./lib/meteorRspackHelpers.js');
 const { loadUserAndOverrideConfig } = require('./lib/meteorRspackConfigHelpers.js');
 const { prepareMeteorRspackConfig } = require("./lib/meteorRspackConfigFactory");
@@ -301,6 +302,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     prepareMeteorRspackConfig({
       disablePlugins: matchers,
     });
+  Meteor.enablePortableBuild = () => enablePortableBuild();
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {
@@ -340,6 +342,10 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     ? currentMode === "development"
     : !!Meteor.isDevelopment || !isProd;
   const mode = isProd ? "production" : "development";
+  const isPortableBuild = !!(
+    nextUserConfig?.["meteor.enablePortableBuild"] ||
+    nextOverrideConfig?.["meteor.enablePortableBuild"]
+  );
   const configPath = Meteor.configPath;
   const testEntry = Meteor.testEntry;
 
@@ -573,8 +579,10 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         "Meteor.isServer": JSON.stringify(false),
         "Meteor.isTest": JSON.stringify(isTestLike && !isTestFullApp),
         "Meteor.isAppTest": JSON.stringify(isTestLike && isTestFullApp),
-        "Meteor.isDevelopment": JSON.stringify(isDev),
-        "Meteor.isProduction": JSON.stringify(isProd),
+        ...(!isPortableBuild && {
+          "Meteor.isDevelopment": JSON.stringify(isDev),
+          "Meteor.isProduction": JSON.stringify(isProd),
+        }),
       }),
       ...bannerPluginConfig,
       Meteor.HtmlRspackPlugin(),
@@ -671,15 +679,19 @@ module.exports = async function (inMeteor = {}, argv = {}) {
           ? {
               "Meteor.isTest": JSON.stringify(isTest && !isTestFullApp),
               "Meteor.isAppTest": JSON.stringify(isTest && isTestFullApp),
-              "Meteor.isDevelopment": JSON.stringify(isDev),
+              ...(!isPortableBuild && {
+                "Meteor.isDevelopment": JSON.stringify(isDev),
+              }),
             }
           : {
               "Meteor.isClient": JSON.stringify(false),
               "Meteor.isServer": JSON.stringify(true),
               "Meteor.isTest": JSON.stringify(isTestLike && !isTestFullApp),
               "Meteor.isAppTest": JSON.stringify(isTestLike && isTestFullApp),
-              "Meteor.isDevelopment": JSON.stringify(isDev),
-              "Meteor.isProduction": JSON.stringify(isProd),
+              ...(!isPortableBuild && {
+                "Meteor.isDevelopment": JSON.stringify(isDev),
+                "Meteor.isProduction": JSON.stringify(isProd),
+              }),
             }
       ),
       ...bannerPluginConfig,
@@ -755,6 +767,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     config = disablePlugins(config, config.disablePlugins);
     delete config.disablePlugins;
   }
+
+  delete config["meteor.enablePortableBuild"];
 
   // if (Meteor.isDebug || Meteor.isVerbose) {
     console.log("Config:", inspect(config, { depth: null, colors: true }));
