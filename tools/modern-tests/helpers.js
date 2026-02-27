@@ -86,7 +86,7 @@ export async function setupMeteorApp(appName, options = {}) {
  * @returns {Object} - The meteor process and output lines
  */
 export async function runMeteorApp(tempDir, port, options = {}) {
-  const { isMonorepo = false } = options;
+  const { isMonorepo = false, env = {} } = options;
 
   // Start Meteor CLI in dev mode
   console.log(`Starting Meteor app on port ${port}...`);
@@ -105,11 +105,12 @@ export async function runMeteorApp(tempDir, port, options = {}) {
 
   // Run the meteor command
   const { meteorProcess, outputLines } = await runMeteorCommand(
-    'run', 
-    args, 
+    'run',
+    args,
     appDir,
     {
-      captureOutput
+      captureOutput,
+      execaOptions: { env: { ...process.env, ...env } }
     }
   );
 
@@ -528,7 +529,7 @@ export async function appendFileContent(tempDir, filePath, options = {}) {
  * @returns {Object} - The meteor process and output lines
  */
 export async function runMeteorTests(tempDir, port, options = {}) {
-  const { isMonorepo = false } = options;
+  const { isMonorepo = false, env = {} } = options;
 
   // Start Meteor tests
   console.log(`Starting Meteor tests on port ${port}...`);
@@ -547,14 +548,15 @@ export async function runMeteorTests(tempDir, port, options = {}) {
 
   // Run the meteor test command
   const { meteorProcess, outputLines, processResult } = await runMeteorCommand(
-    'test', 
-    args, 
+    'test',
+    args,
     appDir,
     {
       execaOptions: {
         env: {
           ...process.env,
-          TEST_BROWSER_DRIVER: 'playwright'
+          TEST_BROWSER_DRIVER: 'playwright',
+          ...env
         }
       },
       captureOutput,
@@ -705,7 +707,7 @@ export async function waitForPlaywrightConsole(pattern, options = {}) {
  * @returns {Object} - The build output directory and the meteor process result
  */
 export async function buildMeteorApp(tempDir, options = {}) {
-  const { isMonorepo = false } = options;
+  const { isMonorepo = false, env = {} } = options;
 
   // Create a unique temporary directory for the build output
   const randomSuffix = Math.random().toString(36).substring(2, 10);
@@ -729,11 +731,11 @@ export async function buildMeteorApp(tempDir, options = {}) {
 
   // Run the meteor build command with automatic exit code checking
   const result = await runMeteorCommand(
-    'build', 
-    args, 
+    'build',
+    args,
     appDir,
     {
-      execaOptions: options.execaOptions || {},
+      execaOptions: { ...(options.execaOptions || {}), env: { ...process.env, ...(options.execaOptions?.env || {}), ...env } },
       captureOutput: options.captureOutput !== undefined ? options.captureOutput : true,
       checkExitCode: true // Automatically check exit code
     }

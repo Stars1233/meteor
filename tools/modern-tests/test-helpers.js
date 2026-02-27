@@ -46,6 +46,8 @@ async function linkLocalRspack(appDir) {
   const constantsContent = await fs.readFile(constantsPath, 'utf8');
   const rspackVersionMatch = constantsContent.match(/DEFAULT_RSPACK_VERSION\s*=\s*['"]([^'"]+)['"]/);
   const rspackVersion = rspackVersionMatch?.[1];
+  console.log(`Running npm install in ${rspackPackageDir}...`);
+  await execa('npm', ['install'], { cwd: rspackPackageDir });
   if (rspackVersion) {
     console.log(`Installing @rspack/core@${rspackVersion} and @rspack/cli@${rspackVersion}...`);
     await execa(
@@ -78,7 +80,7 @@ async function linkLocalRspack(appDir) {
  * @returns {Function} - Jest test function
  */
 export function testMeteorBundler(options) {
-  const { appName, port, customAssertions, beforeAllBehavior, afterAllBehavior } = options;
+  const { appName, port, customAssertions, beforeAllBehavior, afterAllBehavior, env = {} } = options;
 
   return () => {
     let meteorProcess;
@@ -117,7 +119,7 @@ export function testMeteorBundler(options) {
 
     test(`"meteor run" / should start the app`, async () => {
       // Run the Meteor app
-      meteorProcess = (await runMeteorApp(tempDir, port))?.meteorProcess;
+      meteorProcess = (await runMeteorApp(tempDir, port, { env: env.meteorRun }))?.meteorProcess;
 
       // Assert that the Meteor app is running correctly
       await assertMeteorReactApp(port, { title: appName });
@@ -204,6 +206,10 @@ export function testMeteorRspackBundler(options) {
     buildDir = '_build',
     // Rspack config file (default: 'rspack.config.js')
     configFile = 'rspack.config.js',
+    // Per-phase env vars: { meteorRun, meteorRunProduction, meteorTest, meteorTestOnce, meteorBuild }
+    env = {},
+    // Skip isDevelopment/isProduction/isRun/isTest/isBuild verbose output checks
+    skipEnvCheck = false,
   } = options;
 
   return () => {
@@ -248,7 +254,8 @@ export function testMeteorRspackBundler(options) {
       // Run the Meteor app to install Rspack
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
-        isMonorepo
+        isMonorepo,
+        env: env.meteorRun
       });
       meteorProcess = result.meteorProcess;
 
@@ -290,7 +297,8 @@ export function testMeteorRspackBundler(options) {
       // Run the Meteor app and wait for "restarted at" output
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
-        isMonorepo
+        isMonorepo,
+        env: env.meteorRun
       });
       meteorProcess = result.meteorProcess;
 
@@ -353,7 +361,7 @@ export function testMeteorRspackBundler(options) {
         await customAssertions.afterRunRebuildServer({ tempDir, port, meteorProcess, result });
       }
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isDevelopment:.*true.*/
@@ -379,7 +387,8 @@ export function testMeteorRspackBundler(options) {
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
         commandOptions: ['--production'],
-        isMonorepo
+        isMonorepo,
+        env: env.meteorRunProduction
       });
       meteorProcess = result.meteorProcess;
 
@@ -445,7 +454,7 @@ export function testMeteorRspackBundler(options) {
         await customAssertions.afterRunProductionRebuildServer({ tempDir, port, meteorProcess, result });
       }
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isProduction:.*true.*/
@@ -473,7 +482,8 @@ export function testMeteorRspackBundler(options) {
         const result = await runMeteorApp(tempDir, port, {
           waitForOutput: "=> App running at",
           commandOptions: ['--extra-packages', 'bundle-visualizer', '--production'],
-          isMonorepo
+          isMonorepo,
+          env: env.meteorRunProduction
         });
         meteorProcess = result.meteorProcess;
 
@@ -529,7 +539,8 @@ export function testMeteorRspackBundler(options) {
         waitForOutput: "=> App running at",
         commandOptions: testFullApp ? ['--full-app'] : [],
         checkTestResults: false,
-        isMonorepo
+        isMonorepo,
+        env: env.meteorTest
       });
       meteorProcess = result.meteorProcess;
 
@@ -575,7 +586,7 @@ export function testMeteorRspackBundler(options) {
         );
       }
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isDevelopment:.*true.*/
@@ -604,7 +615,8 @@ export function testMeteorRspackBundler(options) {
         waitForOutput: "=> App running at",
         commandOptions: testFullApp ? ['--full-app', '--once'] : ['--once'],
         checkTestResults: true,
-        isMonorepo
+        isMonorepo,
+        env: env.meteorTestOnce
       });
 
       // Wait for a margin
@@ -618,7 +630,7 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(appDir, `${buildDir}/test/server-rspack.js`);
       await assertFileExist(appDir, `${buildDir}/test/server-meteor.js`);
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isDevelopment:.*true.*/
@@ -643,13 +655,14 @@ export function testMeteorRspackBundler(options) {
       const { buildOutputDir, processResult: result } = await buildMeteorApp(tempDir, {
         commandOptions: ['--directory'],
         captureOutput: true,
-        isMonorepo
+        isMonorepo,
+        env: env.meteorBuild
       });
 
       // Wait for a margin
       await wait(WAIT_ON);
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isProduction:.*true.*/
@@ -758,6 +771,8 @@ export function testMeteorSkeleton(options) {
     checkBundleFilePaths = [],
     beforeAllBehavior,
     afterAllBehavior,
+    // Per-phase env vars: { meteorRun, meteorRunProduction, meteorTest, meteorBuild }
+    env = {},
   } = options;
 
   return () => {
@@ -821,7 +836,8 @@ export function testMeteorSkeleton(options) {
     test(`"meteor run" / should run the ${skeletonName} app`, async () => {
       // Run the newly created app
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at"
+        waitForOutput: "=> App running at",
+        env: env.meteorRun
       });
       meteorProcess = result.meteorProcess;
 
@@ -855,7 +871,8 @@ export function testMeteorSkeleton(options) {
       // Run the app in production mode
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
-        commandOptions: ["--production"]
+        commandOptions: ["--production"],
+        env: env.meteorRunProduction
       });
       meteorProcess = result.meteorProcess;
 
@@ -901,7 +918,8 @@ export function testMeteorSkeleton(options) {
       const result = await runMeteorTests(tempDir, port, {
         waitForOutput: "=> App running at",
         commandOptions: ["--once"],
-        checkTestResults: true
+        checkTestResults: true,
+        env: env.meteorTest
       });
 
       // Wait for a margin
@@ -920,7 +938,8 @@ export function testMeteorSkeleton(options) {
       // Build the app
       const { buildOutputDir, processResult: result } = await buildMeteorApp(tempDir, {
         commandOptions: ["--directory"],
-        captureOutput: true
+        captureOutput: true,
+        env: env.meteorBuild
       });
 
       // Wait for a margin
