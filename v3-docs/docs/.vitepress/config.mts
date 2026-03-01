@@ -681,7 +681,7 @@ Key capabilities:
 - One-command deployment to Galaxy Cloud
 - TypeScript support with full type inference
 
-Current version: Meteor 3.4 with Node.js 22.x support.
+Current version: Meteor ${metadata.currentVersion}.
 
 ## Structured API Data
 
