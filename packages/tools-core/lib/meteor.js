@@ -496,3 +496,36 @@ export function getMeteorEnvPackageDirs() {
     ...(packageDirsFromEnvVar('PACKAGE_DIRS', ':')),
   ];
 }
+
+/**
+ * Spreads Meteor's TOOL_NODE_FLAGS to NODE_OPTIONS for proper inheritance
+ * of Meteor-specific tool environment process variables.
+ * Only spreads if TOOL_NODE_FLAGS_INHERIT is truthy (enabled by default).
+ * @param {Object} env - The current environment variables
+ * @returns {Object} The updated environment variables with NODE_OPTIONS
+ */
+export function inheritMeteorToolNodeFlags(env = {}) {
+  const toolFlags = env.TOOL_NODE_FLAGS;
+  if (!toolFlags) {
+    return env;
+  }
+
+  // Check if spreading is enabled (default: true)
+  // Only disable if TOOL_NODE_FLAGS_INHERIT is explicitly set to a falsy value
+  // Treat "0" as falsy for this specific case
+  const shouldSpread = env.TOOL_NODE_FLAGS_INHERIT !== undefined 
+    ? (env.TOOL_NODE_FLAGS_INHERIT !== "0" && !!env.TOOL_NODE_FLAGS_INHERIT)
+    : true;
+
+  if (!shouldSpread) {
+    return env;
+  }
+
+  return {
+    ...env,
+    NODE_OPTIONS: [toolFlags, env.NODE_OPTIONS]
+      .filter(Boolean)
+      .map(s => s.trim())
+      .join(' '),
+  };
+}

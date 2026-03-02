@@ -35,6 +35,7 @@ const {
   isMeteorAppConfigModernVerbose,
   isMeteorBundleVisualizerProject,
   getMeteorAppPort,
+  inheritMeteorToolNodeFlags,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -369,7 +370,7 @@ export function startRspackClientServe(options = {}) {
     command,
     args, {
       cwd: appDir,
-      env: { ...process.env, ...envs },
+      env: inheritMeteorToolNodeFlags({ ...process.env, ...envs }),
       onStdout: (data) => {
         const { cleanedData, config } = parseMeteorRspackOutput(data);
         if (config && !!config?.devServerUrl) {
@@ -471,7 +472,7 @@ export function startRspackServerWatch(options = {}) {
     command,
     args, {
     cwd: appDir,
-    env: { ...process.env, ...envs },
+    env: inheritMeteorToolNodeFlags({ ...process.env, ...envs }),
     onStdout: (data) => {
       const { cleanedData, config } = parseMeteorRspackOutput(data);
       if (config && (config?.compilationCount || 0) > 0) {
@@ -562,7 +563,7 @@ export async function runRspackBuild({ isClient, isServer, isTest, isTestModule,
       args,
       {
       cwd: appDir,
-      env: { ...process.env, ...envs },
+      env: inheritMeteorToolNodeFlags({ ...process.env, ...envs }),
       onStdout: (data) => {
         const { cleanedData, config } = parseMeteorRspackOutput(data);
         if (onCompile) {
