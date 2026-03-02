@@ -21,6 +21,7 @@ const {
   isMeteorAppBuild,
   isMeteorBlazeProject,
   isMeteorAppNative,
+  isMeteorAppTestFullApp,
 } = require('meteor/tools-core/lib/meteor');
 
 const {
@@ -129,11 +130,14 @@ export function ensureModuleFilesExist() {
   const testClientFiles = {
     entryFile: initialEntrypoints.testClient || '',
     outputFile: getBuildFilePath({ isTest: true, isTestModule, isClient: true, role: FILE_ROLE.output, onlyFilename: true }),
+    mainEntryFile: mainClientFiles.entryFile,
   };
   const testServerFiles = {
     entryFile: initialEntrypoints.testServer || '',
     outputFile: getBuildFilePath({ isTest: true, isTestModule, isServer: true, role: FILE_ROLE.output, onlyFilename: true }),
+    mainEntryFile: mainServerFiles.entryFile,
   };
+  const isTestFullApp = isMeteorAppTestFullApp();
 
   const moduleFiles = {
     /* Main module files for client and server */
@@ -150,18 +154,18 @@ export function ensureModuleFilesExist() {
     [getBuildFilePath({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output })]:
       getBuildFileContent({ isMain: true, isServer: true, ...env, role: FILE_ROLE.output, ...mainServerFiles }),
     /* Test module files when test module, test module files for client and server are present or eager discovery */
-    [getBuildFilePath({ isTest: true, isTestModule, isClient: true, ...commandRole })]:
-      getBuildFileContent({ isTest: true, isTestModule, isClient: true, ...commandRole, ...testClientFiles }),
-    [getBuildFilePath({ isTest: true, isTestModule, isClient: true, role: FILE_ROLE.entry })]:
-      getBuildFileContent({ isTest: true, isTestModule, isClient: true, role: FILE_ROLE.entry, ...testClientFiles }),
-    [getBuildFilePath({ isTest: true, isTestModule, isClient: true, role: FILE_ROLE.output })]:
-      getBuildFileContent({ isTest: true, isTestModule, isClient: true, role: FILE_ROLE.output, ...testClientFiles }),
-    [getBuildFilePath({ isTest: true, isTestModule, isServer: true, ...commandRole })]:
-      getBuildFileContent({ isTest: true, isTestModule, isServer: true, ...commandRole, ...testServerFiles }),
-    [getBuildFilePath({ isTest: true, isTestModule, isServer: true, role: FILE_ROLE.entry })]:
-      getBuildFileContent({ isTest: true, isTestModule, isServer: true, role: FILE_ROLE.entry, ...testServerFiles }),
-    [getBuildFilePath({ isTest: true, isTestModule, isServer: true, role: FILE_ROLE.output })]:
-      getBuildFileContent({ isTest: true, isTestModule, isServer: true, role: FILE_ROLE.output, ...testServerFiles }),
+    [getBuildFilePath({ isTest: true, isTestFullApp, isTestModule, isClient: true, ...commandRole })]:
+      getBuildFileContent({ isTest: true, isTestFullApp, isTestModule, isClient: true, ...commandRole, ...testClientFiles }),
+    [getBuildFilePath({ isTest: true, isTestFullApp, isTestModule, isClient: true, role: FILE_ROLE.entry })]:
+      getBuildFileContent({ isTest: true, isTestFullApp, isTestModule, isClient: true, role: FILE_ROLE.entry, ...testClientFiles }),
+    [getBuildFilePath({ isTest: true, isTestFullApp, isTestModule, isClient: true, role: FILE_ROLE.output })]:
+      getBuildFileContent({ isTest: true, isTestFullApp, isTestModule, isClient: true, role: FILE_ROLE.output, ...testClientFiles }),
+    [getBuildFilePath({ isTest: true, isTestFullApp, isTestModule, isServer: true, ...commandRole })]:
+      getBuildFileContent({ isTest: true, isTestFullApp, isTestModule, isServer: true, ...commandRole, ...testServerFiles }),
+    [getBuildFilePath({ isTest: true, isTestFullApp, isTestModule, isServer: true, role: FILE_ROLE.entry })]:
+      getBuildFileContent({ isTest: true, isTestFullApp, isTestModule, isServer: true, role: FILE_ROLE.entry, ...testServerFiles }),
+    [getBuildFilePath({ isTest: true, isTestFullApp, isTestModule, isServer: true, role: FILE_ROLE.output })]:
+      getBuildFileContent({ isTest: true, isTestFullApp, isTestModule, isServer: true, role: FILE_ROLE.output, ...testServerFiles }),
   };
 
   Object.entries(moduleFiles).forEach(([filename, defaultContent]) => {
@@ -418,9 +422,29 @@ if (module.hot) {
  * @returns {string} The import content
  */
 function getImportContent(config, side, role) {
-  if (config?.entryFile && role === FILE_ROLE.entry) {
-    return `/* Link to 🔌 Meteor ${capitalizeFirstLetter(side)} Entry */
+  if (role === FILE_ROLE.entry) {
+    if (config?.isTest) {
+      return `${
+        config?.isTestFullApp && config?.mainEntryFile
+          ? `/* Link to 🔌 Meteor ${capitalizeFirstLetter(
+              side
+            )} Main Entry (--full-app mode) */
+import '../../${config.mainEntryFile}';`
+          : ""
+      }
+${
+  config?.entryFile
+    ? `
+/* Link to 🔌 Meteor ${capitalizeFirstLetter(side)} Test Entry */
+import '../../${config.entryFile}';`
+    : ""
+}`;
+    }
+
+    if (config?.entryFile) {
+      return `/* Link to 🔌 Meteor ${capitalizeFirstLetter(side)} Entry */
 import '../../${config?.entryFile}';`;
+    }
   }
 
   if (config?.outputFile &&

@@ -67,7 +67,6 @@ const {
   getMeteorAppEntrypoints,
   isMeteorAppTest,
   isMeteorAppTestWatch,
-  isMeteorAppTestFullApp,
   isMeteorAppDevelopment,
   isMeteorAppProduction,
   isMeteorAppDebug,
@@ -263,27 +262,6 @@ if (isMeteorAppRun() || isMeteorAppBuild() || isMeteorAppTest()) {
         onCompileClient,
         onCompileServer,
       } = setupCompilationTracking();
-
-      // When run test for full app, run Rspack app server as well
-      // isTestLike ensures the app runtime environment inherit test envs
-      if (isMeteorAppTestFullApp()) {
-        await runRspackBuild({
-          isTest: false,
-          isTestLike: true,
-          isServer: true,
-          isClient: false,
-        });
-
-        if (isMeteorAppTestWatch()) {
-          runRspackBuild({
-            isServer: true,
-            isClient: false,
-            isTest: false,
-            isTestLike: true,
-            watch: true,
-          });
-        }
-      }
 
       // When testModule is specified for client or server, run Rspack considering those files
       if (initialEntrypoints?.testClient || initialEntrypoints?.testServer) {
