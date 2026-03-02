@@ -155,7 +155,9 @@ export function configureMeteorForRspack() {
   const initialEntrypointContexts = [
     initialEntrypoints.mainClient,
     initialEntrypoints.mainServer,
-  ].map(entrypoint => path.dirname(entrypoint));
+  ]
+    .filter(Boolean)
+    .map(entrypoint => path.dirname(entrypoint));
   const includedDirs = ['public', 'private', '.meteor', RSPACK_BUILD_CONTEXT];
   const ignoredDirs = projectRootFilesAndFolders.directories.filter(
     dir => !includedDirs.includes(dir),

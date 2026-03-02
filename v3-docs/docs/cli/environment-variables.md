@@ -160,8 +160,21 @@ Used to generate URLs to your application by, among others, the accounts package
 ## TOOL_NODE_FLAGS
 (_development, production_)
 
-Used to pass flags/variables to Node inside Meteor build. For example you can use this to pass a link to icu data: `TOOL_NODE_FLAGS="--icu-data-dir=node_modules/full-icu"`
+Used to pass Node.js flags that Meteor will inherit and spread to other tool processes like Rspack. For example, to increase memory limits for all tools: `TOOL_NODE_FLAGS="--max-old-space-size=4096"`
+
+By default, these flags are automatically spread to `NODE_OPTIONS` so that tools like Rspack inherit them. This behavior can be controlled using [`TOOL_NODE_FLAGS_INHERIT`](#tool-node-flags-spread).
+
 For full list of available flags see the [Node documentation](https://nodejs.org/dist/latest-v12.x/docs/api/cli.html).
+
+## TOOL_NODE_FLAGS_INHERIT
+(_development, production_)
+
+Controls whether `TOOL_NODE_FLAGS` are prepended to `NODE_OPTIONS`. Enabled by default.
+
+```bash
+# Disable inheritance - Rspack won't inherit the heap limit
+TOOL_NODE_FLAGS_INHERIT=0 TOOL_NODE_FLAGS="--max-old-space-size=4096" meteor run
+```
 
 ## UNIX_SOCKET_GROUP
 (_production_)
