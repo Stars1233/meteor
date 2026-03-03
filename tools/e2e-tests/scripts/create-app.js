@@ -242,6 +242,7 @@ async function injectNpmScripts(packageJsonPath, envVars = {}) {
   scripts['start:prod'] = `${p}${m} run --production`;
   scripts['build'] = `${p}${m} build ./_build --directory`;
   scripts['visualize'] = `${p}${m} run --production --extra-packages bundle-visualizer`;
+  scripts['reset'] = `${p}${m} reset`;
 
   if (hasTestModule) {
     scripts['test'] = `${p}${m} test --once --driver-package meteortesting:mocha`;
