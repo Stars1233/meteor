@@ -87,9 +87,9 @@ function createCacheStrategy(
         type: "persistent",
         storage: {
           type: "filesystem",
-          directory: `node_modules/.cache/rspack${
-            (buildContext && `-${buildContext}`) || ''
-          }${(side && `/${side}`) || ''}`,
+          directory: `node_modules/.cache/rspack/${
+            [buildContext, side].filter(Boolean).join('-') || 'default'
+          }`,
         },
         ...(buildDependencies.length > 0 && {
           buildDependencies: buildDependencies,
