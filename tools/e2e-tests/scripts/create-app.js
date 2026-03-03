@@ -4,15 +4,15 @@
  * Script to create a Meteor test app for manual testing without automatic cleanup.
  *
  * Sources apps from:
- *   - tools/modern-tests/apps/<name>  (use --app flag)
+ *   - tools/e2e-tests/apps/<name>  (use --app flag)
  *   - meteor create --<skeleton>      (use --skeleton flag)
  *
  * Usage:
- *   npm run create-app:modern -- --app react
- *   npm run create-app:modern -- --app react --output ./dist/my-react-app
- *   npm run create-app:modern -- --app monorepo --monorepo
- *   npm run create-app:modern -- --skeleton react
- *   npm run create-app:modern -- --skeleton react --output ./my-apps/custom-name
+ *   npm run create-app:e2e -- --app react
+ *   npm run create-app:e2e -- --app react --output ./dist/my-react-app
+ *   npm run create-app:e2e -- --app monorepo --monorepo
+ *   npm run create-app:e2e -- --skeleton react
+ *   npm run create-app:e2e -- --skeleton react --output ./my-apps/custom-name
  */
 
 const path = require('path');
@@ -21,8 +21,8 @@ const execa = require('execa');
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const METEOR_EXECUTABLE = path.join(REPO_ROOT, 'meteor');
-const MODERN_TESTS_DIR = path.join(__dirname, '..');
-const APPS_DIR = path.join(MODERN_TESTS_DIR, 'apps');
+const E2E_TESTS_DIR = path.join(__dirname, '..');
+const APPS_DIR = path.join(E2E_TESTS_DIR, 'apps');
 const DEFAULT_OUTPUT_DIR = path.join(REPO_ROOT, 'dist');
 
 // ANSI color helpers
@@ -72,10 +72,10 @@ function printHelp() {
     : '(none found)';
 
   console.log(`
-${c.bold}Usage:${c.reset} npm run create-app:modern -- [options]
+${c.bold}Usage:${c.reset} npm run create-app:e2e -- [options]
 
 ${c.bold}Options:${c.reset}
-  ${c.cyan}--app${c.reset} <name>       Copy an existing app from tools/modern-tests/apps/
+  ${c.cyan}--app${c.reset} <name>       Copy an existing app from tools/e2e-tests/apps/
   ${c.cyan}--skeleton${c.reset} <name>  Create a new app via "meteor create --<name>"
   ${c.cyan}--output${c.reset} <path>    Full destination path for the app (default: ./dist/<appName>)
   ${c.cyan}--monorepo${c.reset}         Treat the app as a monorepo (runs npm install at both root and app/ levels)
@@ -85,11 +85,11 @@ ${c.bold}Options:${c.reset}
 ${c.bold}Available apps:${c.reset} ${c.green}${availableApps}${c.reset}
 
 ${c.bold}Examples:${c.reset}
-  ${c.dim}npm run create-app:modern -- --app react${c.reset}
-  ${c.dim}npm run create-app:modern -- --app react --output ./dist/my-react-app${c.reset}
-  ${c.dim}npm run create-app:modern -- --app monorepo --monorepo${c.reset}
-  ${c.dim}npm run create-app:modern -- --skeleton react${c.reset}
-  ${c.dim}npm run create-app:modern -- --skeleton react --output ./my-apps/custom-name${c.reset}
+  ${c.dim}npm run create-app:e2e -- --app react${c.reset}
+  ${c.dim}npm run create-app:e2e -- --app react --output ./dist/my-react-app${c.reset}
+  ${c.dim}npm run create-app:e2e -- --app monorepo --monorepo${c.reset}
+  ${c.dim}npm run create-app:e2e -- --skeleton react${c.reset}
+  ${c.dim}npm run create-app:e2e -- --skeleton react --output ./my-apps/custom-name${c.reset}
 `);
 }
 
@@ -171,14 +171,14 @@ function parseEnvVars(code) {
  * environment variables that the tests set (so the manually created app
  * behaves the same way).
  *
- * For --app <name>:  reads tools/modern-tests/<name>.test.js (whole file)
- * For --skeleton <name>: reads tools/modern-tests/skeleton.test.js and
+ * For --app <name>:  reads tools/e2e-tests/<name>.test.js (whole file)
+ * For --skeleton <name>: reads tools/e2e-tests/skeleton.test.js and
  *   scopes to the testMeteorSkeleton({ skeletonName: '<name>' }) block.
  */
 function extractEnvVarsFromTestFile(sourceName, isApp) {
   const testFile = isApp
-    ? path.join(MODERN_TESTS_DIR, `${sourceName}.test.js`)
-    : path.join(MODERN_TESTS_DIR, 'skeleton.test.js');
+    ? path.join(E2E_TESTS_DIR, `${sourceName}.test.js`)
+    : path.join(E2E_TESTS_DIR, 'skeleton.test.js');
 
   if (!fs.existsSync(testFile)) return {};
 
@@ -317,7 +317,7 @@ async function setupFromApp(appName, destDir, { isMonorepo = false, force = fals
   if (!fs.existsSync(sourceDir)) {
     const available = fs.readdirSync(APPS_DIR).join(', ');
     throw new Error(
-      `App '${appName}' not found in tools/modern-tests/apps/\nAvailable apps: ${available}`
+      `App '${appName}' not found in tools/e2e-tests/apps/\nAvailable apps: ${available}`
     );
   }
 

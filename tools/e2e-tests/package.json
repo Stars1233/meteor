@@ -1,5 +1,5 @@
 {
-  "name": "meteor-modern-tests",
+  "name": "meteor-e2e-tests",
   "version": "1.0.0",
   "description": "Modern tests for Meteor",
   "scripts": {
