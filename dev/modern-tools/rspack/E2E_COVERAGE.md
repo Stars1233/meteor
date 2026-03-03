@@ -4,6 +4,8 @@
 
 End-to-end tests using Jest + Playwright that verify Meteor apps with the Rspack bundler across frameworks, build modes, and features.
 
+Test infrastructure lives in `tools/e2e-tests/`, with app fixtures in `tools/e2e-tests/apps/` and matching test files at `tools/e2e-tests/<name>.test.js`.
+
 ## Test Lifecycle
 
 Every app and skeleton goes through these phases (unless skipped):
