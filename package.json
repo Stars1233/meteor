@@ -37,7 +37,8 @@
   "scripts": {
     "install:modern": "cd tools/modern-tests && npm install && npx playwright install --with-deps chromium chromium-headless-shell",
     "test:idle-bot": "node --test .github/scripts/__tests__/inactive-issues.test.js",
-    "test:modern": "cd tools/modern-tests && npm test -- "
+    "test:modern": "cd tools/modern-tests && npm test -- ",
+    "create-app:modern": "cd tools/modern-tests && node scripts/create-app.js"
   },
   "jshintConfig": {
     "esversion": 11
