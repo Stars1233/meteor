@@ -25,6 +25,27 @@ const MODERN_TESTS_DIR = path.join(__dirname, '..');
 const APPS_DIR = path.join(MODERN_TESTS_DIR, 'apps');
 const DEFAULT_OUTPUT_DIR = path.join(REPO_ROOT, 'dist');
 
+// ANSI color helpers
+const c = {
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  red: '\x1b[31m',
+  magenta: '\x1b[35m',
+};
+const log = {
+  step: (msg) => console.log(`${c.cyan}>${c.reset} ${msg}`),
+  success: (msg) => console.log(`${c.green}>${c.reset} ${msg}`),
+  info: (msg) => console.log(`${c.blue}>${c.reset} ${msg}`),
+  warn: (msg) => console.log(`${c.yellow}>${c.reset} ${msg}`),
+  error: (msg) => console.error(`${c.red}>${c.reset} ${msg}`),
+  detail: (msg) => console.log(`  ${c.dim}${msg}${c.reset}`),
+};
+
 function parseArgs(argv) {
   const args = { monorepo: false };
   for (let i = 0; i < argv.length; i++) {
@@ -51,24 +72,24 @@ function printHelp() {
     : '(none found)';
 
   console.log(`
-Usage: npm run create-app:modern -- [options]
+${c.bold}Usage:${c.reset} npm run create-app:modern -- [options]
 
-Options:
-  --app <name>       Copy an existing app from tools/modern-tests/apps/
-  --skeleton <name>  Create a new app via "meteor create --<name>"
-  --output <path>    Full destination path for the app (default: ./dist/<appName>)
-  --monorepo         Treat the app as a monorepo (runs npm install at both root and app/ levels)
-  --force, -f        Remove the destination directory if it already exists before creating the app
-  --help, -h         Show this help message
+${c.bold}Options:${c.reset}
+  ${c.cyan}--app${c.reset} <name>       Copy an existing app from tools/modern-tests/apps/
+  ${c.cyan}--skeleton${c.reset} <name>  Create a new app via "meteor create --<name>"
+  ${c.cyan}--output${c.reset} <path>    Full destination path for the app (default: ./dist/<appName>)
+  ${c.cyan}--monorepo${c.reset}         Treat the app as a monorepo (runs npm install at both root and app/ levels)
+  ${c.cyan}--force${c.reset}, ${c.cyan}-f${c.reset}        Remove the destination directory if it already exists before creating the app
+  ${c.cyan}--help${c.reset}, ${c.cyan}-h${c.reset}         Show this help message
 
-Available apps: ${availableApps}
+${c.bold}Available apps:${c.reset} ${c.green}${availableApps}${c.reset}
 
-Examples:
-  npm run create-app:modern -- --app react
-  npm run create-app:modern -- --app react --output ./dist/my-react-app
-  npm run create-app:modern -- --app monorepo --monorepo
-  npm run create-app:modern -- --skeleton react
-  npm run create-app:modern -- --skeleton react --output ./my-apps/custom-name
+${c.bold}Examples:${c.reset}
+  ${c.dim}npm run create-app:modern -- --app react${c.reset}
+  ${c.dim}npm run create-app:modern -- --app react --output ./dist/my-react-app${c.reset}
+  ${c.dim}npm run create-app:modern -- --app monorepo --monorepo${c.reset}
+  ${c.dim}npm run create-app:modern -- --skeleton react${c.reset}
+  ${c.dim}npm run create-app:modern -- --skeleton react --output ./my-apps/custom-name${c.reset}
 `);
 }
 
@@ -254,37 +275,39 @@ function printCommandSummary(destDir, appPackageJsonPath) {
     return Math.max(max, inv.length);
   }, 0);
 
+  const line = `${c.dim}${'─'.repeat(55)}${c.reset}`;
+
   console.log('');
-  console.log('─────────────────────────────────────────────────────');
-  console.log(`  App ready at: ${destDir}`);
-  console.log('─────────────────────────────────────────────────────');
+  console.log(line);
+  console.log(`  ${c.green}${c.bold}App ready at:${c.reset} ${c.cyan}${destDir}${c.reset}`);
+  console.log(line);
   console.log('');
-  console.log(`  cd ${destDir}`);
+  console.log(`  ${c.yellow}cd ${destDir}${c.reset}`);
   console.log('');
-  console.log('  Run commands (meteor checkout binary):');
-  console.log(`    ${m} run`);
-  console.log(`    ${m} run --production`);
+  console.log(`  ${c.bold}Run commands${c.reset} ${c.dim}(meteor checkout binary):${c.reset}`);
+  console.log(`    ${c.dim}${m} run${c.reset}`);
+  console.log(`    ${c.dim}${m} run --production${c.reset}`);
 
   if (hasTestModule) {
-    console.log(`    ${m} test --driver-package meteortesting:mocha`);
-    console.log(`    ${m} test --once --driver-package meteortesting:mocha`);
+    console.log(`    ${c.dim}${m} test --driver-package meteortesting:mocha${c.reset}`);
+    console.log(`    ${c.dim}${m} test --once --driver-package meteortesting:mocha${c.reset}`);
     if (hasClient) {
-      console.log(`    ${m} test --full-app --driver-package meteortesting:mocha`);
-      console.log(`    ${m} test --full-app --once --driver-package meteortesting:mocha`);
+      console.log(`    ${c.dim}${m} test --full-app --driver-package meteortesting:mocha${c.reset}`);
+      console.log(`    ${c.dim}${m} test --full-app --once --driver-package meteortesting:mocha${c.reset}`);
     }
   }
 
-  console.log(`    ${m} build ./_build --directory`);
+  console.log(`    ${c.dim}${m} build ./_build --directory${c.reset}`);
   console.log('');
-  console.log('  npm scripts (run from the app directory):');
+  console.log(`  ${c.bold}npm scripts${c.reset} ${c.dim}(run from the app directory):${c.reset}`);
 
   for (const [name, cmd] of Object.entries(scripts)) {
     const invocation = name === 'start' ? 'npm start' : `npm run ${name}`;
     const padding = ' '.repeat(maxLen - invocation.length);
-    console.log(`    ${invocation}${padding}  # ${cmd}`);
+    console.log(`    ${c.cyan}${invocation}${c.reset}${padding}  ${c.dim}# ${cmd}${c.reset}`);
   }
 
-  console.log('─────────────────────────────────────────────────────');
+  console.log(line);
   console.log('');
 }
 
@@ -300,24 +323,24 @@ async function setupFromApp(appName, destDir, { isMonorepo = false, force = fals
 
   if (fs.existsSync(destDir)) {
     if (force) {
-      console.log(`Removing existing destination: ${destDir}...`);
+      log.warn(`Removing existing destination: ${c.cyan}${destDir}${c.reset}`);
       await fs.remove(destDir);
     } else {
-      console.error(`Error: destination already exists: ${destDir}`);
-      console.error('Remove it first or use --force to replace it.');
+      log.error(`Destination already exists: ${c.cyan}${destDir}${c.reset}`);
+      log.detail('Remove it first or use --force to replace it.');
       process.exit(1);
     }
   }
 
   await fs.ensureDir(path.dirname(destDir));
 
-  console.log(`Copying app '${appName}' to ${destDir}...`);
+  log.step(`Copying app ${c.bold}${appName}${c.reset} to ${c.cyan}${destDir}${c.reset}`);
   await fs.copy(sourceDir, destDir, {
     dereference: true,
     preserveTimestamps: true,
     overwrite: true,
   });
-  console.log('Copy complete.');
+  log.success('Copy complete.');
 
   const appPackageJsonPath = isMonorepo
     ? path.join(destDir, 'app', 'package.json')
@@ -326,32 +349,32 @@ async function setupFromApp(appName, destDir, { isMonorepo = false, force = fals
   const envVars = extractEnvVarsFromTestFile(appName, true);
 
   if (fs.existsSync(appPackageJsonPath)) {
-    console.log('Injecting npm scripts into package.json...');
+    log.step('Injecting npm scripts into package.json...');
     if (Object.keys(envVars).length > 0) {
-      console.log('  env from test file:', Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join(' '));
+      log.detail(`env from test file: ${c.magenta}${Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join(' ')}${c.reset}`);
     }
     await injectNpmScripts(appPackageJsonPath, envVars);
   }
 
   const meteorAppDir = isMonorepo ? path.join(destDir, 'app') : destDir;
 
-  console.log('Adding rspack package...');
+  log.step('Adding rspack package...');
   await execa(METEOR_EXECUTABLE, ['add', 'rspack'], {
     cwd: meteorAppDir,
     stdio: 'inherit',
   });
 
   if (isMonorepo) {
-    console.log('Running npm install at root level...');
+    log.step('Running npm install at root level...');
     await execa.command('npm install', { cwd: destDir, stdio: 'inherit', shell: true });
-    console.log('Running npm install at app level...');
+    log.step('Running npm install at app level...');
     await execa.command('npm install', {
       cwd: path.join(destDir, 'app'),
       stdio: 'inherit',
       shell: true,
     });
   } else {
-    console.log('Running npm install...');
+    log.step('Running npm install...');
     await execa.command('npm install', { cwd: destDir, stdio: 'inherit', shell: true });
   }
 
@@ -361,11 +384,11 @@ async function setupFromApp(appName, destDir, { isMonorepo = false, force = fals
 async function setupFromSkeleton(skeletonName, destDir, { force = false } = {}) {
   if (fs.existsSync(destDir)) {
     if (force) {
-      console.log(`Removing existing destination: ${destDir}...`);
+      log.warn(`Removing existing destination: ${c.cyan}${destDir}${c.reset}`);
       await fs.remove(destDir);
     } else {
-      console.error(`Error: destination already exists: ${destDir}`);
-      console.error('Remove it first or use --force to replace it.');
+      log.error(`Destination already exists: ${c.cyan}${destDir}${c.reset}`);
+      log.detail('Remove it first or use --force to replace it.');
       process.exit(1);
     }
   }
@@ -375,13 +398,13 @@ async function setupFromSkeleton(skeletonName, destDir, { force = false } = {}) 
 
   await fs.ensureDir(parentDir);
 
-  console.log(`Creating Meteor app '${appDirName}' via "meteor create --${skeletonName}"...`);
+  log.step(`Creating Meteor app ${c.bold}${appDirName}${c.reset} via ${c.dim}meteor create --${skeletonName}${c.reset}`);
   await execa(METEOR_EXECUTABLE, ['create', `--${skeletonName}`, appDirName], {
     cwd: parentDir,
     stdio: 'inherit',
   });
 
-  console.log('Adding rspack package...');
+  log.step('Adding rspack package...');
   await execa(METEOR_EXECUTABLE, ['add', 'rspack'], {
     cwd: destDir,
     stdio: 'inherit',
@@ -392,9 +415,9 @@ async function setupFromSkeleton(skeletonName, destDir, { force = false } = {}) 
   const envVars = extractEnvVarsFromTestFile(skeletonName, false);
 
   if (fs.existsSync(appPackageJsonPath)) {
-    console.log('Injecting npm scripts into package.json...');
+    log.step('Injecting npm scripts into package.json...');
     if (Object.keys(envVars).length > 0) {
-      console.log('  env from test file:', Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join(' '));
+      log.detail(`env from test file: ${c.magenta}${Object.entries(envVars).map(([k, v]) => `${k}=${v}`).join(' ')}${c.reset}`);
     }
     await injectNpmScripts(appPackageJsonPath, envVars);
   }
@@ -411,13 +434,13 @@ async function main() {
   }
 
   if (!args.app && !args.skeleton) {
-    console.error('Error: you must provide --app <name> or --skeleton <name>');
+    log.error('You must provide --app <name> or --skeleton <name>');
     printHelp();
     process.exit(1);
   }
 
   if (args.app && args.skeleton) {
-    console.error('Error: --app and --skeleton are mutually exclusive');
+    log.error('--app and --skeleton are mutually exclusive');
     process.exit(1);
   }
 
@@ -439,6 +462,6 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('Error:', err.message);
+  log.error(err.message);
   process.exit(1);
 });
