@@ -234,7 +234,7 @@ async function injectNpmScripts(packageJsonPath, envVars = {}) {
   // Rewrite ALL existing scripts: replace bare `meteor` with the checkout path
   const scripts = {};
   for (const [key, value] of Object.entries(pkg.scripts || {})) {
-    scripts[key] = rewriteMeteorCmd(value, m);
+    scripts[key] = `${p}${rewriteMeteorCmd(value, m)}`;
   }
 
   // Add/overwrite canonical scripts using the checkout path
