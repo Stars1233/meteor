@@ -112,7 +112,7 @@ BCp.initializeMeteorAppSwcrc = function () {
 
   let currentLastModifiedConfigTime;
   if (hasSwcJs || hasSwcTs) {
-    // For dynamic JS files, first get the resolved configuration
+    // For dynamic JS/TS files, first get the resolved configuration
     const resolvedConfig = lastModifiedSwcConfigTime?.includes(`${fileModTime}`)
       ? lastModifiedSwcConfig || getMeteorAppSwcrc(swcFile)
       : getMeteorAppSwcrc(swcFile);
@@ -1087,9 +1087,6 @@ function getMeteorAppSwcrc(file = '.swcrc') {
               },
               target: 'es2015',
             },
-            module: {
-              type: 'commonjs',
-            },
           });
           content = result.code;
         } catch (swcError) {
@@ -1124,7 +1121,9 @@ function getMeteorAppSwcrc(file = '.swcrc') {
         })()
       `);
       const context = vm.createContext({ process });
-      return script.runInContext(context);
+      const result = script.runInContext(context);
+      // Handle CJS interop wrapper (e.g. { __esModule: true, default: config })
+      return result && result.__esModule && result.default ? result.default : result;
     } else {
       // For .swcrc and other JSON files, parse as JSON
       return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
