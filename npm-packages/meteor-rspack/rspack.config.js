@@ -229,8 +229,24 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   const projectConfigPath =
     Meteor.projectConfigPath || path.resolve(projectDir, "rspack.config.js");
 
+  // Determine context for bundles and assets
+  const meteorLocalDirName = process.env.METEOR_LOCAL_DIR
+    ? path.basename(process.env.METEOR_LOCAL_DIR.replace(/\\/g, "/"))
+    : "";
+  const buildContext =
+    Meteor.buildContext ||
+    process.env.RSPACK_BUILD_CONTEXT ||
+    `_build${(meteorLocalDirName && `-${meteorLocalDirName}`) || ""}`;
+  const assetsContext =
+    Meteor.assetsContext ||
+    process.env.RSPACK_ASSETS_CONTEXT ||
+    `build-assets${(meteorLocalDirName && `-${meteorLocalDirName}`) || ""}`;
+  const chunksContext =
+    Meteor.chunksContext ||
+    process.env.RSPACK_CHUNKS_CONTEXT ||
+    `build-chunks${(meteorLocalDirName && `-${meteorLocalDirName}`) || ""}`;
+
   // Compute build paths before loading user config (needed by Meteor helpers below)
-  const buildContext = Meteor.buildContext || "_build";
   const outputPath = Meteor.outputPath;
   const outputDir = path.dirname(Meteor.outputPath || "");
   Meteor.buildOutputDir = path.resolve(projectDir, buildContext, outputDir);
@@ -280,29 +296,12 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     : !!Meteor.isDevelopment || !initialIsProd;
   const initialMode = initialIsProd ? "production" : "development";
 
-  // Determine context for bundles and assets
-  const meteorLocalDirName = process.env.METEOR_LOCAL_DIR
-    ? path.basename(process.env.METEOR_LOCAL_DIR.replace(/\\/g, '/'))
-    : '';
-  const buildContext =
-    Meteor.buildContext ||
-    process.env.RSPACK_BUILD_CONTEXT ||
-    `_build${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
-  const assetsContext =
-    Meteor.assetsContext ||
-    process.env.RSPACK_ASSETS_CONTEXT ||
-    `build-assets${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
-  const chunksContext =
-    Meteor.chunksContext ||
-    process.env.RSPACK_CHUNKS_CONTEXT ||
-    `build-chunks${(meteorLocalDirName && `-${meteorLocalDirName}`) || ''}`;
-
   // Initialized with pre-load values so helpers work during the first config load;
   // reassigned after load once mode is fully resolved.
   let cacheStrategy = createCacheStrategy(
     initialMode,
-    (Meteor.isClient && 'client') || 'server',
-    { projectConfigPath, configPath, buildContext  }
+    (Meteor.isClient && "client") || "server",
+    { projectConfigPath, configPath, buildContext }
   );
   let swcConfigRule = createSwcConfig({
     isTypescriptEnabled,
@@ -641,7 +640,8 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         onListening(devServer) {
           if (!devServer) return;
           const { host, port } = devServer.options;
-          const protocol = devServer.options.server?.type === "https" ? "https" : "http";
+          const protocol =
+            devServer.options.server?.type === "https" ? "https" : "http";
           const devServerUrl = `${protocol}://${host || "localhost"}:${port}`;
           outputMeteorRspack({ devServerUrl });
         },
@@ -781,7 +781,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         }
       : {};
 
-
   // Second pass: re-run only when a mode override was detected, so the user config
   // can depend on fully-computed Meteor flags and helpers (swcConfigOptions, buildOutputDir, etc.).
   if (nextUserConfig?.mode || nextOverrideConfig?.mode || isAngularEnabled) {
@@ -791,9 +790,13 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       argv
     ));
   }
+  let statsOverrided = false;
   let config = isClient ? clientConfig : serverConfig;
   if (nextUserConfig) {
     config = mergeSplitOverlap(config, nextUserConfig);
+    if (nextUserConfig.stats != null) {
+      statsOverrided = true;
+    }
   }
 
   config = mergeSplitOverlap(config, angularExpandConfig);
@@ -801,6 +804,9 @@ module.exports = async function (inMeteor = {}, argv = {}) {
 
   if (nextOverrideConfig) {
     config = mergeSplitOverlap(config, nextOverrideConfig);
+    if (nextOverrideConfig.stats != null) {
+      statsOverrided = true;
+    }
   }
 
   const shouldDisablePlugins = config?.disablePlugins != null;
@@ -812,7 +818,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   delete config["meteor.enablePortableBuild"];
 
   // if (Meteor.isDebug || Meteor.isVerbose) {
-    console.log("Config:", inspect(config, { depth: null, colors: true }));
+  console.log("Config:", inspect(config, { depth: null, colors: true }));
   // }
 
   // Check if lazyCompilation is enabled and warn the user
