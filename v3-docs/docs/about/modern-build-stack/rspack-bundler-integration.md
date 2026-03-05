@@ -159,6 +159,7 @@ You can use flags to control the final configuration based on the environment. T
 | `splitVendorChunk`  | function | Splits vendor libraries so they are automatically served from a separate chunk                                                    |
 | `extendSwcConfig`   | function | Extends the [SWC loader configuration](https://rspack.rs/guide/features/builtin-swc-loader#options) to apply only to the app code |
 | `extendConfig`      | function | Extends the config by applying merged object configs                                                                                 |
+| `enablePortableBuild` | function | Omits `Meteor.isDevelopment` and `Meteor.isProduction` from the bundle, making it portable across environments                     |
 
 Some configurations in the Rspack config are reserved for the Meteor-Rspack setup to work, such as Rspack options inside the `entry` and `output` objects. These will trigger warnings if modified. All other settings can be overridden, giving you the flexibility to make any setup compatible with the modern bundler.
 
@@ -781,6 +782,24 @@ module.exports = defineConfig(Meteor => ({
     ]),
 }));
 ```
+
+### Portable Build
+
+By default, Meteor-Rspack replaces `Meteor.isDevelopment` and `Meteor.isProduction` with static values at build time. This follows modern bundler conventions where `mode: "production"` enables aggressive dead-code elimination, any code inside `if (Meteor.isDevelopment) { ... }` blocks is stripped entirely from production builds.
+
+This is the recommended default. It produces smaller, more secure bundles by ensuring development-only code never ships to production. `meteor build` benefits directly from this, as the final output is as lean as possible.
+
+If you need a single build that works across environments (for example, building once and deploying to both staging and production without rebuilding), you can opt in to portable builds. This omits `Meteor.isDevelopment` and `Meteor.isProduction` from compile-time replacement, keeping them as runtime checks instead.
+
+```js
+const { defineConfig } = require('@meteorjs/rspack');
+
+module.exports = defineConfig(Meteor => ({
+  ...Meteor.enablePortableBuild(),
+}));
+```
+
+Note that this trades build optimization for portability — dead-code elimination for development/production branches will no longer apply, resulting in larger bundles. Other flags like `Meteor.isClient`, `Meteor.isServer`, and `Meteor.isTest` are always replaced at build time, since they depend on the build target.
 
 ### Running Multiple Instances
 

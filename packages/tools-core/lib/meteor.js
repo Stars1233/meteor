@@ -268,6 +268,9 @@ export function isMeteorAppNative() {
  * @returns {boolean} True if the application is in development mode, false otherwise.
  */
 export function isMeteorAppDevelopment() {
+  if (process.env.NODE_ENV) {
+    return process.env.NODE_ENV !== 'production';
+  }
   return Package.meteor?.Meteor.isDevelopment && !isMeteorAppBuild();
 }
 
@@ -276,6 +279,9 @@ export function isMeteorAppDevelopment() {
  * @returns {boolean} True if the application is in production mode, false otherwise.
  */
 export function isMeteorAppProduction() {
+  if (process.env.NODE_ENV) {
+    return process.env.NODE_ENV === 'production';
+  }
   return Package.meteor?.Meteor.isProduction || isMeteorAppBuild();
 }
 

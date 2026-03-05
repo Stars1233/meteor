@@ -153,6 +153,19 @@ function extendSwcConfig(swcConfig) {
 }
 
 /**
+ * Signal that `Meteor.isDevelopment` and `Meteor.isProduction` should be omitted
+ * from DefinePlugin, making the bundle portable across Meteor environments.
+ * Usage: return Meteor.enablePortableBuild() in your rspack.config.js
+ *
+ * @returns {Record<string, object>} config fragment with `meteor.enablePortableBuild: true`
+ */
+function enablePortableBuild() {
+  return prepareMeteorRspackConfig({
+    "meteor.enablePortableBuild": true,
+  });
+}
+
+/**
  * Remove plugins from a Rspack config by name, RegExp, predicate, or array of them.
  * When using a function predicate, it receives both the plugin and its index in the plugins array.
  *
@@ -217,4 +230,5 @@ module.exports = {
   makeWebNodeBuiltinsAlias,
   disablePlugins,
   outputMeteorRspack,
+  enablePortableBuild,
 };

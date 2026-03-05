@@ -23,6 +23,7 @@ import {
   assertFileExist,
   assertMeteorApp,
   assertMeteorReactApp,
+  assertPathNotExist,
   assertRspackScriptTag
 } from "./assertions";
 import fs from "fs-extra";
@@ -31,8 +32,48 @@ import execa from "execa";
 import waitOn from "wait-on";
 
 const isCI = process.env.GITHUB_ACTIONS === "true";
+// Link local npm-packages/meteor-rspack so tests run against the latest dev version.
+// Set NPM_LINK_RSPACK=false to disable.
+const npmLinkLocalRspack = process.env.NPM_LINK_RSPACK !== 'false';
 
 const WAIT_ON = isCI ? 2000 : 500;
+
+async function linkLocalRspack(appDir) {
+  if (!npmLinkLocalRspack) return;
+  const repoRoot = path.resolve(process.cwd(), '..', '..');
+
+  const meteorBin = path.join(repoRoot, "meteor");
+  console.log(`Running meteor update --npm in ${appDir}...`);
+  (await execa(meteorBin, ["update", "--npm"], {
+    cwd: appDir,
+    stdio: "inherit",
+  }));
+
+  const rspackPackageDir = path.join(repoRoot, 'npm-packages', 'meteor-rspack');
+  const constantsPath = path.join(repoRoot, 'packages', 'rspack', 'lib', 'constants.js');
+  const constantsContent = await fs.readFile(constantsPath, 'utf8');
+  const rspackVersionMatch = constantsContent.match(/DEFAULT_RSPACK_VERSION\s*=\s*['"]([^'"]+)['"]/);
+  const rspackVersion = rspackVersionMatch?.[1];
+  if (rspackVersion) {
+    console.log(`Installing @rspack/core@${rspackVersion} and @rspack/cli@${rspackVersion}...`);
+    await execa(
+      "npm",
+      [
+        "install",
+        `@rspack/core@${rspackVersion}`,
+        `@rspack/cli@${rspackVersion}`,
+        "--no-save",
+        "--no-package-lock",
+      ],
+      { cwd: rspackPackageDir }
+    );
+  }
+  console.log(`Installing ignore-loader in the app...`);
+  await execa('npm', ['install', 'ignore-loader', '--save'], { cwd: appDir });
+  console.log(`Linking local meteor-rspack from ${rspackPackageDir}...`);
+  await execa('npm', ['link', rspackPackageDir], { cwd: appDir });
+  console.log('Local meteor-rspack linked successfully.');
+}
 
 /**
  * Helper function to set up and run tests for the Meteor Bundler
@@ -45,7 +86,7 @@ const WAIT_ON = isCI ? 2000 : 500;
  * @returns {Function} - Jest test function
  */
 export function testMeteorBundler(options) {
-  const { appName, port, customAssertions, beforeAllBehavior, afterAllBehavior } = options;
+  const { appName, port, customAssertions, beforeAllBehavior, afterAllBehavior, env = {} } = options;
 
   return () => {
     let meteorProcess;
@@ -62,6 +103,9 @@ export function testMeteorBundler(options) {
 
       // Setup the Meteor app
       tempDir = (await setupMeteorApp(appName))?.tempDir;
+
+      // Link local meteor-rspack so the app picks up the latest dev version
+      await linkLocalRspack(tempDir);
     });
 
     afterAll(async () => {
@@ -81,7 +125,7 @@ export function testMeteorBundler(options) {
 
     test(`"meteor run" / should start the app`, async () => {
       // Run the Meteor app
-      meteorProcess = (await runMeteorApp(tempDir, port))?.meteorProcess;
+      meteorProcess = (await runMeteorApp(tempDir, port, { env: env.meteorRun }))?.meteorProcess;
 
       // Assert that the Meteor app is running correctly
       await assertMeteorReactApp(port, { title: appName });
@@ -168,14 +212,21 @@ export function testMeteorRspackBundler(options) {
     afterAllBehavior,
     // Build directory (default: '_build')
     buildDir = '_build',
+    // Assets context directory (default: 'build-assets')
+    assetsContext = 'build-assets',
+    // Chunks context directory (default: 'build-chunks')
+    chunksContext = 'build-chunks',
     // Rspack config file (default: 'rspack.config.js')
     configFile = 'rspack.config.js',
+    // Custom environment variables
+    // Per-phase env vars: { meteorRun, meteorRunProduction, meteorTest, meteorTestOnce, meteorBuild }
+    env = {},
     // Whether to skip client-specific assertions
     skipClient = false,
     // Whether to skip client-side tests
     skipTestClient = false,
-    // Custom environment variables
-    env = {},
+    // Skip isDevelopment/isProduction/isRun/isTest/isBuild verbose output checks
+    skipEnvCheck = false,
   } = options;
 
   return () => {
@@ -205,7 +256,13 @@ export function testMeteorRspackBundler(options) {
 
       // Add Rspack package
       appDir = isMonorepo ? path.join(tempDir, 'app') : tempDir;
-      await runMeteorCommand('add', ['rspack'], appDir, { checkExitCode: true });
+
+      await runMeteorCommand("add", ["rspack"], appDir, {
+        checkExitCode: true,
+      });
+
+      // Link local meteor-rspack so the app picks up the latest dev version
+      await linkLocalRspack(appDir);
 
       // Set meteor.modern.verbose to true
       if (verbose) {
@@ -217,8 +274,7 @@ export function testMeteorRspackBundler(options) {
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
         isMonorepo,
-        skipWaitOn: skipClient,
-        env,
+        env: { ...env, ...(env.meteorRun || {}) },
       });
       meteorProcess = result.meteorProcess;
 
@@ -262,7 +318,7 @@ export function testMeteorRspackBundler(options) {
         waitForOutput: "=> App running at",
         isMonorepo,
         skipWaitOn: skipClient,
-        env,
+        env: { ...env, ...(env.meteorRun || {}) },
       });
       meteorProcess = result.meteorProcess;
 
@@ -331,7 +387,7 @@ export function testMeteorRspackBundler(options) {
         await customAssertions.afterRunRebuildServer({ tempDir, port, meteorProcess, result });
       }
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isDevelopment:.*true.*/
@@ -359,7 +415,7 @@ export function testMeteorRspackBundler(options) {
         commandOptions: ['--production'],
         isMonorepo,
         skipWaitOn: skipClient,
-        env,
+        env: { ...env, ...(env.meteorRunProduction || {}) },
       });
       meteorProcess = result.meteorProcess;
 
@@ -434,7 +490,7 @@ export function testMeteorRspackBundler(options) {
         await customAssertions.afterRunProductionRebuildServer({ tempDir, port, meteorProcess, result });
       }
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isProduction:.*true.*/
@@ -462,7 +518,8 @@ export function testMeteorRspackBundler(options) {
         const result = await runMeteorApp(tempDir, port, {
           waitForOutput: "=> App running at",
           commandOptions: ['--extra-packages', 'bundle-visualizer', '--production'],
-          isMonorepo
+          isMonorepo,
+          env: env.meteorRunProduction
         });
         meteorProcess = result.meteorProcess;
 
@@ -522,6 +579,7 @@ export function testMeteorRspackBundler(options) {
         checkTestResults: false,
         isMonorepo,
         testClient: !skipTestClient,
+        env: { ...env, ...(env.meteorTest || {}) },
       });
       meteorProcess = result.meteorProcess;
 
@@ -575,7 +633,7 @@ export function testMeteorRspackBundler(options) {
         }
       }
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isDevelopment:.*true.*/
@@ -608,6 +666,7 @@ export function testMeteorRspackBundler(options) {
         checkTestResults: true,
         isMonorepo,
         testClient: !skipTestClient,
+        env: { ...env, ...(env.meteorTestOnce || {}) },
       });
 
       // Wait for a margin
@@ -621,7 +680,7 @@ export function testMeteorRspackBundler(options) {
       await assertFileExist(appDir, `${buildDir}/test/server-rspack.js`);
       await assertFileExist(appDir, `${buildDir}/test/server-meteor.js`);
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isDevelopment:.*true.*/
@@ -646,13 +705,14 @@ export function testMeteorRspackBundler(options) {
       const { buildOutputDir, processResult: result } = await buildMeteorApp(tempDir, {
         commandOptions: ['--directory'],
         captureOutput: true,
-        isMonorepo
+        isMonorepo,
+        env: env.meteorBuild
       });
 
       // Wait for a margin
       await wait(WAIT_ON);
 
-      if (verbose) {
+      if (verbose && !skipEnvCheck) {
         await waitForMeteorOutput(
           result.outputLines,
           /.*isProduction:.*true.*/
@@ -721,6 +781,68 @@ export function testMeteorRspackBundler(options) {
         await cleanupTempDir(buildOutputDir);
       }
     });
+
+    test(`"meteor reset" / should clear all caches and build artifacts`, async () => {
+      // Derive METEOR_LOCAL_DIR-aware paths for assertions
+      const resetEnv = { ...env, ...(env.meteorReset || {}) };
+      const meteorLocalDirEnv = resetEnv.METEOR_LOCAL_DIR;
+      const meteorLocalDirName = meteorLocalDirEnv
+        ? path.basename(meteorLocalDirEnv.replace(/\\/g, '/'))
+        : '';
+      const localDirSuffix = meteorLocalDirName ? `-${meteorLocalDirName}` : '';
+
+      // Verify build artifacts exist from previous tests
+      await assertFileExist(appDir, buildDir);
+      await assertFileExist(appDir, 'node_modules/.cache/rspack');
+
+      // Run meteor reset
+      await runMeteorCommand("reset", [], appDir, {
+        checkExitCode: true,
+        env: resetEnv,
+      });
+
+      // Verify Rspack build artifacts removed
+      await assertPathNotExist(appDir, buildDir);
+      await assertPathNotExist(appDir, 'node_modules/.cache/rspack');
+      await assertPathNotExist(appDir, assetsContext);
+      await assertPathNotExist(appDir, chunksContext);
+      await assertPathNotExist(appDir, `public/${assetsContext}`);
+      await assertPathNotExist(appDir, `public/${chunksContext}`);
+
+      // Also verify defaults are cleaned to prevent regressions
+      await assertPathNotExist(appDir, '_build');
+      await assertPathNotExist(appDir, 'public/build-assets');
+      await assertPathNotExist(appDir, 'public/build-chunks');
+
+      // When METEOR_LOCAL_DIR is set, also verify suffixed paths are cleaned
+      if (localDirSuffix) {
+        await assertPathNotExist(appDir, `${buildDir}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `${assetsContext}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `${chunksContext}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `public/${assetsContext}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `public/${chunksContext}${localDirSuffix}`);
+        await assertPathNotExist(appDir, `_build${localDirSuffix}`);
+        await assertPathNotExist(appDir, `public/build-assets${localDirSuffix}`);
+        await assertPathNotExist(appDir, `public/build-chunks${localDirSuffix}`);
+      }
+
+      // Verify default .meteor/local caches are always cleaned
+      await assertPathNotExist(appDir, '.meteor/local/build');
+      await assertPathNotExist(appDir, '.meteor/local/bundler-cache');
+      await assertPathNotExist(appDir, '.meteor/local/plugin-cache');
+
+      // When METEOR_LOCAL_DIR is set, also verify custom local dir is cleaned
+      if (meteorLocalDirEnv && meteorLocalDirEnv !== '.meteor/local') {
+        await assertPathNotExist(appDir, `${meteorLocalDirEnv}/build`);
+        await assertPathNotExist(appDir, `${meteorLocalDirEnv}/bundler-cache`);
+        await assertPathNotExist(appDir, `${meteorLocalDirEnv}/plugin-cache`);
+      }
+
+      // Run custom assertions if provided
+      if (customAssertions && customAssertions.afterReset) {
+        await customAssertions.afterReset({ tempDir, appDir });
+      }
+    });
   };
 }
 
@@ -767,6 +889,14 @@ export function testMeteorSkeleton(options) {
     checkBundleFilePaths = [],
     beforeAllBehavior,
     afterAllBehavior,
+    // Per-phase env vars: { meteorRun, meteorRunProduction, meteorTest, meteorBuild }
+    env = {},
+    // Bare skeleton may not create build artifacts (e.g. _build, node_modules/.cache/rspack)
+    skipBuildCacheCheck = false,
+    // Assets context directory (default: 'build-assets')
+    assetsContext = 'build-assets',
+    // Chunks context directory (default: 'build-chunks')
+    chunksContext = 'build-chunks',
   } = options;
 
   return () => {
@@ -818,6 +948,9 @@ export function testMeteorSkeleton(options) {
       const packageJsonExists = await fs.pathExists(packageJsonPath);
       expect(packageJsonExists).toBe(true);
 
+      // Link local meteor-rspack so the app picks up the latest dev version
+      await linkLocalRspack(tempDir);
+
       // Run custom assertions if provided
       if (customAssertions.afterCreate) {
         await customAssertions.afterCreate({ tempDir, packageJsonPath });
@@ -827,7 +960,8 @@ export function testMeteorSkeleton(options) {
     test(`"meteor run" / should run the ${skeletonName} app`, async () => {
       // Run the newly created app
       const result = await runMeteorApp(tempDir, port, {
-        waitForOutput: "=> App running at"
+        waitForOutput: "=> App running at",
+        env: env.meteorRun
       });
       meteorProcess = result.meteorProcess;
 
@@ -863,7 +997,8 @@ export function testMeteorSkeleton(options) {
       // Run the app in production mode
       const result = await runMeteorApp(tempDir, port, {
         waitForOutput: "=> App running at",
-        commandOptions: ["--production"]
+        commandOptions: ["--production"],
+        env: env.meteorRunProduction
       });
       meteorProcess = result.meteorProcess;
 
@@ -905,6 +1040,7 @@ export function testMeteorSkeleton(options) {
         stdio: "inherit",
         shell: true
       });
+      await linkLocalRspack(tempDir);
 
       // Run tests once for the app
       const result = await runMeteorTests(tempDir, port, {
@@ -912,6 +1048,7 @@ export function testMeteorSkeleton(options) {
         commandOptions: ["--once"],
         checkTestResults: true,
         testClient: !skipTestClient,
+        env: { ...env, ...(env.meteorTest || {}) },
       });
 
       // Wait for a margin
@@ -930,7 +1067,8 @@ export function testMeteorSkeleton(options) {
       // Build the app
       const { buildOutputDir, processResult: result } = await buildMeteorApp(tempDir, {
         commandOptions: ["--directory"],
-        captureOutput: true
+        captureOutput: true,
+        env: { ...env, ...(env.meteorBuild || {}) },
       });
 
       // Wait for a margin
@@ -980,6 +1118,69 @@ export function testMeteorSkeleton(options) {
       } finally {
         // Clean up the build output directory
         await cleanupTempDir(buildOutputDir);
+      }
+    });
+
+    test(`"meteor reset" / should clear all caches and build artifacts`, async () => {
+      // Derive METEOR_LOCAL_DIR-aware paths for assertions
+      const resetEnv = { ...env, ...(env.meteorReset || {}) };
+      const meteorLocalDirEnv = resetEnv.METEOR_LOCAL_DIR;
+      const meteorLocalDirName = meteorLocalDirEnv
+        ? path.basename(meteorLocalDirEnv.replace(/\\/g, '/'))
+        : '';
+      const localDirSuffix = meteorLocalDirName ? `-${meteorLocalDirName}` : '';
+
+      // Verify build artifacts exist from previous tests
+      if (!skipBuildCacheCheck) {
+        await assertFileExist(tempDir, "_build");
+        await assertFileExist(tempDir, "node_modules/.cache/rspack");
+      }
+
+      // Run meteor reset
+      await runMeteorCommand('reset', [], tempDir, {
+        checkExitCode: true,
+        env: resetEnv,
+      });
+
+      // Verify Rspack build artifacts removed
+      await assertPathNotExist(tempDir, '_build');
+      await assertPathNotExist(tempDir, 'node_modules/.cache/rspack');
+      await assertPathNotExist(tempDir, 'node_modules/.cache/meteor');
+      await assertPathNotExist(tempDir, assetsContext);
+      await assertPathNotExist(tempDir, chunksContext);
+      await assertPathNotExist(tempDir, `public/${assetsContext}`);
+      await assertPathNotExist(tempDir, `public/${chunksContext}`);
+
+      // Also verify defaults are cleaned to prevent regressions
+      await assertPathNotExist(tempDir, 'public/build-assets');
+      await assertPathNotExist(tempDir, 'public/build-chunks');
+
+      // When METEOR_LOCAL_DIR is set, also verify suffixed paths are cleaned
+      if (localDirSuffix) {
+        await assertPathNotExist(tempDir, `_build${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `${assetsContext}${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `${chunksContext}${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `public/${assetsContext}${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `public/${chunksContext}${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `public/build-assets${localDirSuffix}`);
+        await assertPathNotExist(tempDir, `public/build-chunks${localDirSuffix}`);
+      }
+
+      // Verify default .meteor/local caches are always cleaned
+      await assertPathNotExist(tempDir, '.meteor/local/build');
+      await assertPathNotExist(tempDir, '.meteor/local/bundler-cache');
+      await assertPathNotExist(tempDir, '.meteor/local/plugin-cache');
+
+      // When METEOR_LOCAL_DIR is set, also verify custom local dir is cleaned
+      if (meteorLocalDirEnv && meteorLocalDirEnv !== '.meteor/local') {
+        await assertPathNotExist(tempDir, `${meteorLocalDirEnv}/build`);
+        await assertPathNotExist(tempDir, `${meteorLocalDirEnv}/bundler-cache`);
+        await assertPathNotExist(tempDir, `${meteorLocalDirEnv}/plugin-cache`);
+      }
+
+      // Run custom assertions if provided
+      if (customAssertions.afterReset) {
+        await customAssertions.afterReset({ tempDir });
       }
     });
   };
