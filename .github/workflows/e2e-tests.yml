@@ -74,6 +74,13 @@ jobs:
       - name: Install test deps
         run: npm run install:e2e
 
+      - name: Set NPM_LINK_RSPACK=false for release branches
+        run: |
+          echo "Current branch: ${{ github.head_ref || github.ref_name }}"
+          if [[ "${{ github.head_ref || github.ref_name }}" == release-* ]]; then
+            echo "NPM_LINK_RSPACK=false" >> $GITHUB_ENV
+          fi
+
       - name: Prepare Meteor
         run: ./meteor --get-ready
 

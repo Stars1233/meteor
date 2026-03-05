@@ -60,6 +60,7 @@ describe('Meteor Skeletons /', () => {
       checkAppTitle: false,
       checkBodyStyles: false,
       skipTestClient: true,
+      skipBuildCacheCheck: true,
     })
   );
 
