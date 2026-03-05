@@ -18,6 +18,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 const execa = require('execa');
+const { linkLocalRspack } = require('./link-rspack');
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const METEOR_EXECUTABLE = path.join(REPO_ROOT, 'meteor');
@@ -363,12 +364,8 @@ async function setupFromApp(appName, destDir, { isMonorepo = false, force = fals
     ...execEnv,
   });
 
-  log.step('Updating Meteor npm dependencies...');
-  await execa(METEOR_EXECUTABLE, ['update', '--npm'], {
-    cwd: meteorAppDir,
-    stdio: 'inherit',
-    ...execEnv,
-  });
+  log.step('Linking local @meteorjs/rspack...');
+  await linkLocalRspack(meteorAppDir, { env: envVars });
 
   if (isMonorepo) {
     log.step('Running meteor npm install at root level...');
@@ -430,12 +427,8 @@ async function setupFromSkeleton(skeletonName, destDir, { force = false } = {}) 
     ...execEnv,
   });
 
-  log.step('Updating Meteor npm dependencies...');
-  await execa(METEOR_EXECUTABLE, ['update', '--npm'], {
-    cwd: destDir,
-    stdio: 'inherit',
-    ...execEnv,
-  });
+  log.step('Linking local @meteorjs/rspack...');
+  await linkLocalRspack(destDir, { env: envVars });
 
   log.step('Running meteor npm install...');
   await execa(METEOR_EXECUTABLE, ['npm', 'install'], { cwd: destDir, stdio: 'inherit', ...execEnv });
