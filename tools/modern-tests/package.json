@@ -1,7 +1,7 @@
 {
   "name": "meteor-modern-tests",
   "version": "1.0.0",
-  "description": "Modern tests for Meteor",
+  "description": "Isolated Jest + Playwright environment for Meteor E2E tests",
   "scripts": {
     "test": "jest --config jest.config.js"
   },

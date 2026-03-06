@@ -128,17 +128,20 @@ The repository has four test layers, each covering a different scope:
 
 ### Unit tests (Jest)
 
-Unit tests cover pure helpers, scripts, and tool logic that does not require the Meteor runtime. They use [Jest](https://jestjs.io/) configured at the monorepo root (`jest.config.js`), targeting `tools/**/*.test.js` and `scripts/**/*.test.js`.
+Unit tests cover pure helpers, scripts, and tool logic that does not require the Meteor runtime. They use [Jest](https://jestjs.io/) configured in `tools/unit-tests/`, targeting `tools/**/*.test.js` and `scripts/**/*.test.js`.
 
 ```sh
+# Install dependencies (first time)
+npm run install:unit
+
 # Run all unit tests
 npm run test:unit
 
 # Run a specific test file
-npx jest tools/path/to/file.test.js
+npm run test:unit -- tools/path/to/file.test.js
 
 # Run tests matching a name pattern
-npx jest -t "my test name"
+npm run test:unit -- -t "my test name"
 ```
 
 Place test files next to the module they test using the `*.test.js` naming convention. Jest will pick them up automatically.

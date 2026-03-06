@@ -1,5 +1,9 @@
+const path = require('path');
+
+const repoRoot = path.resolve(__dirname, '../..');
+
 module.exports = {
-  rootDir: __dirname,
+  rootDir: repoRoot,
   testMatch: [
     "<rootDir>/tools/**/*.test.js",
     "<rootDir>/scripts/**/*.test.js",
@@ -19,6 +23,9 @@ module.exports = {
     "<rootDir>/scripts/admin/",
     "<rootDir>/docs/",
     "<rootDir>/packages/non-core/",
+  ],
+  modulePaths: [
+    path.resolve(__dirname, 'node_modules'),
   ],
   transform: {
     "^.+\\.js$": ["@swc/jest", {
