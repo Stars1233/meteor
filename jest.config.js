@@ -11,6 +11,15 @@ module.exports = {
     "<rootDir>/packages/",
     "<rootDir>/.github/",
   ],
+  modulePathIgnorePatterns: [
+    "<rootDir>/tools/modern-tests/",
+    "<rootDir>/tools/tests/",
+    "<rootDir>/tools/static-assets/",
+    "<rootDir>/npm-packages/",
+    "<rootDir>/scripts/admin/",
+    "<rootDir>/docs/",
+    "<rootDir>/packages/non-core/",
+  ],
   transform: {
     "^.+\\.js$": ["@swc/jest", {
       jsc: {
