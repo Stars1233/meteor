@@ -5,9 +5,15 @@
 
 const fs = require('fs');
 const path = require('path');
-const { pathToFileURL } = require('url');
 
-async function generateApiJson() {
+function parseApiData(dataSource) {
+  const json = dataSource
+    .replace(/^(?:\/\/.*\n\s*)*export default\s*/, '')
+    .replace(/;\s*$/, '');
+  return JSON.parse(json);
+}
+
+exports.generateApiJson = async function generateApiJson() {
   console.log("📦 Generating API reference JSON for LLMs...");
 
   const dataPath = path.join(__dirname, '../../data/data.js');
@@ -21,8 +27,7 @@ async function generateApiJson() {
   }
 
   try {
-    // Dynamically import the ESM data module
-    const { default: apiData } = await import(pathToFileURL(dataPath).href);
+    const apiData = parseApiData(fs.readFileSync(dataPath, 'utf8'));
 
     // Create public directory if it doesn't exist
     if (!fs.existsSync(publicDir)) {
@@ -49,6 +54,4 @@ async function generateApiJson() {
   } catch (err) {
     console.error("❌ Error generating API JSON:", err.message);
   }
-}
-
-module.exports = { generateApiJson };
+};
