@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'meteor'
-      - 'tools/modern-tests/**'
+      - 'tools/e2e-tests/**'
       - 'packages/rspack/**'
       - 'packages/tools-core/**'
       - 'packages/babel-compiler/**'
@@ -52,7 +52,7 @@ jobs:
           path: |
             ~/.npm
             node_modules
-            tools/modern-tests/node_modules
+            tools/e2e-tests/node_modules
             packages/**/.npm
             .meteor
             dev_bundle

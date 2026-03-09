@@ -31,7 +31,7 @@ npm run test:modern                          # Run all E2E tests
 npm run test:modern -- -t="React"            # Run specific test
 ```
 
-## Modern E2E Tests (`tools/modern-tests/`)
+## Modern E2E Tests (`tools/e2e-tests/`)
 
 Jest + Playwright suite for verifying modern bundler integrations (rspack). Tests cover framework skeletons and build scenarios.
 
