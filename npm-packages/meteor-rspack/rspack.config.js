@@ -60,6 +60,8 @@ function createCacheStrategy(
   const hasSwcrcConfig = fs.existsSync(swcrcPath);
   const swcJsPath = path.join(process.cwd(), 'swc.config.js');
   const hasSwcJsConfig = fs.existsSync(swcJsPath);
+  const swcTsPath = path.join(process.cwd(), 'swc.config.ts');
+  const hasSwcTsConfig = fs.existsSync(swcTsPath);
   const postcssConfigPath = path.join(process.cwd(), 'postcss.config.js');
   const hasPostcssConfig = fs.existsSync(postcssConfigPath);
   const packageLockPath = path.join(process.cwd(), 'package-lock.json');
@@ -76,6 +78,7 @@ function createCacheStrategy(
     ...(hasBabelJsConfig ? [babelJsConfig] : []),
     ...(hasSwcrcConfig ? [swcrcPath] : []),
     ...(hasSwcJsConfig ? [swcJsPath] : []),
+    ...(hasSwcTsConfig ? [swcTsPath] : []),
     ...(hasPostcssConfig ? [postcssConfigPath] : []),
     ...(hasPackageLock ? [packageLockPath] : []),
     ...(hasYarnLock ? [yarnLockPath] : []),
