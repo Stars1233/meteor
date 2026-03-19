@@ -148,7 +148,7 @@ Place test files next to the module they test using the `*.test.js` naming conve
 
 ### E2E tests (Jest + Playwright)
 
-End-to-end tests in `tools/modern-tests/` validate that Meteor skeletons and bundler integrations work correctly. They create real Meteor apps, start dev servers, and assert behavior in a headless Chromium browser.
+End-to-end tests in `tools/e2e-tests/` validate that Meteor skeletons and bundler integrations work correctly. They create real Meteor apps, start dev servers, and assert behavior in a headless Chromium browser.
 
 ```sh
 # Install dependencies (first time)
@@ -161,7 +161,7 @@ npm run test:e2e
 npm run test:e2e -- -t="React"
 ```
 
-Each test has a corresponding app fixture in `tools/modern-tests/apps/`. See that directory for examples when adding new E2E tests.
+Each test has a corresponding app fixture in `tools/e2e-tests/apps/`. See that directory for examples when adding new E2E tests.
 
 ### Self-tests (Meteor tool)
 
