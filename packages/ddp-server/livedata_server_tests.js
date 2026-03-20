@@ -617,10 +617,18 @@ Tinytest.addAsync(
 
     const { clientConn } = await getTestConnections(test);
     const sub = clientConn.subscribe('test_async_onstop_cleanup', trackerId);
-    await sleep(100);
+
+    await waitUntil(
+      () => sub.ready(),
+      { description: 'subscription is ready' }
+    );
 
     sub.stop();
-    await sleep(200);
+
+    await waitUntil(
+      () => asyncCleanupTracker[trackerId] === true,
+      { description: 'async onStop callback completed after unsubscribe' }
+    );
 
     test.isTrue(
       asyncCleanupTracker[trackerId],
@@ -640,10 +648,18 @@ Tinytest.addAsync(
 
     const { clientConn } = await getTestConnections(test);
     clientConn.subscribe('test_async_onstop_cleanup', trackerId);
-    await sleep(100);
+
+    await waitUntil(
+      () => clientConn.status().connected,
+      { description: 'client is connected' }
+    );
 
     clientConn.disconnect();
-    await sleep(300);
+
+    await waitUntil(
+      () => asyncCleanupTracker[trackerId] === true,
+      { description: 'async onStop callback completed after disconnect' }
+    );
 
     test.isTrue(
       asyncCleanupTracker[trackerId],
