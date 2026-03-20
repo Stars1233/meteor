@@ -35,10 +35,24 @@ var splitQuotedArgs = exports.splitQuotedArgs = function (s) {
       continue;
     }
 
-    // Backslash: escape next char in double quotes or unquoted context
-    if (ch === '\\' && !inSingle) {
-      escaped = true;
-      continue;
+    // Backslash: escape next char only when it precedes a meaningful
+    // character (space, quote, or another backslash). This preserves
+    // Windows-style paths like C:\temp\my-file.js.
+    if (ch === '\\' && !inSingle && i + 1 < s.length) {
+      const next = s[i + 1];
+      if (inDouble) {
+        // Inside double quotes, only \" and \\ are escape sequences
+        if (next === '"' || next === '\\') {
+          escaped = true;
+          continue;
+        }
+      } else {
+        // Outside quotes, escape spaces, quotes, and backslashes
+        if (next === ' ' || next === '"' || next === "'" || next === '\\') {
+          escaped = true;
+          continue;
+        }
+      }
     }
 
     if (ch === '"' && !inSingle) {

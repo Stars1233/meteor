@@ -108,6 +108,18 @@ describe('splitQuotedArgs', () => {
       ]);
     });
 
+    test('Windows backslash paths are preserved', () => {
+      expect(splitQuotedArgs('--require=C:\\temp\\my-file.js')).toEqual([
+        '--require=C:\\temp\\my-file.js',
+      ]);
+    });
+
+    test('Windows path inside double quotes', () => {
+      expect(splitQuotedArgs('"C:\\Program Files\\node\\node.exe"')).toEqual([
+        'C:\\Program Files\\node\\node.exe',
+      ]);
+    });
+
     test('concatenated double-quoted segments', () => {
       expect(splitQuotedArgs('"abc""def"')).toEqual(['abcdef']);
     });
