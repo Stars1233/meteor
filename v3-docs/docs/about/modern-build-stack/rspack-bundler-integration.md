@@ -827,6 +827,8 @@ new GenerateSW({
 })
 ```
 
+During development, the HMR dev server writes `sw.js` to disk by default, so build-generated service workers are served by Meteor's web server without extra configuration. If your service worker uses a different filename, see the [Dev Server](#dev-server) section for how to extend `writeToDisk`.
+
 ### Dev Server
 
 You can customize the Rspack dev server much like you would when using meteor run. Any [devServer option listed in the official Rspack guide](https://rspack.rs/config/dev-server) can be applied in your app’s [`rspack.config.js`](./rspack-bundler-integration.md#custom-rspackconfigjs).
@@ -839,6 +841,23 @@ RSPACK_DEVSERVER_PORT=3232 meteor run
 ```
 
 The reason is that the Rspack dev server is handled by the Meteor so it can make both dev server works together, and the info of the port needs to be properly shared via the env.
+
+During development, the HMR dev server keeps most build assets in memory and only writes HTML files and `sw.js` to disk by default. This means if your build pipeline generates files that need to be served from the root path, like `service-worker.js`, `manifest.json`, or any other output that Meteor's web server should serve directly, you can extend `writeToDisk` in your `rspack.config.js`:
+
+```js
+const { defineConfig } = require('@meteorjs/rspack');
+
+module.exports = defineConfig(Meteor => ({
+  devServer: {
+    devMiddleware: {
+      writeToDisk: (filePath) =>
+        /\.(html)$/.test(filePath) || filePath.endsWith('service-worker.js'),
+    },
+  },
+}));
+```
+
+In production, all build outputs are written to disk normally, so this only affects local development.
 
 ### Disable Plugins
 
