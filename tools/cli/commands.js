@@ -124,7 +124,7 @@ import { ensureDevBundleDependencies } from '../cordova/index.js';
 import { CordovaRunner } from '../cordova/runner.js';
 import { iOSRunTarget, AndroidRunTarget } from '../cordova/run-targets.js';
 
-import { EXAMPLE_REPOSITORIES } from './example-repositories.js';
+import { getExamples, findExample, cloneRepo, cloneSubdirectory, validateMeteorApp, EXAMPLES_REPO, EXAMPLES_BRANCH } from './examples.js';
 
 // The architecture used by Meteor Software's hosted servers; it's the
 // architecture used by 'meteor deploy'.
@@ -675,17 +675,6 @@ main.registerCommand({
  * Resolves into json with
  * @returns {Promise<[Skeletons, null]> | Promise<[null, Error]>}
  */
-function getExamplesJSON(){
-  return tryRun(async () => {
-    const response = await httpHelpers.request({
-      url: "https://cdn.meteor.com/static/meteor.json",
-      method: "GET",
-      useSessionHeader: true,
-      useAuthHeader: true,
-    });
-    return JSON.parse(response.body);
-  });
-}
 
 const DEFAULT_SKELETON = "react";
 export const AVAILABLE_SKELETONS = [
@@ -751,6 +740,8 @@ main.registerCommand({
     legacy: { type: Boolean },
     prototype: { type: Boolean },
     from: { type: String },
+    'from-dir': { type: String },
+    refresh: { type: Boolean },
   },
   pretty: false,
   catalogRefresh: new catalog.Refresh.Never()
@@ -771,6 +762,11 @@ main.registerCommand({
     }
     if (options.list || options.example) {
       Console.error("No package examples exist at this time.");
+      Console.error();
+      throw new main.ShowUsage();
+    }
+    if (options.from || options['from-dir']) {
+      Console.error("Package creation does not support --from or --from-dir.");
       Console.error();
       throw new main.ShowUsage();
     }
@@ -895,26 +891,28 @@ main.registerCommand({
   }
 
   if (options.list) {
-    Console.info("Available examples:");
-    const [json, err] = await getExamplesJSON()
-    if (err) {
-      Console.error("Failed to fetch examples:", err.message);
-      Console.info("Using cached examples.json");
-    }
-    const examples = err ? EXAMPLE_REPOSITORIES : json;
-    _.each(examples, function (repoInfo, name) {
-      const branchInfo = repoInfo.branch ? `/tree/${repoInfo.branch}` : "";
+    try {
+      const examples = await getExamples({ refresh: !!options.refresh });
+      Console.info('Available examples:');
+      Console.info();
+      examples.forEach(ex => {
+        Console.info(Console.command(ex.slug), Console.options({ indent: 2 }));
+        if (ex.why) {
+          Console.info(ex.why, Console.options({ indent: 4 }));
+        }
+        Console.info(ex.stack.join(', '), Console.options({ indent: 4 }));
+        const url = ex.repositoryUrl || `${EXAMPLES_REPO}/tree/${EXAMPLES_BRANCH}/${ex.internalPath}`;
+        Console.info(Console.url(url), Console.options({ indent: 4 }));
+        Console.info();
+      });
       Console.info(
-        Console.command(`${name}: ${repoInfo.repo}${branchInfo}`),
-        Console.options({ indent: 2 })
+        'To create an example:',
+        Console.command("'meteor create <app-name> --example <name>'")
       );
-    });
-
-    Console.info();
-    Console.info(
-      "To create an example, simply",
-      Console.command("'meteor create <app-name> --example <name>'")
-    );
+    } catch (err) {
+      Console.error(err.message);
+      return 1;
+    }
     return 0;
   }
 
@@ -1151,57 +1149,67 @@ main.registerCommand({
 
   }
 
-  /**
-   *
-   * @param {string} url
-   */
-  const setupExampleByURL = async (url) => {
-    const [ok, err] = await bash`git --version`;
-    if (err) throw new Error("git is not installed");
-    const isWindows = process.platform === "win32";
-
-    // Set GIT_TERMINAL_PROMPT=0 to disable prompting
-    process.env.GIT_TERMINAL_PROMPT = 0;
-
-    const gitCommand = isWindows
-      ? `git clone --progress ${url} "${files.convertToOSPath(appPath)}"`
-      : `git clone --progress ${url} ${appPath}`;
-    const [okClone, errClone] = await bash`${gitCommand}`;
-    const errorMessage = errClone && typeof errClone === "string" ? errClone : errClone?.message;
-    if (errorMessage && errorMessage.includes("Cloning into")) {
-      throw new Error("error cloning skeleton");
-    }
-    // remove .git folder from the example
-    await files.rm_recursive_async(files.pathJoin(appPath, ".git"));
-    await setupMessages();
-  };
-
   if (options.example) {
-    const [json, err] = await getExamplesJSON();
+    try {
+      let examples = await getExamples();
+      let example = findExample(examples, options.example);
 
-    if (err) {
-      Console.error("Failed to fetch examples:", err.message);
-      Console.info("Using cached examples.json");
-    }
+      if (!example) {
+        examples = await getExamples({ refresh: true });
+        example = findExample(examples, options.example);
+      }
 
-    const examples = err ? EXAMPLE_REPOSITORIES : json;
-    const repoInfo = examples[options.example];
-    if (!repoInfo) {
-      Console.error(`${options.example}: no such example.`);
-      Console.error(
-        "List available applications with",
-        Console.command("'meteor create --list'") + "."
-      );
+      if (!example) {
+        Console.error(`'${options.example}' is not a known example.`);
+        Console.error('Run', Console.command("'meteor create --list'"), 'to see available examples.');
+        return 1;
+      }
+
+      if (example.isInternal) {
+        await cloneSubdirectory(EXAMPLES_REPO, EXAMPLES_BRANCH, example.internalPath, appPath);
+      } else {
+        await cloneRepo(example.repositoryUrl, appPath);
+      }
+
+      await setupMessages();
+    } catch (err) {
+      Console.error('Error creating example:', err.message);
       return 1;
     }
-    // repoInfo.repo is the URL of the repo, and repoInfo.branch is the branch
-    await setupExampleByURL(repoInfo.repo);
     return 0;
   }
 
+  if (options['from-dir'] && !options.from) {
+    Console.error('--from-dir requires --from to specify the source repository.');
+    return 1;
+  }
 
   if (options.from) {
-    await setupExampleByURL(options.from);
+    try {
+      if (options['from-dir']) {
+        let repoUrl = options.from;
+        try {
+          const examples = await getExamples();
+          const example = findExample(examples, options.from);
+          if (example) {
+            repoUrl = example.repositoryUrl || EXAMPLES_REPO;
+          }
+        } catch (e) {
+          // If examples fetch fails, treat --from as a URL
+        }
+
+        await cloneSubdirectory(repoUrl, null, options['from-dir'], appPath);
+        validateMeteorApp(appPath);
+      } else {
+        await cloneRepo(options.from, appPath);
+        validateMeteorApp(appPath);
+      }
+
+      await setupMessages();
+    } catch (err) {
+      Console.error(err.message);
+      return 1;
+    }
     return 0;
   }
 
@@ -1271,8 +1279,8 @@ main.registerCommand({
       // using it as it was before 2.x
       if (release.explicit) throw new Error("Using release option");
 
-      // If local skeleton doesn't exist, use setupExampleByURL
-      await setupExampleByURL(`https://github.com/meteor/skel-${skeleton}`);
+      // If local skeleton doesn't exist, clone from GitHub
+      await cloneRepo(`https://github.com/meteor/skel-${skeleton}`, appPath);
     } catch (e) {
       if (
         e.message !== "Using prototype option" &&
