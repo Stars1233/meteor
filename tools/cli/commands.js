@@ -900,14 +900,19 @@ main.registerCommand({
         if (ex.why) {
           Console.info(ex.why, Console.options({ indent: 4 }));
         }
-        Console.info(ex.stack.join(', '), Console.options({ indent: 4 }));
-        const url = ex.repositoryUrl || `${EXAMPLES_REPO}/tree/${EXAMPLES_BRANCH}/${ex.internalPath}`;
-        Console.info(Console.url(url), Console.options({ indent: 4 }));
+        if (ex.stack && ex.stack.length) {
+          Console.info('Tech: ' + ex.stack.join(', '), Console.options({ indent: 4 }));
+        }
+        if (ex.demo) {
+          Console.info('Demo: ' + Console.url(ex.demo), Console.options({ indent: 4 }));
+        }
+        const repoUrl = ex.repositoryUrl || `${EXAMPLES_REPO}/tree/${EXAMPLES_BRANCH}/${ex.internalPath}`;
+        Console.info('Repo: ' + Console.url(repoUrl), Console.options({ indent: 4 }));
         Console.info();
       });
       Console.info(
-        'To create an example:',
-        Console.command("'meteor create <app-name> --example <name>'")
+        'Usage:',
+        Console.command("meteor create <app-name> --example <slug>")
       );
     } catch (err) {
       Console.error(err.message);

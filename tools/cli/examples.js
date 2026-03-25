@@ -4,7 +4,7 @@ var Console = require('../console/console.js').Console;
 const { exec } = require('child_process');
 
 const EXAMPLES_REPO = 'https://github.com/meteor/examples';
-const EXAMPLES_BRANCH = 'meteor-3.x';
+const EXAMPLES_BRANCH = 'migrate-examples';
 const EXAMPLES_JSON_URL =
   `https://raw.githubusercontent.com/meteor/examples/${EXAMPLES_BRANCH}/examples.json`;
 
@@ -46,18 +46,18 @@ function writeCache(data) {
 }
 
 async function fetchExamplesJson() {
-  const response = await httpHelpers.request({
+  const result = await httpHelpers.request({
     url: EXAMPLES_JSON_URL,
     method: 'GET',
   });
-  if (response.statusCode !== 200) {
+  if (result.response.statusCode !== 200) {
     throw new Error(
-      `Failed to fetch examples.json (HTTP ${response.statusCode})`
+      `Failed to fetch examples.json (HTTP ${result.response.statusCode})`
     );
   }
   let data;
   try {
-    data = JSON.parse(response.body);
+    data = JSON.parse(result.body);
   } catch (e) {
     throw new Error('Invalid JSON received from examples repository.');
   }
