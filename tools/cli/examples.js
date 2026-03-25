@@ -171,12 +171,22 @@ async function cloneSubdirectory(repoUrl, branch, subdir, destPath) {
   }
 }
 
+function validateMeteorApp(dirPath) {
+  const meteorDir = files.pathJoin(dirPath, '.meteor');
+  if (!files.exists(meteorDir)) {
+    throw new Error(
+      `The directory '${files.convertToOSPath(dirPath)}' is not a Meteor app (no .meteor directory found).`
+    );
+  }
+}
+
 module.exports = {
   validateExamplesData,
   getExamples,
   findExample,
   cloneRepo,
   cloneSubdirectory,
+  validateMeteorApp,
   EXAMPLES_REPO,
   EXAMPLES_BRANCH,
   EXAMPLES_JSON_URL
