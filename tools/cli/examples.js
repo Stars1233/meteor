@@ -25,6 +25,26 @@ function validateExamplesData(data) {
   });
 }
 
+function getCachePath() {
+  return files.pathJoin(files.getHomeDir(), '.meteor', 'examples-cache.json');
+}
+
+function readCache() {
+  const cachePath = getCachePath();
+  if (!files.exists(cachePath)) return null;
+  try {
+    const raw = files.readFile(cachePath, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function writeCache(data) {
+  const cachePath = getCachePath();
+  files.writeFile(cachePath, JSON.stringify(data, null, 2), 'utf8');
+}
+
 module.exports = {
   validateExamplesData,
   EXAMPLES_REPO,
