@@ -896,7 +896,8 @@ main.registerCommand({
       Console.info('Available examples:');
       Console.info();
       examples.forEach(ex => {
-        Console.info(Console.command(ex.slug), Console.options({ indent: 2 }));
+        const version = ex.meteorVersion ? ` (Meteor ${ex.meteorVersion})` : '';
+        Console.info(Console.command(ex.slug) + version, Console.options({ indent: 2 }));
         if (ex.why) {
           Console.info(ex.why, Console.options({ indent: 4 }));
         }
