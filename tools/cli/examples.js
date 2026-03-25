@@ -8,17 +8,17 @@ const EXAMPLES_BRANCH = 'migrate-examples';
 const EXAMPLES_JSON_URL =
   `https://raw.githubusercontent.com/meteor/examples/${EXAMPLES_BRANCH}/examples.json`;
 
-function validateExamplesData(data) {
+function validateExamplesData(data, { warn = (msg) => Console.warn(msg) } = {}) {
   if (!Array.isArray(data)) {
     throw new Error('Invalid examples.json format: expected a JSON array.');
   }
   return data.filter(entry => {
     if (!entry.slug || typeof entry.slug !== 'string') {
-      Console.warn(`Skipping example entry with missing slug`);
+      warn('Skipping example entry with missing slug');
       return false;
     }
     if (!entry.repositoryUrl || typeof entry.repositoryUrl !== 'string') {
-      Console.warn(`Skipping example '${entry.slug}' with missing repositoryUrl`);
+      warn(`Skipping example '${entry.slug}' with missing repositoryUrl`);
       return false;
     }
     return true;
