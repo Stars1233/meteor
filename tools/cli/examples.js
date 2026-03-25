@@ -45,8 +45,51 @@ function writeCache(data) {
   files.writeFile(cachePath, JSON.stringify(data, null, 2), 'utf8');
 }
 
+async function fetchExamplesJson() {
+  const response = await httpHelpers.request({
+    url: EXAMPLES_JSON_URL,
+    method: 'GET',
+  });
+  if (response.statusCode !== 200) {
+    throw new Error(
+      `Failed to fetch examples.json (HTTP ${response.statusCode})`
+    );
+  }
+  let data;
+  try {
+    data = JSON.parse(response.body);
+  } catch (e) {
+    throw new Error('Invalid JSON received from examples repository.');
+  }
+  return validateExamplesData(data);
+}
+
+async function getExamples({ refresh = false } = {}) {
+  if (!refresh) {
+    const cached = readCache();
+    if (cached && cached.examples) {
+      return cached.examples;
+    }
+  }
+
+  const examples = await fetchExamplesJson();
+
+  if (examples.length === 0) {
+    throw new Error('No valid examples found in examples.json.');
+  }
+
+  writeCache({
+    fetchedAt: new Date().toISOString(),
+    branch: EXAMPLES_BRANCH,
+    examples,
+  });
+
+  return examples;
+}
+
 module.exports = {
   validateExamplesData,
+  getExamples,
   EXAMPLES_REPO,
   EXAMPLES_BRANCH,
   EXAMPLES_JSON_URL
