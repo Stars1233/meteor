@@ -65,26 +65,31 @@ async function fetchExamplesJson() {
 }
 
 async function getExamples({ refresh = false } = {}) {
-  if (!refresh) {
+  // Always try network first, use cache as fallback for offline
+  try {
+    const examples = await fetchExamplesJson();
+
+    if (examples.length === 0) {
+      throw new Error('No valid examples found in examples.json.');
+    }
+
+    writeCache({
+      fetchedAt: new Date().toISOString(),
+      branch: EXAMPLES_BRANCH,
+      examples,
+    });
+
+    return examples;
+  } catch (fetchError) {
+    // Network failed — fall back to cache if available
     const cached = readCache();
     if (cached && cached.examples) {
       return cached.examples;
     }
+
+    // No cache either — surface the original fetch error
+    throw fetchError;
   }
-
-  const examples = await fetchExamplesJson();
-
-  if (examples.length === 0) {
-    throw new Error('No valid examples found in examples.json.');
-  }
-
-  writeCache({
-    fetchedAt: new Date().toISOString(),
-    branch: EXAMPLES_BRANCH,
-    examples,
-  });
-
-  return examples;
 }
 
 function findExample(examples, slug) {
