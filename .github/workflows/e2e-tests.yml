@@ -14,16 +14,69 @@ on:
       - '.github/workflows/e2e-tests.yml'
 
 concurrency:
-  group: meteor-rspack-tests-${{ github.ref }}
+  group: meteor-e2e-tests-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   NODE_OPTIONS: "--max_old_space_size=12288"
 
 jobs:
+  prepare:
+    name: Prepare cache
+    runs-on: oss-vm-01
+    timeout-minutes: 30
+    container:
+      image: node:22-bookworm
+      volumes:
+        - /cache/meteor/npm:/root/.npm
+        - /cache/meteor/dev-bundle:/github/workspace/dev_bundle
+        - /cache/meteor/playwright:/root/.cache/ms-playwright
+        - /cache/meteor/babel:/github/workspace/.babel-cache
+        - /cache/meteor/dot-meteor:/github/workspace/.meteor
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Invalidate cache if dependencies changed
+        run: |
+          HASH_FILE="/cache/meteor/.cache-hash"
+          CURRENT_HASH=$(cat package-lock.json meteor tools/modern-tests/package.json 2>/dev/null | sha256sum | cut -d' ' -f1)
+          if [ -f "$HASH_FILE" ] && [ "$(cat "$HASH_FILE")" = "$CURRENT_HASH" ]; then
+            echo "Cache hash matches — keeping cache"
+          else
+            echo "Cache hash changed — clearing stale caches"
+            rm -rf /root/.npm/* /github/workspace/dev_bundle/* /root/.cache/ms-playwright/* /github/workspace/.babel-cache/* /github/workspace/.meteor/*
+            echo "$CURRENT_HASH" > "$HASH_FILE"
+          fi
+
+      - name: Install system deps for Playwright
+        run: npx playwright install --with-deps chromium chromium-headless-shell
+
+      - name: Install deps
+        run: npm install
+
+      - name: Install test deps
+        run: npm run install:e2e
+
+      - name: Prepare Meteor
+        run: ./meteor --get-ready
+
   test:
     name: ${{ matrix.category }}
-    runs-on: ubuntu-latest
+    needs: prepare
+    runs-on: oss-vm-01
+    timeout-minutes: 60
+    container:
+      image: node:22-bookworm
+      options: --cpus 4 --memory 12g
+      volumes:
+        - /cache/meteor/npm:/root/.npm
+        - /cache/meteor/dev-bundle:/github/workspace/dev_bundle
+        - /cache/meteor/playwright:/root/.cache/ms-playwright
+        - /cache/meteor/babel:/github/workspace/.babel-cache
+        - /cache/meteor/dot-meteor:/github/workspace/.meteor
+
     strategy:
       fail-fast: false
       matrix:
@@ -45,27 +98,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            node_modules
-            tools/modern-tests/node_modules
-            packages/**/.npm
-            .meteor
-            dev_bundle
-            .babel-cache
-            ~/.cache/ms-playwright
-
-          key: ${{ runner.os }}-meteor-${{ hashFiles('**/package-lock.json', 'meteor') }}
-          restore-keys: |
-            ${{ runner.os }}-meteor-
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
+      - name: Install system deps for Playwright
+        run: npx playwright install --with-deps chromium chromium-headless-shell
 
       - name: Install deps
         run: npm install
