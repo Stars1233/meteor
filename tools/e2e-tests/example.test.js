@@ -62,4 +62,36 @@ describe('Examples /', () => {
       await cleanupTempDir(tempDir);
     }
   });
+
+  it('meteor create --from with --from-dir fails for non-existing directory', async () => {
+    const { appName, tempDir } = tempApp('baddir');
+    try {
+      await expect(runMeteorCommand(
+        'create', [
+          '--from', 'https://github.com/meteor/examples',
+          '--from-branch', 'migrate-examples',
+          '--from-dir', 'this-dir-does-not-exist',
+          appName
+        ], os.tmpdir(),
+        { captureOutput: true, checkExitCode: true }
+      )).rejects.toThrow();
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  });
+
+  it('meteor create --from fails for a non-Meteor repository', async () => {
+    const { appName, tempDir } = tempApp('nonmeteor');
+    try {
+      await expect(runMeteorCommand(
+        'create', [
+          '--from', 'https://github.com/meteor/meteor',
+          appName
+        ], os.tmpdir(),
+        { captureOutput: true, checkExitCode: true }
+      )).rejects.toThrow();
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  });
 });
