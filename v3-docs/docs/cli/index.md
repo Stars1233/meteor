@@ -260,11 +260,49 @@ If you run `meteor create` without arguments, Meteor will launch an interactive 
 
 | Option | Description |
 |--------|-------------|
-| `--from <url>` | Clone a Meteor project from a URL |
-| `--example <name>` | Use a specific example template |
-| `--list` | Show list of available examples |
-| `--release <version>` | Specify Meteor version (e.g., `--release 2.8`) |
+| `--release <version>` | Specify Meteor version (e.g., `--release 3.4`) |
 | `--prototype` | Include `autopublish` and `insecure` packages for rapid prototyping (not for production) |
+
+### Examples
+
+Meteor provides a curated list of community examples that you can use as starting points. The examples are maintained in the [meteor/examples](https://github.com/meteor/examples) repository.
+
+To browse available examples with descriptions, tech stack, demo links, and repository URLs:
+
+```bash
+meteor create --list
+```
+
+To create a new app from an example:
+
+```bash
+meteor create my-app --example simple-tasks
+```
+
+| Option | Description |
+|--------|-------------|
+| `--example <slug>` | Create from a community example |
+| `--list` | Show detailed list of available examples |
+
+### Cloning from a Git Repository
+
+You can create a new Meteor app by cloning any Git repository:
+
+```bash
+meteor create my-app --from https://github.com/fredmaiaarantes/simpletasks
+```
+
+To extract a specific subdirectory from a repository, use `--from-dir`. You can also specify a branch with `--from-branch`:
+
+```bash
+meteor create my-app --from https://github.com/meteor/examples --from-branch migrate-examples --from-dir parties
+```
+
+| Option | Description |
+|--------|-------------|
+| `--from <url>` | Clone a Meteor project from a Git URL |
+| `--from-branch <branch>` | Branch to clone from (use with `--from`) |
+| `--from-dir <dir>` | Extract only a subdirectory (use with `--from`) |
 
 ### Application Types
 
