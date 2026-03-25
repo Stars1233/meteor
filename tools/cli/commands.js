@@ -741,7 +741,6 @@ main.registerCommand({
     prototype: { type: Boolean },
     from: { type: String },
     'from-dir': { type: String },
-    refresh: { type: Boolean },
   },
   pretty: false,
   catalogRefresh: new catalog.Refresh.Never()
@@ -892,7 +891,7 @@ main.registerCommand({
 
   if (options.list) {
     try {
-      const examples = await getExamples({ refresh: !!options.refresh });
+      const examples = await getExamples();
       Console.info('Available examples:');
       Console.info();
       examples.forEach(ex => {
