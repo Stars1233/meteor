@@ -1,0 +1,34 @@
+# Ignore everything by default
+# oxfmt uses .prettierignore automatically
+
+# Root and top-level directories
+*.yml
+*.md
+*.json
+tsconfig.json
+.travis.yml
+android_bundle/
+dev_bundle/
+docs/
+examples/
+guide/
+scripts/
+tools/
+npm-packages/
+v3-docs/
+node_modules/
+.meteor/
+.circleci/
+.github/
+
+# Ignore node_modules/npm inside packages
+packages/**/node_modules/
+packages/**/.npm/
+
+# All packages ignored by default
+# Only those listed below are formatted
+packages/*
+
+!packages/non-core/
+packages/non-core/*
+!packages/non-core/bundle-visualizer/
