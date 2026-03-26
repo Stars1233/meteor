@@ -26,7 +26,8 @@ function validateExamplesData(data, { warn = (msg) => Console.warn(msg) } = {}) 
 }
 
 function getCachePath() {
-  return files.pathJoin(files.getHomeDir(), '.meteor', 'examples-cache.json');
+  var tropohouse = require('../packaging/tropohouse.js');
+  return files.pathJoin(tropohouse.default.root, 'examples-cache.json');
 }
 
 function readCache() {
@@ -41,8 +42,12 @@ function readCache() {
 }
 
 function writeCache(data) {
-  const cachePath = getCachePath();
-  files.writeFile(cachePath, JSON.stringify(data, null, 2), 'utf8');
+  try {
+    const cachePath = getCachePath();
+    files.writeFile(cachePath, JSON.stringify(data, null, 2), 'utf8');
+  } catch (e) {
+    // Don't fail the command if it can't write
+  }
 }
 
 async function fetchExamplesJson() {
