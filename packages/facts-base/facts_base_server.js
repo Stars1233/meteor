@@ -1,4 +1,8 @@
-import { Facts, FACTS_COLLECTION, FACTS_PUBLICATION } from './facts_base_common';
+import {
+  Facts,
+  FACTS_COLLECTION,
+  FACTS_PUBLICATION,
+} from './facts_base_common';
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -56,27 +60,28 @@ Facts.resetServerFacts = function () {
 // called?
 Meteor.defer(function () {
   // XXX Also publish facts-by-package.
-  Meteor.publish(FACTS_PUBLICATION, function () {
-    const sub = this;
-    if (!userIdFilter(this.userId)) {
-      sub.ready();
-      return;
-    }
+  Meteor.publish(
+    FACTS_PUBLICATION,
+    function () {
+      const sub = this;
+      if (!userIdFilter(this.userId)) {
+        sub.ready();
+        return;
+      }
 
-    activeSubscriptions.push(sub);
-    Object.keys(factsByPackage).forEach(function (pkg) {
-      sub.added(FACTS_COLLECTION, pkg, factsByPackage[pkg]);
-    });
-    sub.onStop(function () {
-      activeSubscriptions =
-        activeSubscriptions.filter(activeSub => activeSub !== sub);
-    });
-    sub.ready();
-  }, {is_auto: true});
+      activeSubscriptions.push(sub);
+      Object.keys(factsByPackage).forEach(function (pkg) {
+        sub.added(FACTS_COLLECTION, pkg, factsByPackage[pkg]);
+      });
+      sub.onStop(function () {
+        activeSubscriptions = activeSubscriptions.filter(
+          (activeSub) => activeSub !== sub,
+        );
+      });
+      sub.ready();
+    },
+    { is_auto: true },
+  );
 });
 
-export {
-  Facts,
-  FACTS_COLLECTION,
-  FACTS_PUBLICATION,
-};
+export { Facts, FACTS_COLLECTION, FACTS_PUBLICATION };

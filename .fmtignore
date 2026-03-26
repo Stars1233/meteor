@@ -29,6 +29,4 @@ packages/**/.npm/
 # Only those listed below are formatted
 packages/*
 
-!packages/non-core/
-packages/non-core/*
-!packages/non-core/bundle-visualizer/
+!packages/facts-base/
