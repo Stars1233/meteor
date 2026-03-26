@@ -28,7 +28,7 @@ jobs:
       hash: ${{ steps.hash.outputs.hash }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Compute hash
         id: hash
@@ -50,7 +50,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install system deps for Playwright
         run: npx playwright install --with-deps chromium chromium-headless-shell
@@ -98,7 +98,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install system deps for Playwright
         run: npx playwright install --with-deps chromium chromium-headless-shell
