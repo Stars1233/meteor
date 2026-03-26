@@ -37,7 +37,7 @@ jobs:
   prepare:
     name: Prepare cache
     needs: cache-key
-    runs-on: oss-vm-01
+    runs-on: self-hosted
     timeout-minutes: 30
     container:
       image: node:22-bookworm
