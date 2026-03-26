@@ -67,7 +67,7 @@ jobs:
   test:
     name: ${{ matrix.category }}
     needs: [cache-key, prepare]
-    runs-on: oss-vm-01
+    runs-on: oss-vm
     timeout-minutes: 60
     container:
       image: node:22-bookworm
