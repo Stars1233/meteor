@@ -62,7 +62,7 @@ jobs:
         run: npm run install:e2e
 
       - name: Prepare Meteor
-        run: ./meteor --get-ready
+        run: ./meteor --get-ready --allow-superuser
 
   test:
     name: ${{ matrix.category }}
