@@ -1,7 +1,7 @@
 var files = require('../fs/files');
 var httpHelpers = require('../utils/http-helpers.js');
 var Console = require('../console/console.js').Console;
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 
 const EXAMPLES_REPO = 'https://github.com/meteor/examples';
 const EXAMPLES_BRANCH = 'migrate-examples';
@@ -102,35 +102,28 @@ function findExample(examples, slug) {
 }
 
 async function cloneRepo(url, destPath, { branch = null } = {}) {
+  const env = Object.assign({}, process.env, { GIT_TERMINAL_PROMPT: '0' });
+
   return new Promise((resolve, reject) => {
-    exec('git --version', (error) => {
+    execFile('git', ['--version'], (error) => {
       if (error) {
         reject(new Error('git is not installed'));
         return;
       }
 
-      process.env.GIT_TERMINAL_PROMPT = 0;
+      const args = ['clone', '--progress'];
+      if (branch) {
+        args.push('--branch', branch);
+      }
+      args.push(url, files.convertToOSPath(destPath));
 
-      const isWindows = process.platform === 'win32';
-      const dest = isWindows
-        ? `"${files.convertToOSPath(destPath)}"`
-        : destPath;
-      const branchArg = branch ? `--branch ${branch} ` : '';
-      const command = `git clone --progress ${branchArg}${url} ${dest}`;
-
-      exec(command, { env: process.env }, async (cloneError) => {
+      execFile('git', args, { env }, async (cloneError) => {
         if (cloneError) {
-          // git clone writes progress to stderr, so only reject on real errors
-          // "Cloning into" on stderr is normal git output, not an error
-          const msg = cloneError.message || '';
-          if (!msg.includes('Cloning into')) {
-            reject(new Error(`Failed to clone ${url}: ${msg}`));
-            return;
-          }
+          reject(new Error(`Failed to clone ${url}: ${cloneError.message}`));
+          return;
         }
 
         try {
-          // Remove .git folder from the cloned repo
           await files.rm_recursive_async(files.pathJoin(destPath, '.git'));
           resolve();
         } catch (e) {
@@ -144,19 +137,18 @@ async function cloneRepo(url, destPath, { branch = null } = {}) {
 async function cloneSubdirectory(repoUrl, branch, subdir, destPath) {
   const tempDir = files.mkdtemp('meteor-example-');
   try {
-    const branchArg = branch ? `--branch ${branch} ` : '';
-    const command = `git clone --progress ${branchArg}${repoUrl} ${tempDir}`;
-
-    process.env.GIT_TERMINAL_PROMPT = 0;
+    const env = Object.assign({}, process.env, { GIT_TERMINAL_PROMPT: '0' });
+    const args = ['clone', '--progress'];
+    if (branch) {
+      args.push('--branch', branch);
+    }
+    args.push(repoUrl, tempDir);
 
     await new Promise((resolve, reject) => {
-      exec(command, { env: process.env }, (error) => {
+      execFile('git', args, { env }, (error) => {
         if (error) {
-          const msg = error.message || '';
-          if (!msg.includes('Cloning into')) {
-            reject(new Error(`Failed to clone ${repoUrl}: ${msg}`));
-            return;
-          }
+          reject(new Error(`Failed to clone ${repoUrl}: ${error.message}`));
+          return;
         }
         resolve();
       });
