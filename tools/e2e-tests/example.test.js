@@ -16,7 +16,7 @@ describe('Examples /', () => {
       'create', ['--list'], os.tmpdir(),
       { captureOutput: true, checkExitCode: true }
     );
-    expect(processResult.outputLines.join('\n')).toMatch(/Available examples/);
+    expect(processResult.outputLines.join('\n')).toMatch(/Meteor Examples/);
   });
 
   it('meteor create --example creates a Meteor app', async () => {
