@@ -16,6 +16,9 @@ var stats = require('../meteor-services/stats.js');
 var Console = require('../console/console.js').Console;
 const {
   blue,
+  bold,
+  cyan,
+  dim,
   green,
   purple,
   red,
@@ -893,28 +896,31 @@ main.registerCommand({
   if (options.list) {
     try {
       const examples = await getExamples();
-      Console.info('Available examples:');
-      Console.info();
-      examples.forEach(ex => {
-        const version = ex.meteorVersion ? ` (Meteor ${ex.meteorVersion})` : '';
-        Console.info(Console.command(ex.slug) + version, Console.options({ indent: 2 }));
+      Console.rawInfo(`\n  ${bold`Meteor Examples`}  ${dim`${examples.length} available`}\n\n`);
+
+      examples.forEach((ex, i) => {
+        const version = ex.meteorVersion ? dim` v${ex.meteorVersion}` : '';
+        Console.rawInfo(`  ${cyan`${ex.slug}`}${version}\n`);
         if (ex.why) {
-          Console.info(ex.why, Console.options({ indent: 4 }));
+          Console.rawInfo(`    ${ex.why}\n`);
         }
         if (ex.stack && ex.stack.length) {
-          Console.info('Tech: ' + ex.stack.join(', '), Console.options({ indent: 4 }));
-        }
-        if (ex.demo) {
-          Console.info('Demo: ' + Console.url(ex.demo), Console.options({ indent: 4 }));
+          Console.rawInfo(`    ${dim`Tech:`} ${ex.stack.join(' · ')}\n`);
         }
         const repoUrl = ex.repositoryUrl || `${EXAMPLES_REPO}/tree/${EXAMPLES_BRANCH}/${ex.internalPath}`;
-        Console.info('Repo: ' + Console.url(repoUrl), Console.options({ indent: 4 }));
-        Console.info();
+        if (ex.demo) {
+          Console.rawInfo(`    ${dim`Demo:`} ${ex.demo}\n`);
+        }
+        if (ex.tutorial) {
+          Console.rawInfo(`    ${dim`Tutorial:`} ${ex.tutorial}\n`);
+        }
+        Console.rawInfo(`    ${dim`Repo:`} ${repoUrl}\n`);
+        if (i < examples.length - 1) {
+          Console.rawInfo('\n');
+        }
       });
-      Console.info(
-        'Usage:',
-        Console.command("meteor create <app-name> --example <slug>")
-      );
+
+      Console.rawInfo(`\n  ${dim`Usage:`} meteor create ${bold`<app>`} --example ${cyan`<slug>`}\n\n`);
     } catch (err) {
       Console.error(err.message);
       return 1;
