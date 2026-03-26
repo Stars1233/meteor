@@ -23,7 +23,7 @@ env:
 jobs:
   cache-key:
     name: Compute cache key
-    runs-on: oss-vm-01
+    runs-on: self-hosted
     outputs:
       hash: ${{ steps.hash.outputs.hash }}
     steps:
