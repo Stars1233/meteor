@@ -110,7 +110,7 @@ jobs:
         run: npm run install:e2e
 
       - name: Prepare Meteor
-        run: ./meteor --get-ready
+        run: ./meteor --get-ready --allow-superuser
 
       - name: Run tests for ${{ matrix.category }}
         uses: nick-fields/retry@v3
