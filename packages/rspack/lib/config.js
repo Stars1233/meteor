@@ -418,7 +418,17 @@ export function applyDelegatedExtensions(extensions) {
   }
 
   if (ignorePatterns.length > 0) {
-    setMeteorAppIgnore(ignorePatterns.join(' '));
+    // Re-append meteor.modules unignore patterns after the delegation ignores
+    // so they take precedence (gitignore semantics: last match wins)
+    const meteorAppConfig = getMeteorAppConfig();
+    const unignoredFilesAndFolders = buildUnignorePatterns(
+      meteorAppConfig?.modules || [],
+      { skipLevel: 1 },
+    );
+
+    setMeteorAppIgnore(
+      [...ignorePatterns, ...unignoredFilesAndFolders].join(' ')
+    );
 
     if (isMeteorAppDebug() || isMeteorAppConfigModernVerbose()) {
       logInfo(`[i] Rspack delegated extensions: ${extensions.join(', ')} (ignored in entry folders)\n    ${process.env.METEOR_IGNORE}`);
