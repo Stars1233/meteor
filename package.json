@@ -19,6 +19,7 @@
     "@types/sockjs": "^0.3.36",
     "@types/sockjs-client": "^1.5.4",
     "oxfmt": "^0.42.0",
+    "oxlint": "^1.57.0",
     "typescript": "^5.4.5"
   },
   "scripts": {
