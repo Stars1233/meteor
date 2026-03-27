@@ -20,6 +20,7 @@ node_modules/
 .meteor/
 .circleci/
 .github/
+.coderabbit.yaml
 
 # Ignore node_modules/npm inside packages
 packages/**/node_modules/
