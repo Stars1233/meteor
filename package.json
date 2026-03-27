@@ -24,6 +24,7 @@
   "scripts": {
     "fmt": "oxfmt --ignore-path .fmtignore .",
     "fmt:check": "oxfmt --ignore-path .fmtignore --check .",
+    "lint": "oxlint --ignore-path .oxlintignore .",
     "install:unit": "cd tools/unit-tests && npm install",
     "test:unit": "cd tools/unit-tests && npm test",
     "test:idle-bot": "node --test .github/scripts/__tests__/inactive-issues.test.js",
