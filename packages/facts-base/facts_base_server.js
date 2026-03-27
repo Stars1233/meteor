@@ -44,7 +44,7 @@ Facts.incrementServerFact = function (pkg, fact, increment) {
     factsByPackage[pkg][fact] = 0;
   }
   factsByPackage[pkg][fact] += increment;
-  var changedField = {};
+  const changedField = {};
   changedField[fact] = factsByPackage[pkg][fact];
   activeSubscriptions.forEach(function (sub) {
     sub.changed(FACTS_COLLECTION, pkg, changedField);
