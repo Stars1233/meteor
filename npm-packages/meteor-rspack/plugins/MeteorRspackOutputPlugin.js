@@ -40,11 +40,11 @@ function extractConfiguredExtensions(compiler) {
 }
 
 /**
- * Extracts file extensions that rspack both has rules for AND actually compiled.
- * An extension is only delegated if it appears in the config rules and at least
- * one file with that extension was part of the compilation dependency graph.
- * This prevents Meteor from ignoring files that Rspack is configured for but
- * never actually processes.
+ * Extracts file extensions that rspack both has rules for AND actually compiled
+ * from files within entry folder paths (e.g. client/, server/).
+ * An extension is only delegated if Rspack compiled a file with that extension
+ * from an entry folder. Files in non-entry folders (e.g. imports/) don't count,
+ * since delegation only ignores entry folder files for Meteor.
  * @param {import('@rspack/core').Stats} stats
  * @param {import('@rspack/core').Compiler} compiler
  * @returns {string[]} Array of extensions like ['.css', '.less', '.scss']
@@ -53,12 +53,39 @@ function extractDelegatedExtensions(stats, compiler) {
   const configured = extractConfiguredExtensions(compiler);
   if (configured.size === 0) return [];
 
-  const found = new Set();
   const path = require('path');
+  const fs = require('fs');
+  const appRoot = compiler.options.context || process.cwd();
+
+  // Read entry folders from package.json meteor.mainModule
+  const entryFolders = new Set();
+  try {
+    const pkgPath = path.join(appRoot, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    const mainModule = pkg?.meteor?.mainModule || {};
+    for (const entry of Object.values(mainModule)) {
+      if (typeof entry === 'string') {
+        const folder = entry.split('/')[0];
+        if (folder) entryFolders.add(folder);
+      }
+    }
+  } catch (e) {
+    // If we can't read package.json, fall back to config-only
+    return Array.from(configured);
+  }
+
+  if (entryFolders.size === 0) return Array.from(configured);
+
+  const found = new Set();
 
   for (const module of stats.compilation.modules) {
     const resource = module.resource || module.userRequest;
     if (!resource) continue;
+
+    const relativePath = path.relative(appRoot, resource);
+    const topFolder = relativePath.split(path.sep)[0];
+    if (!entryFolders.has(topFolder)) continue;
+
     const ext = path.extname(resource);
     if (configured.has(ext)) {
       found.add(ext);
