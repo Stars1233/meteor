@@ -1,5 +1,3 @@
-import { FACTS_COLLECTION, FACTS_PUBLICATION } from './facts_base_common.js';
-
 Tinytest.add('facts-base - increments server facts', (test) => {
   Facts.resetServerFacts();
 
@@ -14,9 +12,7 @@ Tinytest.add('facts-base - increments server facts', (test) => {
 });
 
 Tinytest.add('facts-base - setUserIdFilter', (test) => {
-  let called = false;
   Facts.setUserIdFilter((userId) => {
-    called = true;
     return userId === 'test-user';
   });
   test.isTrue(typeof Facts.setUserIdFilter === 'function');

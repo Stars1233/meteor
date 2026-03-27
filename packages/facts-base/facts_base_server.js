@@ -10,7 +10,7 @@ const hasOwn = Object.prototype.hasOwnProperty;
 
 // By default, we publish facts to no user if autopublish is off, and to all
 // users if autopublish is on.
-let userIdFilter = function (userId) {
+let userIdFilter = function () {
   return !!Package.autopublish;
 };
 
@@ -50,7 +50,7 @@ Facts.incrementServerFact = function (pkg, fact, increment) {
 };
 
 Facts.resetServerFacts = function () {
-  for (let pkg in factsByPackage) {
+  for (const pkg in factsByPackage) {
     delete factsByPackage[pkg];
   }
 };
