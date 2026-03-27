@@ -57,7 +57,7 @@ class SummaryReporter {
       }
     }
 
-    if (skipped.length > 0) {
+    if (skipped.length > 0 && process.env.E2E_SHOW_SKIPPED) {
       console.log(chalk.yellow(`\n  SKIPPED (${skipped.length}):`));
       console.log(thinDivider);
       for (const t of skipped) {
