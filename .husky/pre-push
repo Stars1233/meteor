@@ -17,4 +17,8 @@ if ! git diff --quiet; then
       git commit --amend --no-edit --no-verify
     fi
   fi
+
+  # Schedule a second push after the original completes
+  BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  (sleep 2 && git push --no-verify origin "$BRANCH") &
 fi
