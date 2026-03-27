@@ -1,24 +1,2 @@
-npm run fmt
-npm run lint:fix
-
-if ! git diff --quiet; then
-  git add -A
-  COMMIT_HASH=$(git commit -m "style: auto-format and lint fixes" --no-verify | grep -oE '[a-f0-9]{7,}' | head -1)
-
-  if [ -n "$COMMIT_HASH" ]; then
-    FULL_HASH=$(git rev-parse "$COMMIT_HASH")
-    IGNORE_FILE=".git-blame-ignore-revs"
-
-    if ! grep -q "$FULL_HASH" "$IGNORE_FILE" 2>/dev/null; then
-      echo "# auto-format and lint fixes $(date +%Y-%m-%d)" >> "$IGNORE_FILE"
-      echo "$FULL_HASH" >> "$IGNORE_FILE"
-      echo "" >> "$IGNORE_FILE"
-      git add "$IGNORE_FILE"
-      git commit --amend --no-edit --no-verify
-    fi
-  fi
-
-  # Schedule a second push after the original completes
-  BRANCH=$(git rev-parse --abbrev-ref HEAD)
-  (sleep 2 && git push --no-verify origin "$BRANCH") &
-fi
+npm run fmt:check
+npm run lint

@@ -20,8 +20,14 @@ Facts.setUserIdFilter = function (filter) {
 const factsByPackage = {};
 let activeSubscriptions = [];
 
-// Make factsByPackage data available to the server environment
+// Make internal state available to the server environment
 Facts._factsByPackage = factsByPackage;
+Facts._getActiveSubscriptions = function () {
+  return activeSubscriptions;
+};
+Facts._setActiveSubscriptions = function (subs) {
+  activeSubscriptions = subs;
+};
 
 Facts.incrementServerFact = function (pkg, fact, increment) {
   if (!hasOwn.call(factsByPackage, pkg)) {

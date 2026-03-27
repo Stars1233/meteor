@@ -19,3 +19,5 @@ jobs:
       - run: npm ci
       - name: Check formatting with oxfmt
         run: npx oxfmt --ignore-path .fmtignore --check .
+      - name: Run lint with oxlint
+        run: npm run lint
