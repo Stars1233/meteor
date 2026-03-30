@@ -54,7 +54,7 @@ Full-featured React Router app with custom packages, Less, and advanced rspack c
 | Compiler output cached in dev (babel.config.js) | Run |
 | 404 page routing (renders "Page Not Found") | Run, Prod |
 | Less stylesheet support (`white-space: break-spaces`) | Run, Prod |
-| Meteor modules config styles (`align-content: center`) | Run, Prod |
+| `meteor.modules` config styles (`align-content: center`) | Run, Prod |
 | Custom HTML meta tags (`theme-color`) | Run, Prod |
 | Default + custom package loading | Run |
 | `resolve.extensions` loading (`.jsx`) | Run |
@@ -132,12 +132,15 @@ CoffeeScript language support.
 
 ### vue
 
-Vue.js framework with Tailwind CSS.
+Vue.js framework with Tailwind CSS, CSS auto-delegation, and `meteor.modules` config.
 
 | What is covered | Phase |
 |----------------|-------|
 | Vue single-file components | All |
 | Tailwind CSS styles (`.p-8` padding) | Run, Prod |
+| CSS auto-delegation (`client/main.css` processed by Rspack, not Meteor) | All |
+| `meteor.modules` config preserves `client/meteor.css` for Meteor processing | All |
+| Rspack CSS + Meteor CSS coexistence in same entry folder | All |
 | HMR works in dev, disabled in prod | Run, Prod |
 
 ### solid
@@ -262,7 +265,7 @@ Where each feature is tested across apps and skeletons.
 | Static asset bundling | react-router, monorepo | |
 | Less styles | react-router | |
 | SCSS styles | typescript | |
-| Tailwind CSS | vue | tailwind |
+| Tailwind CSS | vue (PostCSS) | tailwind |
 | Image asset loading | react | |
 | 404 routing | react-router | |
 | Meta tags | react-router | |
@@ -278,6 +281,8 @@ Where each feature is tested across apps and skeletons.
 | Custom NODE_ENV compilation | babel | |
 | Portable build (no isDev/isProd defines) | typescript | |
 | `Meteor.extendSwcConfig` (path aliases) | typescript | |
+| CSS auto-delegation (entry folder filtering) | vue | |
+| `meteor.modules` config (preserve files for Meteor) | react-router, vue | |
 | `meteor reset` cleanup | all apps | all skeletons |
 | Skeleton creation | | all 14 skeletons |
 | Body style assertions | | react, tailwind (custom); most others (default) |

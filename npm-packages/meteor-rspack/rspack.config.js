@@ -854,7 +854,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       compilationCount,
       isRebuild,
       ...(!isRebuild && compiler && {
-        delegatedExtensions: extractDelegatedExtensions(compiler),
+        delegatedExtensions: extractDelegatedExtensions(stats, compiler),
       }),
     }),
   });

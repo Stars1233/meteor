@@ -9,11 +9,10 @@ const { outputMeteorRspack } = require('../lib/meteorRspackHelpers');
 /**
  * Extracts file extensions that rspack is configured to handle
  * from the resolved module.rules test patterns.
- * Only returns extensions relevant for Meteor delegation (CSS-family).
  * @param {import('@rspack/core').Compiler} compiler
- * @returns {string[]} Array of extensions like ['.css', '.less', '.scss']
+ * @returns {Set<string>} Set of extensions like .css, .less, .scss
  */
-function extractDelegatedExtensions(compiler) {
+function extractConfiguredExtensions(compiler) {
   const delegatableExtensions = ['.css', '.less', '.scss', '.sass', '.styl'];
   const found = new Set();
 
@@ -37,6 +36,63 @@ function extractDelegatedExtensions(compiler) {
   }
 
   inspectRules(compiler.options.module?.rules || []);
+  return found;
+}
+
+/**
+ * Extracts file extensions that rspack both has rules for AND actually compiled
+ * from files within entry folder paths (e.g. client/, server/).
+ * An extension is only delegated if Rspack compiled a file with that extension
+ * from an entry folder. Files in non-entry folders (e.g. imports/) don't count,
+ * since delegation only ignores entry folder files for Meteor.
+ * @param {import('@rspack/core').Stats} stats
+ * @param {import('@rspack/core').Compiler} compiler
+ * @returns {string[]} Array of extensions like ['.css', '.less', '.scss']
+ */
+function extractDelegatedExtensions(stats, compiler) {
+  const configured = extractConfiguredExtensions(compiler);
+  if (configured.size === 0) return [];
+
+  const path = require('path');
+  const fs = require('fs');
+  const appRoot = compiler.options.context || process.cwd();
+
+  // Read entry folders from package.json meteor.mainModule
+  const entryFolders = new Set();
+  try {
+    const pkgPath = path.join(appRoot, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    const mainModule = pkg?.meteor?.mainModule || {};
+    for (const entry of Object.values(mainModule)) {
+      if (typeof entry === 'string') {
+        const folder = entry.split('/')[0];
+        if (folder) entryFolders.add(folder);
+      }
+    }
+  } catch (e) {
+    // If we can't read package.json, fall back to config-only
+    return Array.from(configured);
+  }
+
+  if (entryFolders.size === 0) return Array.from(configured);
+
+  const found = new Set();
+
+  for (const module of stats.compilation.modules) {
+    const resource = module.resource || module.userRequest;
+    if (!resource) continue;
+
+    const relativePath = path.relative(appRoot, resource);
+    const topFolder = relativePath.split(path.sep)[0];
+    if (!entryFolders.has(topFolder)) continue;
+
+    const ext = path.extname(resource);
+    if (configured.has(ext)) {
+      found.add(ext);
+      if (found.size === configured.size) break;
+    }
+  }
+
   return Array.from(found);
 }
 
