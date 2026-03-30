@@ -690,6 +690,7 @@ function getExamplesJSON(){
 const DEFAULT_SKELETON = "react";
 export const AVAILABLE_SKELETONS = [
   "apollo",
+  "babel",
   "bare",
   "blaze",
   "full",
@@ -701,6 +702,9 @@ export const AVAILABLE_SKELETONS = [
   "tailwind",
   "chakra-ui",
   "solid",
+  "legacy",
+  "coffeescript",
+  "angular"
 ];
 
 const SKELETON_INFO = {
@@ -715,8 +719,11 @@ const SKELETON_INFO = {
   "svelte": "To create a basic Svelte app",
   "tailwind": "To create an app using React and Tailwind",
   "chakra-ui": "To create an app Chakra UI and React",
-  "solid": "To create a basic Solid app"
-}
+  "solid": "To create a basic Solid app",
+  "coffeescript": "To create a basic CoffeeScript app",
+  "babel": "To create a React app with Babel support",
+  "angular": "To create a basic Angular app",
+};
 
 main.registerCommand({
   name: 'create',
@@ -726,6 +733,7 @@ main.registerCommand({
     list: { type: Boolean },
     example: { type: String },
     package: { type: Boolean },
+    babel: { type: Boolean },
     bare: { type: Boolean },
     minimal: { type: Boolean },
     full: { type: Boolean },
@@ -737,7 +745,10 @@ main.registerCommand({
     svelte: { type: Boolean },
     tailwind: { type: Boolean },
     'chakra-ui': { type: Boolean },
+    coffeescript: { type: Boolean },
     solid: { type: Boolean },
+    angular: { type: Boolean },
+    legacy: { type: Boolean },
     prototype: { type: Boolean },
     from: { type: String },
   },
@@ -840,7 +851,7 @@ main.registerCommand({
             return transform(f);
           },
           transformContents: async function (contents, f) {
-            if (/(\.html|\.[jt]sx?|\.css)/.test(f)) {
+            if (/(\.html|\.[jt]sx?|\.css|\.coffee)/.test(f)) {
               return Buffer.from(await transform(contents.toString()));
             } else {
               return contents;
@@ -1225,7 +1236,7 @@ main.registerCommand({
               return Buffer.from(contents.toString().replace(/~prototype~/g, ""));
             }
           }
-          if (/(\.html|\.[jt]sx?|\.css)/.test(f)) {
+          if (/(\.html|\.[jt]sx?|\.css|\.coffee)/.test(f)) {
             return Buffer.from(transform(contents.toString()));
           } else {
             return contents;
@@ -1854,47 +1865,76 @@ main.registerCommand({
                  "MONGO_URL will NOT be reset.");
   }
 
-  const resetMeteorNmCachePromise = options['skip-cache'] ? Promise.resolve() : files.rm_recursive_async(
+  // Always clean the default .meteor/local directory to prevent regressions.
+  // When METEOR_LOCAL_DIR is set, also clean the custom local directory.
+  const defaultLocalRelative = files.pathJoin('.meteor', 'local');
+  const customLocalRelative = process.env.METEOR_LOCAL_DIR || null;
+  const localDirs = [defaultLocalRelative];
+  if (customLocalRelative && customLocalRelative !== defaultLocalRelative) {
+    localDirs.push(customLocalRelative);
+  }
+
+  const resetMeteorNpmCachePromise = options['skip-cache'] ? Promise.resolve() : files.rm_recursive_async(
     files.pathJoin(options.appDir, "node_modules", ".cache", "meteor")
   );
+
+  const rspackHelpers = require('../tool-env/rspack.js');
+  const rspackAppContexts = rspackHelpers.getRspackAppContexts(options.appDir);
+  const resetRspackPromises = rspackAppContexts.map((contextPath) => files.rm_recursive_async(
+    contextPath
+  ));
 
   if (options.db) {
     // XXX detect the case where Meteor is running the app, but
     // MONGO_URL was set, so we don't see a Mongo process
     var findMongoPort = require('../runners/run-mongo.js').findMongoPort;
-    var isRunning = !! await findMongoPort(files.pathJoin(options.appDir, ".meteor", "local", "db"));
-    if (isRunning) {
-      Console.error("reset: Meteor is running.");
-      Console.error();
-      Console.error(
-        "This command does not work while Meteor is running your application.",
-        "Exit the running Meteor development server.");
-      return 1;
+    // Check all local dirs for a running Mongo instance
+    for (const localRelative of localDirs) {
+      const localDir = files.pathResolve(options.appDir, localRelative);
+      var isRunning = !! await findMongoPort(files.pathJoin(localDir, "db"));
+      if (isRunning) {
+        Console.error("reset: Meteor is running.");
+        Console.error();
+        Console.error(
+          "This command does not work while Meteor is running your application.",
+          "Exit the running Meteor development server.");
+        return 1;
+      }
     }
 
     await Promise.all([
-      files.rm_recursive_async(
-        files.pathJoin(options.appDir, ".meteor", "local")
+      ...localDirs.map((rel) =>
+        files.rm_recursive_async(files.pathResolve(options.appDir, rel))
       ),
-      resetMeteorNmCachePromise,
+      resetMeteorNpmCachePromise,
+      ...resetRspackPromises,
     ]);
 
     Console.info("Project reset.");
     return;
   }
 
-  var allExceptDb = files.getPathsInDir(files.pathJoin('.meteor', 'local'), {
-    cwd: options.appDir,
-    maxDepth: 1,
-  }).filter(function (path) {
-    return !path.includes('.meteor/local/db');
+  // Collect all paths inside each local dir except db
+  var allExceptDb = localDirs.flatMap((rel) => {
+    try {
+      return files.getPathsInDir(rel, {
+        cwd: options.appDir,
+        maxDepth: 1,
+      }).filter(function (p) {
+        return !p.includes('/db');
+      });
+    } catch (e) {
+      // Directory may not exist (e.g. default dir when only custom is used)
+      return [];
+    }
   });
 
   var allRemovePromises = [
     ...allExceptDb.map((_path) =>
       files.rm_recursive_async(files.pathJoin(options.appDir, _path))
     ),
-    resetMeteorNmCachePromise
+    resetMeteorNpmCachePromise,
+    ...resetRspackPromises,
   ];
   await Promise.all(allRemovePromises);
   Console.info("Project reset.");
@@ -3423,7 +3463,7 @@ const setupBenchmarkSuite = async (profilingPath) => {
   process.env.GIT_TERMINAL_PROMPT = 0;
 
   const repoUrl = "https://github.com/meteor/performance";
-  const branch = "v3.3.0";
+  const branch = "v3.4.0";
 
   let tarFailed = false;
 
