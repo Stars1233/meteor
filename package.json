@@ -33,6 +33,54 @@
     "test:idle-bot": "node --test .github/scripts/__tests__/inactive-issues.test.js",
     "install:e2e": "cd tools/modern-tests && npm install && npx playwright install --with-deps chromium chromium-headless-shell",
     "test:e2e": "cd tools/modern-tests && npm test -- ",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "checkout:pr": "node scripts/checkout-pr.js"
+  },
+  "jshintConfig": {
+    "esversion": 11
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": false
+  },
+  "eslintConfig": {
+    "extends": "vazco",
+    "rules": {
+      "global-require": "off",
+      "no-console": "off",
+      "camelcase": "warn",
+      "consistent-return": "off",
+      "quotes": [
+        "warn",
+        "single",
+        {
+          "allowTemplateLiterals": true
+        }
+      ],
+      "no-shadow": [
+        "error",
+        {
+          "allow": [
+            "resolve"
+          ]
+        }
+      ],
+      "no-use-before-define": "warn",
+      "import/no-unresolved": "warn",
+      "require-await": "warn",
+      "space-before-function-paren": [
+        "warn",
+        {
+          "anonymous": "never",
+          "named": "never",
+          "asyncArrow": "always"
+        }
+      ],
+      "complexity": "off",
+      "func-names": "off",
+      "no-undef": "warn",
+      "curly": "off",
+      "sort-imports": "off"
+    }
   }
 }
