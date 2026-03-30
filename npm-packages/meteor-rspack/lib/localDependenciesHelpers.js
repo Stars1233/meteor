@@ -122,10 +122,26 @@ function resolveLocalModule(modulePath, configDir, projectDir) {
 
   try {
     let resolvedPath = path.resolve(configDir, modulePath);
+    const extensions = ['.js', '.mjs', '.cjs', '.ts', '.json'];
 
-    // Try common extensions if file doesn't exist as-is
-    if (!fs.existsSync(resolvedPath)) {
-      const extensions = ['.js', '.mjs', '.cjs', '.ts', '.json'];
+    // If the path exists as-is, check if it's a directory needing index resolution
+    if (fs.existsSync(resolvedPath)) {
+      if (fs.statSync(resolvedPath).isDirectory()) {
+        let found = false;
+        for (const ext of extensions) {
+          const indexPath = path.join(resolvedPath, `index${ext}`);
+          if (fs.existsSync(indexPath)) {
+            resolvedPath = indexPath;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          return null;
+        }
+      }
+    } else {
+      // Try common extensions if file doesn't exist as-is
       let found = false;
 
       for (const ext of extensions) {
@@ -134,18 +150,6 @@ function resolveLocalModule(modulePath, configDir, projectDir) {
           resolvedPath = pathWithExt;
           found = true;
           break;
-        }
-      }
-
-      // If not found with extension, try index files in directory
-      if (!found && fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isDirectory()) {
-        for (const ext of extensions) {
-          const indexPath = path.join(resolvedPath, `index${ext}`);
-          if (fs.existsSync(indexPath)) {
-            resolvedPath = indexPath;
-            found = true;
-            break;
-          }
         }
       }
 
