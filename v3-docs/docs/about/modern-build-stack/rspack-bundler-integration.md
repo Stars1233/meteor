@@ -422,6 +422,46 @@ With the Meteor–Rspack integration, `zodern:melte` no longer works. Use the of
 
 Meteor-Rspack comes with built-in CSS support. You can import any CSS file into your code, and it will be processed and included in your HTML skeleton automatically. In addition, any CSS file placed in the same folder as your Meteor entry point will be processed and added as global styles without the need for explicit imports.
 
+### CSS Modules
+
+[CSS Modules](https://rspack.rs/guide/tech/css#css-modules) are supported out of the box — any file named `*.module.css` is automatically scoped locally.
+
+By default, rspack uses **named exports**, so imports look like:
+
+``` js
+import { app } from './App.module.css';
+```
+
+If you prefer **default imports** (`import styles from './App.module.css'`), disable `namedExports` on both the `css/auto` and `css/module` parsers:
+
+``` js
+module.exports = defineConfig(Meteor => ({
+  module: {
+    parser: {
+      'css/auto': {
+        namedExports: false,
+      },
+      'css/module': {
+        namedExports: false,
+      },
+    },
+  },
+}));
+```
+
+#### TypeScript
+
+When using CSS Modules with TypeScript, add a declaration file (e.g. `imports/css-modules.d.ts`) so the compiler recognizes `.module.css` imports:
+
+``` typescript
+declare module '*.module.css' {
+  const classes: { readonly [key: string]: string };
+  export default classes;
+}
+```
+
+For more details, check [the official Rspack CSS Modules guide](https://rspack.rs/guide/tech/css#css-modules).
+
 ### Less
 
 Less support is available in Meteor-Rspack. You need to replace the existing [Meteor `less` package](https://github.com/meteor/meteor/tree/master/packages/non-core/less) or similar with the Rspack configuration.
@@ -787,6 +827,8 @@ new GenerateSW({
 })
 ```
 
+During development, the HMR dev server writes `sw.js` to disk by default, so build-generated service workers are served by Meteor's web server without extra configuration. If your service worker uses a different filename, see the [Dev Server](#dev-server) section for how to extend `writeToDisk`.
+
 ### Dev Server
 
 You can customize the Rspack dev server much like you would when using meteor run. Any [devServer option listed in the official Rspack guide](https://rspack.rs/config/dev-server) can be applied in your app’s [`rspack.config.js`](./rspack-bundler-integration.md#custom-rspackconfigjs).
@@ -799,6 +841,23 @@ RSPACK_DEVSERVER_PORT=3232 meteor run
 ```
 
 The reason is that the Rspack dev server is handled by the Meteor so it can make both dev server works together, and the info of the port needs to be properly shared via the env.
+
+During development, the HMR dev server keeps most build assets in memory and only writes HTML files and `sw.js` to disk by default. This means if your build pipeline generates files that need to be served from the root path, like `service-worker.js`, `manifest.json`, or any other output that Meteor's web server should serve directly, you can extend `writeToDisk` in your `rspack.config.js`:
+
+```js
+const { defineConfig } = require('@meteorjs/rspack');
+
+module.exports = defineConfig(Meteor => ({
+  devServer: {
+    devMiddleware: {
+      writeToDisk: (filePath) =>
+        /\.(html)$/.test(filePath) || filePath.endsWith('service-worker.js'),
+    },
+  },
+}));
+```
+
+In production, all build outputs are written to disk normally, so this only affects local development.
 
 ### Disable Plugins
 
