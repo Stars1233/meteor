@@ -40,6 +40,9 @@ Core React integration with custom Meteor local directory.
 | React + JSX environment detection | Run, Prod, Test, Build |
 | Image assets load (generated + public + background) | Run, Prod |
 | `Meteor.disablePlugins` suppresses rspack plugins | Run, Prod, Test, Build |
+| Unplugin transform hook fires on first run (fresh cache) | Init |
+| Unplugin factory created on cached run — #14031 regression | Run |
+| Unplugin transform + buildDependencies tracking in production | Prod |
 | Custom rspack config (`rspack.config.cjs`) | All |
 | HMR works in dev, disabled in prod | Run, Prod |
 
@@ -227,6 +230,12 @@ Several apps import specific npm packages to verify that Meteor + Rspack handles
 | `node:buffer` | `imports/api/links.js` | Node.js built-in via `node:` protocol in shared client/server code — must be ignored on client without errors |
 | `@react-email/components` | `imports/emails/TestEmail.jsx` | JSX-heavy ESM package with many subpath exports |
 
+### react (`apps/react/plugins/demo-unplugin.js`)
+
+| Package | Reason |
+|---------|--------|
+| `unplugin` | Unplugin transform hook integration — validates rspack cache tracks plugin dependency files (#14031) |
+
 ### babel (`apps/babel/server/apollo.js`)
 
 | Package | Reason |
@@ -269,6 +278,7 @@ Where each feature is tested across apps and skeletons.
 | Babel compiler plugin | react-router | |
 | TypeScript type checking | typescript | |
 | Meteor.disablePlugins | react | |
+| Unplugin transform with cache (#14031) | react | |
 | Custom package dirs | react-router | |
 | CoffeeScript compilation | coffeescript | coffeescript |
 | Server-only (no client) | server-only | |

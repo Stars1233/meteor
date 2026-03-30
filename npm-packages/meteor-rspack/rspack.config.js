@@ -27,6 +27,7 @@ const {
 } = require('./lib/meteorRspackHelpers.js');
 const { loadUserAndOverrideConfig } = require('./lib/meteorRspackConfigHelpers.js');
 const { prepareMeteorRspackConfig } = require("./lib/meteorRspackConfigFactory");
+const { extractLocalDependencies } = require('./lib/localDependenciesHelpers.js');
 
 
 // Safe require that doesn't throw if the module isn't found
@@ -70,10 +71,16 @@ function createCacheStrategy(
   const yarnLockPath = path.join(process.cwd(), 'yarn.lock');
   const hasYarnLock = fs.existsSync(yarnLockPath);
 
+  // Extract local dependencies from project config (e.g., plugin files)
+  const localDependencies = projectConfigPath 
+    ? extractLocalDependencies(projectConfigPath) 
+    : [];
+
   // Build dependencies array
   const buildDependencies = [
     ...(projectConfigPath ? [projectConfigPath] : []),
     ...(configPath ? [configPath] : []),
+    ...localDependencies,
     ...(hasTsconfig ? [tsconfigPath] : []),
     ...(hasBabelRcConfig ? [babelRcConfig] : []),
     ...(hasBabelJsConfig ? [babelJsConfig] : []),
