@@ -145,6 +145,15 @@ function normalizeUrl(url) {
     .replace(/^git@github\.com:/, 'github.com/');
 }
 
+function buildForkUrl(owner) {
+  // Match origin's protocol (SSH vs HTTPS)
+  const originUrl = git('remote get-url origin', { silent: true }) || '';
+  if (originUrl.startsWith('git@')) {
+    return `git@github.com:${owner}/meteor.git`;
+  }
+  return `https://github.com/${owner}/meteor.git`;
+}
+
 async function main() {
   const args = process.argv.slice(2);
 
@@ -160,17 +169,22 @@ async function main() {
   } else if (args.length === 1) {
     const arg = args[0];
     const prMatch = arg.match(/^https?:\/\/github\.com\/.*\/pull\/\d+/);
-    const shortMatch = arg.match(/^([^:]+):(.+)$/);
+    const sshMatch = arg.match(/^git@[^:]+:/);
+    const httpsRepoMatch = arg.match(/^https?:\/\/.*\.git$/);
+    // user:branch — must not start with git@ (SSH) or contain / before : (URLs)
+    const shortMatch = !sshMatch && arg.match(/^([^/:]+):(.+)$/);
 
     if (prMatch) {
       const result = await extractFromPrUrl(arg);
       forkOwner = result.owner;
       forkBranch = result.branch;
-      forkRepoUrl = `https://github.com/${forkOwner}/meteor.git`;
+      forkRepoUrl = buildForkUrl(forkOwner);
+    } else if (sshMatch || httpsRepoMatch) {
+      die(`repo URL requires a branch argument: node scripts/checkout-pr.js ${arg} <branch>`);
     } else if (shortMatch) {
       forkOwner = shortMatch[1];
       forkBranch = shortMatch[2];
-      forkRepoUrl = `https://github.com/${forkOwner}/meteor.git`;
+      forkRepoUrl = buildForkUrl(forkOwner);
     } else {
       err(`unrecognized format: ${arg}`);
       console.error('');
