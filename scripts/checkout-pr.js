@@ -3,12 +3,14 @@
 // checkout-pr.js — prepare a local branch from a fork contribution
 //
 // Usage:
+//   node scripts/checkout-pr.js <PR-number>
 //   node scripts/checkout-pr.js <PR-URL>
 //   node scripts/checkout-pr.js <user>:<branch>
 //   node scripts/checkout-pr.js <fork-repo-url> <branch>
 //   node scripts/checkout-pr.js git@github.com:<user>/<repo>.git <branch>
 //
 // Examples:
+//   node scripts/checkout-pr.js 123
 //   node scripts/checkout-pr.js https://github.com/meteor/meteor/pull/<PR-number>
 //   node scripts/checkout-pr.js <user>:<branch>
 //   node scripts/checkout-pr.js <fork-repo-url> <branch>
@@ -42,6 +44,7 @@ function die(msg) {
 
 function usage() {
   console.log(`Usage:
+  npm run checkout:pr -- <PR-number>
   npm run checkout:pr -- <PR-URL>
   npm run checkout:pr -- <user>:<branch>
   npm run checkout:pr -- <fork-repo-url> <branch>
@@ -50,6 +53,7 @@ function usage() {
 Prepares a local branch from a fork contribution for testing and review.
 
 Examples:
+  npm run checkout:pr -- 123
   npm run checkout:pr -- https://github.com/meteor/meteor/pull/<PR-number>
   npm run checkout:pr -- <user>:<branch>
   npm run checkout:pr -- <fork-repo-url> <branch>
@@ -136,6 +140,18 @@ async function extractFromPrUrl(prUrl) {
   die(`could not extract fork owner/branch from PR #${prNumber}`);
 }
 
+function getRepoPathFromOrigin() {
+  const originUrl = git('remote get-url origin', { silent: true });
+  if (!originUrl) return null;
+  // Match HTTPS: https://github.com/owner/repo(.git)
+  const httpsMatch = originUrl.match(/github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/);
+  if (httpsMatch) return httpsMatch[1];
+  // Match SSH: git@github.com:owner/repo(.git)
+  const sshMatch = originUrl.match(/github\.com:([^/]+\/[^/]+?)(?:\.git)?$/);
+  if (sshMatch) return sshMatch[1];
+  return null;
+}
+
 function extractOwnerFromUrl(url) {
   const match = url.match(/github\.com[:/]([^/]+)\//);
   return match ? match[1] : null;
@@ -172,13 +188,23 @@ async function main() {
     usage();
   } else if (args.length === 1) {
     const arg = args[0];
+    const prNumberMatch = arg.match(/^\d+$/);
     const prMatch = arg.match(/^https?:\/\/github\.com\/.*\/pull\/\d+/);
     const sshMatch = arg.match(/^git@[^:]+:/);
     const httpsRepoMatch = arg.match(/^https?:\/\/.*\.git$/);
     // user:branch — must not start with git@ (SSH) or contain / before : (URLs)
     const shortMatch = !sshMatch && arg.match(/^([^/:]+):(.+)$/);
 
-    if (prMatch) {
+    if (prNumberMatch) {
+      const repoPath = getRepoPathFromOrigin();
+      if (!repoPath) die('could not determine repository from origin remote');
+      const prUrl = `https://github.com/${repoPath}/pull/${arg}`;
+      info(`resolved PR #${arg} → ${c.bold}${prUrl}${c.reset}`);
+      const result = await extractFromPrUrl(prUrl);
+      forkOwner = result.owner;
+      forkBranch = result.branch;
+      forkRepoUrl = buildForkUrl(forkOwner);
+    } else if (prMatch) {
       const result = await extractFromPrUrl(arg);
       forkOwner = result.owner;
       forkBranch = result.branch;
