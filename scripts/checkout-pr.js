@@ -184,9 +184,7 @@ async function main() {
 
   let forkOwner, forkBranch, forkRepoUrl;
 
-  if (args.length === 0) {
-    usage();
-  } else if (args.length === 1) {
+  if (args.length === 1) {
     const arg = args[0];
     const prNumberMatch = arg.match(/^\d+$/);
     const prMatch = arg.match(/^https?:\/\/github\.com\/.*\/pull\/\d+/);
@@ -218,7 +216,7 @@ async function main() {
     } else {
       err(`unrecognized format: ${arg}`);
       console.error('');
-      usage();
+      return usage();
     }
   } else if (args.length === 2) {
     forkRepoUrl = args[0];
@@ -226,7 +224,7 @@ async function main() {
     forkOwner = extractOwnerFromUrl(forkRepoUrl);
     if (!forkOwner) die(`could not extract owner from URL: ${forkRepoUrl}`);
   } else {
-    usage();
+    return usage();
   }
 
   const previousBranch = git('symbolic-ref --short HEAD', { silent: true })
