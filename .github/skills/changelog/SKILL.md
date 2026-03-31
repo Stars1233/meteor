@@ -203,6 +203,18 @@ meteor update --release <VERSION>
 
 ---
 
+## Branching Model & Comparison Baseline
+
+Meteor releases are prepared on **`release-<VERSION>`** branches (e.g., `release-3.4.1`). The main development branch is **`devel`**.
+
+- **Changelog scope** = all changes on `release-<VERSION>` that are not on `devel`
+- **PR base** = PRs merged with base `release-<VERSION>`
+- **Commit diff** = `git log devel..release-<VERSION>` or `git log devel..HEAD` when on the release branch
+
+When generating or updating a changelog, always compare against `devel` to determine what is new in the release. PRs merged into `devel` that were then merged into the release branch via a branch merge (e.g., `Merge branch 'devel' into release-X.Y`) are included — they are part of the release diff.
+
+---
+
 ## Generating a Changelog from PRs
 
 Use merged PRs targeting the release branch.
@@ -252,11 +264,27 @@ When the changelog file already exists with content:
     * **Features** — new APIs, new packages, new capabilities
     * **Improvements** — enhancements, optimizations, DX upgrades to existing behavior
     * **Fixes** — bug fixes, correctness patches
-* Exclude:
-    * Release tooling only
-    * Docs-only PRs
-    * CI/test-only PRs
-    * Dependabot PRs unless user-facing
+
+### Inclusion & Exclusion Rules
+
+**Include only PRs that touch release-relevant directories:**
+
+* `tools/` — CLI and build system
+* `packages/` — core Meteor packages
+* `npm-packages/` — published `@meteorjs/*` packages
+* `scripts/` — dev bundle build scripts (e.g., Node.js version bumps)
+
+A PR that touches files **only** outside these directories is not a release change and must be excluded from the changelog.
+
+**Exclude PRs that are:**
+
+* Release tooling only (e.g., changelog generation, version bumps)
+* Docs-only — touching only `docs/`, `v3-docs/`, `guide/`, or markdown files outside release directories
+* CI/test-infrastructure-only — touching only `.github/workflows/`, test harness setup, or E2E infrastructure without changing runtime behavior
+* Dependabot PRs unless they bump a dependency that ships in the Meteor release (e.g., Node.js upgrade)
+* Internal refactors with no user-facing impact (e.g., renaming internal variables, reformatting)
+
+**When a PR touches both release and non-release directories**, include it — the release-relevant changes take priority for categorization.
 
 ### Breaking Change Detection
 
