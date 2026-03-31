@@ -278,6 +278,8 @@ In each file, update only packages that are at prerelease versions (or newly add
 
 Use the [changelog skill](../changelog/SKILL.md) to create or update the changelog entry at `v3-docs/docs/generators/changelog/versions/<VERSION>.md`.
 
+Update the **Bumped Meteor Packages** section in the changelog with all packages that were bumped, using the final version (without prerelease suffix). Format: one package per line, `name@version`. Include `meteor-tool@<version>` when applicable.
+
 Update any documentation files that reference specific package versions (e.g., rspack installation commands).
 
 ---
@@ -314,7 +316,7 @@ Same rule as beta: update only packages at prerelease versions.
 
 ### Step 4: Update documentation and changelog
 
-Update changelog and any docs referencing RC versions.
+Update changelog and any docs referencing RC versions. Update the **Bumped Meteor Packages** section with the current RC versions.
 
 ---
 
@@ -357,6 +359,7 @@ Strip prerelease suffixes from packages that were at RC versions. Leave stable v
 
 - Set the release date in the changelog
 - Replace all RC version references with final versions
+- Update the **Bumped Meteor Packages** section with final versions (no prerelease suffixes)
 - Update `v3-docs/docs/history.md` with the full release entry
 
 ### Commit 2: npm installer
