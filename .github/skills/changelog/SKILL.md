@@ -103,6 +103,7 @@ N/A
 - Format: `## vX.Y.Z, YYYY-MM-DD`
 - Comma + space separator
 - Always H2
+- Update the date to the current date whenever the changelog is modified
 
 ### Highlights
 
