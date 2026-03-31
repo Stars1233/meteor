@@ -218,6 +218,9 @@ function getHostArch() {
   }
 
   if (process.platform === "darwin") {
+    if (process.arch === "arm64") {
+      return "os.osx.arm64";
+    }
     return "os.osx.x86_64";
   }
 }
