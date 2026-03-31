@@ -51,6 +51,8 @@ Load these for detailed context on specific topics:
 | [e2e-coverage](.github/skills/e2e-coverage/SKILL.md) | Updating the E2E test coverage report when apps/skeletons change |
 | [ai-context](.github/skills/ai-context/SKILL.md) | Creating, updating, or maintaining AI documentation files |
 | [changelog](.github/skills/changelog/SKILL.md) | Writing, reviewing, or editing changelog entries for releases |
+| [version-bump](.github/skills/version-bump/SKILL.md) | Bumping package versions for beta, RC, and official releases |
+| [docs-gap](.github/skills/docs-gap/SKILL.md) | Analyzing release changes for missing user-facing documentation |
 
 ## Package Domains
 
