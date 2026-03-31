@@ -248,6 +248,16 @@ When describing what documentation to write in the gap report, keep suggestions 
 - Frame documentation as technical specs
 - Suggest documentation for changes only relevant to Meteor contributors
 
+### Preserving Style and Integration
+
+When the gap report is used to write documentation, the new content must feel native to the existing docs — not bolted on. Each suggested action in the report should include guidance on how to integrate cleanly:
+
+- **Read the target file first.** Before suggesting where to add content, note the writing style, heading levels, use of components (e.g., `<ApiBox>`), code example format, and tone.
+- **Match the surrounding pattern.** If nearby sections use a brief intro paragraph followed by a code block and a tip, follow the same structure. If they use bullet lists, use bullet lists.
+- **Find the right spot.** Place new content next to related existing content — not appended at the end. For example, a new API method goes next to similar methods; a new framework section goes alongside the other framework sections.
+- **Use the same components.** If the doc uses `<ApiBox>`, `:::warning`, `:::info`, code groups, or other VitePress/Vue components, use them for new content too.
+- **Preserve categorization.** New package docs go in `packages/`, new CLI options go in `cli/`, new getting-started content goes in `about/`. Do not create new top-level sections unless no existing section fits.
+
 ---
 
 ## Review Checklist
