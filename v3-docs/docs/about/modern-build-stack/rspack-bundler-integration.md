@@ -245,6 +245,22 @@ With this, Meteor will process these files, merge stylesheets, generate the fina
 
 Keep in mind: compiling styles with the Meteor compilers triggers Meteor HMR, which is slower than Rspack HMR. Migrating to compile styles with Rspack as part of the app code ensures the fastest HMR for style changes in development.
 
+### Server-Only Apps
+
+Meteor-Rspack supports apps without a client entry point. If your app only defines a `server` entry in `meteor.mainModule`, Rspack runs only for the server build and Meteor skips client-side bundling through Rspack.
+
+``` json
+{
+  "meteor": {
+    "mainModule": {
+      "server": "server/main.js"
+    }
+  }
+}
+```
+
+This is useful for API servers, microservices, or background workers that don't serve a client UI. Rspack still handles server-side bundling, including dependency resolution and tree-shaking.
+
 ### Nested Imports
 
 Nested imports are a feature of Meteor’s bundler, not supported in standard bundlers. Meteor introduced them during a time when bundling standards were still evolving and experimented with its own approach. This feature comes from the [`reify` module](https://github.com/benjamn/reify/tree/main) and works with Babel transpilation. SWC doesn't support them since they were never standardized.
@@ -326,6 +342,12 @@ Meteor-Rspack supports React projects out of the box. Just install the `rspack` 
 Learn more in the [official Rspack and React integration guide](https://rspack.rs/guide/tech/react).
 
 > Use `meteor create --react` to start with a preconfigured Rspack React app.
+
+### Preact
+
+If your project uses [Preact](https://preactjs.com/) instead of React, Meteor detects it automatically. When Preact is installed, Meteor skips adding React-specific dependencies (such as `react-refresh`), so your Preact setup is not affected by the Rspack integration.
+
+No additional configuration is needed — just install the `rspack` package as usual and ensure Preact is listed in your `package.json` dependencies.
 
 ### React Compiler
 

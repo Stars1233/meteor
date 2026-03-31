@@ -78,6 +78,11 @@ $env:SERVER_NODE_OPTIONS = '--inspect' | meteor run
 SERVER_NODE_OPTIONS=--inspect-brk meteor run
 ```
 
+Quoted values are supported, which is useful when an option contains special characters:
+```bash
+SERVER_NODE_OPTIONS='--max-old-space-size=4096 --inspect' meteor run
+```
+
 ### Port Configuration Example
 
 ```bash
