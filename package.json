@@ -33,7 +33,6 @@
     "test:idle-bot": "node --test .github/scripts/__tests__/inactive-issues.test.js",
     "install:e2e": "cd tools/modern-tests && npm install && npx playwright install --with-deps chromium chromium-headless-shell",
     "test:e2e": "cd tools/modern-tests && npm test -- ",
-    "prepare": "lefthook install",
     "checkout:pr": "node scripts/checkout-pr.js"
   },
   "jshintConfig": {
