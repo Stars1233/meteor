@@ -86,11 +86,17 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Expose globally-installed puppeteer to Node.js
-        # puppeteer@23.6.0 is pre-installed on oss-vm via `npm install -g`.
-        # Setting NODE_PATH lets `require('puppeteer')` resolve it directly,
-        # so run.sh skips the slow `./meteor npm install -g puppeteer` step.
-        run: echo "NODE_PATH=$(npm root -g)" >> "$GITHUB_ENV"
+      - name: Build test container image
+        # Build once per runner; subsequent matrix jobs on the same machine hit
+        # the Docker layer cache and finish in seconds.
+        # The build context is limited to .github/docker/ — no source code is
+        # sent to the daemon, keeping the build fast.
+        run: |
+          docker build \
+            --file .github/docker/test-packages.Dockerfile \
+            --tag meteor-test-packages:local \
+            --cache-from meteor-test-packages:local \
+            .github/docker
 
       - name: Restore caches
         uses: actions/cache@v4
@@ -104,14 +110,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-meteor-
 
-      - name: Install system dependencies
-        # g++-12 is needed to build native Node.js add-ons (e.g. fibers).
-        # All Chromium dependencies are already satisfied on oss-vm.
-        run: |
-          if ! dpkg -s g++-12 >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y g++-12
-          fi
-
       - name: Run tests (${{ matrix.group.name }})
-        run: ./packages/test-in-console/run.sh ${{ matrix.group.packages }}
+        # Each matrix job runs inside its own Docker container so that
+        # concurrent suites on the same oss-vm get isolated network namespaces.
+        # This prevents port 4096 and Meteor's embedded MongoDB from colliding
+        # with sibling jobs running on the same host.
+        #
+        # Key flags:
+        #   --rm               — discard the container after the run
+        #   --shm-size=2gb     — Chrome requires more shared memory than Docker's 64 MB default
+        #   --user             — run as the runner uid/gid so volume-mounted files
+        #                        (workspace, npm cache) retain their original ownership
+        #   -v WORKSPACE       — the checked-out source and all restored caches
+        #                        (.meteor, dev_bundle, .babel-cache) live here
+        #   -v HOME/.npm       — reuse the npm cache restored by actions/cache
+        #   --env HOME         — tell Node/npm where the cache directory is inside the container
+        run: |
+          docker run --rm \
+            --shm-size=2gb \
+            --user "$(id -u):$(id -g)" \
+            --env HOME="$HOME" \
+            --env CXX=g++-12 \
+            --env METEOR_HOSTED_CI=true \
+            --env NODE_PATH=/usr/local/lib/node_modules \
+            --env PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+            --env PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable \
+            -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" \
+            -v "$HOME/.npm:$HOME/.npm" \
+            -w "$GITHUB_WORKSPACE" \
+            meteor-test-packages:local \
+            ./packages/test-in-console/run.sh ${{ matrix.group.packages }}
