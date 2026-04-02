@@ -27,6 +27,15 @@ trap "pkill -TERM -P $EXEC_PID; exit 1" SIGINT
 
 sed '/test-in-console listening$/q' <&3
 
+# Wait until the HTTP server is actually accepting connections before launching
+# Puppeteer. 'test-in-console listening' is emitted by the test driver before
+# the HTTP port is fully bound, so a bare goto() would time out on slow starts.
+echo "Waiting for test server at $URL..."
+until curl --silent --output /dev/null --fail "$URL"; do
+  sleep 1
+done
+echo "Test server is ready."
+
 node --trace-warnings "$METEOR_HOME/packages/test-in-console/puppeteer_runner.js"
 
 STATUS=$?

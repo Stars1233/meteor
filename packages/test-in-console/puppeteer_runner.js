@@ -57,7 +57,13 @@ async function runNextUrl(browser) {
     return;
   }
 
-  await page.goto(process.env.URL);
+  // Use domcontentloaded: Meteor apps connect via DDP after DOM parse and never
+  // fire the default 'load' event in the traditional sense. Increase timeout to
+  // 120 s to handle slow first-run builds on CI / underpowered machines.
+  await page.goto(process.env.URL, {
+    timeout: 120000,
+    waitUntil: "domcontentloaded",
+  });
 
   async function poll() {
     if (await isDone(page)) {
