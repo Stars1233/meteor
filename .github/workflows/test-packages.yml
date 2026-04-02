@@ -12,68 +12,12 @@ concurrency:
 
 jobs:
   test-packages:
-    name: "packages / ${{ matrix.group.name }}"
+    name: "Package Tests"
     runs-on: oss-vm
     timeout-minutes: 90
     env:
       CXX: g++-12
       METEOR_HOSTED_CI: "true"
-
-    strategy:
-      fail-fast: false
-      matrix:
-        group:
-          - name: accounts
-            packages: >-
-              accounts-base accounts-password accounts-passwordless accounts-2fa
-              accounts-oauth accounts-ui accounts-ui-unstyled
-              audit-argument-checks check service-configuration
-
-          - name: auth-social
-            packages: >-
-              oauth oauth2 oauth-encryption
-              accounts-facebook accounts-github accounts-google accounts-twitter
-              accounts-weibo accounts-meetup accounts-meteor-developer
-              facebook-oauth github-oauth google-oauth weibo-oauth
-              meetup-oauth meteor-developer-oauth
-              facebook-config-ui github-config-ui google-config-ui
-              twitter-config-ui weibo-config-ui
-
-          - name: database
-            packages: >-
-              mongo minimongo allow-deny diff-sequence mongo-id disable-oplog
-              geojson-utils id-map ordered-dict binary-heap
-              mongo-livedata npm-mongo npm-mongo-legacy
-
-          - name: ddp-realtime
-            packages: >-
-              ddp ddp-client ddp-common ddp-server ddp-rate-limiter
-              rate-limit inter-process-messaging autoupdate reload
-              reload-safetybelt routepolicy
-
-          - name: build
-            packages: >-
-              babel-compiler babel-runtime ecmascript ecmascript-runtime
-              ecmascript-runtime-client ecmascript-runtime-server
-              caching-compiler typescript minifier-css minifier-js
-              standard-minifier-css static-html-tools es5-shim
-              constraint-solver package-version-parser
-              modules modules-runtime modules-runtime-hot
-
-          - name: webapp
-            packages: >-
-              webapp webapp-hashing boilerplate-generator
-              boilerplate-generator-tests hot-code-push server-render
-              browser-policy browser-policy-common browser-policy-content
-              browser-policy-framing shell-server force-ssl force-ssl-common
-              dev-error-overlay react-fast-refresh
-
-          - name: core
-            packages: >-
-              meteor core-runtime base64 ejson random tracker reactive-var
-              reactive-dict callback-hook retry url promise session
-              dynamic-import localstorage fetch roles facts-base facts-ui
-              logic-solver insecure autopublish test-helpers rspack
 
     steps:
       - name: Fix workspace permissions
@@ -113,5 +57,93 @@ jobs:
             sudo apt-get install -y g++-12
           fi
 
-      - name: Run tests (${{ matrix.group.name }})
-        run: ./packages/test-in-console/run.sh ${{ matrix.group.packages }}
+      - name: Run all package groups in parallel
+        run: |
+          # Each group runs in a subshell: output is piped through sed to prefix
+          # every line with "[group]" for real-time readability. The subshell
+          # exits with run.sh's exit code via ${PIPESTATUS[0]}, so `wait` below
+          # correctly reflects test failures rather than sed's exit code.
+          (
+            LISTENING_PORT=4101 ./packages/test-in-console/run.sh \
+              accounts-base accounts-password accounts-passwordless accounts-2fa \
+              accounts-oauth accounts-ui accounts-ui-unstyled \
+              audit-argument-checks check service-configuration \
+              2>&1 | sed 's/^/[accounts] /'
+            exit "${PIPESTATUS[0]}"
+          ) & pid_accounts=$!
+
+          (
+            LISTENING_PORT=4102 ./packages/test-in-console/run.sh \
+              oauth oauth2 oauth-encryption \
+              accounts-facebook accounts-github accounts-google accounts-twitter \
+              accounts-weibo accounts-meetup accounts-meteor-developer \
+              facebook-oauth github-oauth google-oauth weibo-oauth \
+              meetup-oauth meteor-developer-oauth \
+              facebook-config-ui github-config-ui google-config-ui \
+              twitter-config-ui weibo-config-ui \
+              2>&1 | sed 's/^/[auth-social] /'
+            exit "${PIPESTATUS[0]}"
+          ) & pid_auth_social=$!
+
+          (
+            LISTENING_PORT=4103 ./packages/test-in-console/run.sh \
+              mongo minimongo allow-deny diff-sequence mongo-id disable-oplog \
+              geojson-utils id-map ordered-dict binary-heap \
+              mongo-livedata npm-mongo npm-mongo-legacy \
+              2>&1 | sed 's/^/[database] /'
+            exit "${PIPESTATUS[0]}"
+          ) & pid_database=$!
+
+          (
+            LISTENING_PORT=4104 ./packages/test-in-console/run.sh \
+              ddp ddp-client ddp-common ddp-server ddp-rate-limiter \
+              rate-limit inter-process-messaging autoupdate reload \
+              reload-safetybelt routepolicy \
+              2>&1 | sed 's/^/[ddp-realtime] /'
+            exit "${PIPESTATUS[0]}"
+          ) & pid_ddp_realtime=$!
+
+          (
+            LISTENING_PORT=4105 ./packages/test-in-console/run.sh \
+              babel-compiler babel-runtime ecmascript ecmascript-runtime \
+              ecmascript-runtime-client ecmascript-runtime-server \
+              caching-compiler typescript minifier-css minifier-js \
+              standard-minifier-css static-html-tools es5-shim \
+              constraint-solver package-version-parser \
+              modules modules-runtime modules-runtime-hot \
+              2>&1 | sed 's/^/[build] /'
+            exit "${PIPESTATUS[0]}"
+          ) & pid_build=$!
+
+          (
+            LISTENING_PORT=4106 ./packages/test-in-console/run.sh \
+              webapp webapp-hashing boilerplate-generator \
+              boilerplate-generator-tests hot-code-push server-render \
+              browser-policy browser-policy-common browser-policy-content \
+              browser-policy-framing shell-server force-ssl force-ssl-common \
+              dev-error-overlay react-fast-refresh \
+              2>&1 | sed 's/^/[webapp] /'
+            exit "${PIPESTATUS[0]}"
+          ) & pid_webapp=$!
+
+          (
+            LISTENING_PORT=4107 ./packages/test-in-console/run.sh \
+              meteor core-runtime base64 ejson random tracker reactive-var \
+              reactive-dict callback-hook retry url promise session \
+              dynamic-import localstorage fetch roles facts-base facts-ui \
+              logic-solver insecure autopublish test-helpers rspack \
+              2>&1 | sed 's/^/[core] /'
+            exit "${PIPESTATUS[0]}"
+          ) & pid_core=$!
+
+          # Wait for all groups and collect failures.
+          failed=0
+          for group in accounts auth-social database ddp-realtime build webapp core; do
+            var="pid_${group//-/_}"
+            wait "${!var}" && status=0 || status=$?
+            if [ $status -ne 0 ]; then
+              echo "::error::Group '$group' failed (exit $status)"
+              failed=1
+            fi
+          done
+          exit $failed
