@@ -21,7 +21,25 @@ export PATH=$METEOR_HOME:$PATH
 export URL='http://127.0.0.1:4096/'
 export METEOR_PACKAGE_DIRS='packages/deprecated'
 
-exec 3< <(./meteor test-packages --driver-package test-in-console -p 4096 --exclude ${TEST_PACKAGES_EXCLUDE:-''} $1)
+# --- Hosted CI mode ---
+# Set METEOR_HOSTED_CI=true to automatically apply CI environment settings and
+# exclude Blaze packages (maintained separately at github.com/meteor/blaze)
+# and all packages under packages/deprecated/.
+if [ "${METEOR_HOSTED_CI:-}" = "true" ]; then
+  echo "running in hosted CI mode: excluding Blaze and deprecated packages from test run"
+  export METEOR_MODERN="${METEOR_MODERN:-true}"
+  export NODE_ENV="${NODE_ENV:-CI}"
+  export METEOR_HEADLESS="${METEOR_HEADLESS:-true}"
+
+  # Blaze packages — maintained at github.com/meteor/blaze
+  _BLAZE="blaze,blaze-hot,blaze-html-templates,blaze-tools,caching-html-compiler,html-tools,htmljs,observe-sequence,spacebars,spacebars-compiler,spacebars-tests,templating,templating-compiler,templating-runtime,templating-tools,ui"
+  # Packages in packages/deprecated/ — kept for backwards compatibility only
+  _DEPRECATED="amplify,appcache,backbone,code-prettify,context,d3,deps,facebook,facts,fastclick,github,google,handlebars,http,jquery-history,jquery-layout,jquery-waypoints,jsparse,jshint,livedata,markdown,meetup,meteor-developer,meteor-platform,meyerweb-reset,npm-bcrypt,preserve-inputs,showdown,spiderable,srp,standard-app-packages,startup,stylus,twitter,underscore,underscore-tests,weibo"
+
+  export TEST_PACKAGES_EXCLUDE="${TEST_PACKAGES_EXCLUDE:+${TEST_PACKAGES_EXCLUDE},}${_BLAZE},${_DEPRECATED}"
+fi
+
+exec 3< <(./meteor test-packages --driver-package test-in-console -p 4096 --exclude ${TEST_PACKAGES_EXCLUDE:-''} "$@")
 EXEC_PID=$!
 trap "pkill -TERM -P $EXEC_PID; exit 1" SIGINT
 
