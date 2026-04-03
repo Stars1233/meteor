@@ -41,8 +41,6 @@ import {
   prefixedClass,
 } from "./common.js";
 
-import * as classes from "./classNames.js";
-
 // Dimensions of sunburst.
 const width = 950;
 const height = 600;
@@ -182,7 +180,7 @@ export class Sunburst {
     });
   }
 
-  draw(json, i) {
+  draw(json) {
     const svg = this.elements.chart
       .append("svg:svg")
         .attr("width", width)
@@ -284,7 +282,7 @@ export class Sunburst {
   // Restore everything to full opacity when moving off the visualization.
   mouseleaveEvent() {
     const self = this;
-    return self.mouseleave || (self.mouseleave = function (d) {
+    return self.mouseleave || (self.mouseleave = function (_d) {
       // Hide the breadcrumb trail
       self.elements.trail
         .style("visibility", "hidden");
@@ -307,7 +305,7 @@ export class Sunburst {
   }
 
   // Update the breadcrumb trail to show the current sequence and percentage.
-  updateBreadcrumbs(nodeArray, percentageString) {
+  updateBreadcrumbs(nodeArray) {
     // Data join; key function combines name and depth (= position in sequence).
     const trail = this.elements.trail
       .selectAll("div")
