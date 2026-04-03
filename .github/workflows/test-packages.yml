@@ -26,8 +26,8 @@ jobs:
           - name: accounts
             packages: >-
               accounts-base accounts-password accounts-passwordless accounts-2fa
-              accounts-oauth accounts-ui accounts-ui-unstyled
-              audit-argument-checks check service-configuration
+              accounts-oauth accounts-ui-unstyled
+              audit-argument-checks check
 
           - name: auth-social
             packages: >-
@@ -36,19 +36,17 @@ jobs:
               accounts-weibo accounts-meetup accounts-meteor-developer
               facebook-oauth github-oauth google-oauth weibo-oauth
               meetup-oauth meteor-developer-oauth
-              facebook-config-ui github-config-ui google-config-ui
-              twitter-config-ui weibo-config-ui
 
           - name: database
             packages: >-
-              mongo minimongo allow-deny diff-sequence mongo-id disable-oplog
+              mongo minimongo allow-deny diff-sequence mongo-id
               geojson-utils id-map ordered-dict binary-heap
-              mongo-livedata npm-mongo npm-mongo-legacy
+              npm-mongo npm-mongo-legacy
 
           - name: ddp-realtime
             packages: >-
-              ddp ddp-client ddp-common ddp-server ddp-rate-limiter
-              rate-limit inter-process-messaging autoupdate reload
+              ddp-client ddp-common ddp-server ddp-rate-limiter
+              rate-limit inter-process-messaging reload
               reload-safetybelt routepolicy
 
           - name: build
@@ -62,18 +60,15 @@ jobs:
 
           - name: webapp
             packages: >-
-              webapp webapp-hashing boilerplate-generator
-              boilerplate-generator-tests hot-code-push server-render
-              browser-policy browser-policy-common browser-policy-content
-              browser-policy-framing shell-server force-ssl force-ssl-common
-              dev-error-overlay react-fast-refresh
+              webapp webapp-hashing boilerplate-generator-tests server-render
+              browser-policy force-ssl-common
 
           - name: core
             packages: >-
               meteor core-runtime base64 ejson random tracker reactive-var
               reactive-dict callback-hook retry url promise session
-              dynamic-import localstorage fetch roles facts-base facts-ui
-              logic-solver insecure autopublish test-helpers rspack
+              dynamic-import localstorage fetch roles facts-base
+              logic-solver test-helpers rspack
 
     steps:
       - name: Fix workspace permissions
