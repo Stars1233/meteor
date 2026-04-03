@@ -124,12 +124,18 @@ jobs:
         #   -v WORKSPACE       — the checked-out source and all restored caches
         #                        (.meteor, dev_bundle, .babel-cache) live here
         #   -v HOME/.npm       — reuse the npm cache restored by actions/cache
-        #   --env HOME         — tell Node/npm where the cache directory is inside the container
+        #   HOME=/tmp          — Chrome's crashpad writes to $HOME/.local; /tmp is
+        #                        always world-writable regardless of runner uid,
+        #                        avoiding "Permission denied" when the runner uid does
+        #                        not own /home/ubuntu inside the Ubuntu base image.
+        #   npm_config_cache   — pin npm's cache to the volume-mounted host path so
+        #                        it is still reused even though HOME is now /tmp.
         run: |
           docker run --rm \
             --shm-size=2gb \
             --user "$(id -u):$(id -g)" \
-            --env HOME="$HOME" \
+            --env HOME=/tmp \
+            --env npm_config_cache="$HOME/.npm" \
             --env CXX=g++-12 \
             --env METEOR_HOSTED_CI=true \
             --env NODE_PATH=/usr/local/lib/node_modules \
