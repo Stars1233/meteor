@@ -46,11 +46,27 @@ if [ "${METEOR_HOSTED_CI:-}" = "true" ]; then
   export TEST_PACKAGES_EXCLUDE="${TEST_PACKAGES_EXCLUDE:+${TEST_PACKAGES_EXCLUDE},}${_BLAZE},${_DEPRECATED}"
 fi
 
-exec 3< <(./meteor test-packages --driver-package test-in-console -p "$_PORT" --exclude ${TEST_PACKAGES_EXCLUDE:-''} "$@")
+# Merge stderr into stdout so all Meteor output is captured on fd3.
+# This ensures crash messages (which go to stderr) are visible when sed
+# exits on EOF, rather than being silently discarded.
+exec 3< <(./meteor test-packages --driver-package test-in-console -p "$_PORT" --exclude ${TEST_PACKAGES_EXCLUDE:-''} "$@" 2>&1)
 EXEC_PID=$!
 trap "pkill -TERM -P $EXEC_PID; exit 1" SIGINT
 
+# Print everything Meteor outputs until it signals it is ready.
+# If Meteor crashes before printing "test-in-console listening", sed exits on
+# EOF.  We then check whether the process is still alive and fail loudly so
+# the CI log shows the actual crash output rather than a misleading
+# ERR_CONNECTION_REFUSED from Puppeteer.
 sed '/test-in-console listening$/q' <&3
+
+if ! kill -0 "$EXEC_PID" 2>/dev/null; then
+  echo "" >&2
+  echo "error: meteor test-packages exited before the server started listening on port $_PORT." >&2
+  echo "Check the output above for the actual crash reason." >&2
+  pkill -TERM -P $EXEC_PID 2>/dev/null || true
+  exit 1
+fi
 
 node --trace-warnings "$METEOR_HOME/packages/test-in-console/puppeteer_runner.js"
 
