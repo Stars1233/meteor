@@ -153,11 +153,4 @@ After upgrading:
 Migrate one module at a time when possible. This lets you catch and fix errors incrementally instead of facing them all at once.
 :::
 
-## Real-World Migration Reports
-
-These community reports document complete migrations and are invaluable references:
-
-- [The Meteor 3.0 Migration: A Space Exploration Mission](https://dev.to/meteor/the-meteor-30-migration-a-space-exploration-mission-3gb5) — Collection2, collection-hooks, SCSS, Cordova
-- [WeKan Meteor 3 Migration PR](https://github.com/wekan/wekan/pull/6205) — large Blaze app, 23 model files, SimpleSchema, synced-cron
-- [Wework Meteor 3.4 Migration PR](https://github.com/nate-strauser/wework/pull/126) — iron:router replacement, REST API migration, 20+ package removals
-- Dev Diary series: [#24](https://harryadel.com/dev-diary-24/), [#25](https://harryadel.com/dev-diary-25/), [#26](https://harryadel.com/dev-diary-26/) — authentication packages, ldap, cron pitfalls
+For real-world migration writeups, migration PRs, and more supporting links, see [Migration Reports and External Resources](../index.md#migration-reports-and-external-resources).

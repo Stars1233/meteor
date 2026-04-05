@@ -74,14 +74,15 @@ This guide covers the necessary topics for migrating your application from Meteo
 - [Migrating to Async in Meteor 2.x](migrating-to-async-in-v2/index.md), how can you migrate your application to Meteor v3 while in 2.x.
 - [Common Errors](./guide/common-errors.md), documented errors and solutions you may encounter during migration.
 
-## External Resources
+## Migration Reports and External Resources
 
-We are aware of these articles and guides to assist with your migration:
+We are aware of these migration reports, articles, guides, and videos to assist with your migration:
 
 - [Prepare your Meteor.js project for the big 3.0 release](https://dev.to/jankapunkt/prepare-your-meteorjs-project-for-the-big-30-release-14bf)
 - [Gradually upgrading a Meteor.js project to 3.0](https://dev.to/meteor/gradually-upgrading-a-meteorjs-project-to-30-5aj0)
 - [Meteor 3.0 Migration Guide, from Daniel](https://docs.google.com/document/d/1XxHE5MQaS0-85HQ-bkiXxmGlYi41ggkX3F-9Rjb9HhE/edit#heading=h.65xi3waq9bb)
 - [Illustreets Migration Guide, large SaaS migrated to 3.0](https://forums.meteor.com/t/large-saas-migrated-to-3-0/61113) & their how-to [post](https://forums.meteor.com/t/meteor-3-0-beta-6-is-out/61277/12)
+- [Atmosphere Migration from Meteor 2.x to Meteor 3.4 with Rspack](https://blog.galaxycloud.app/meteorjs-2-to-3-blaze-migration-rspack/)
 - [The Meteor 3.0 Migration: A Space Exploration Mission](https://dev.to/meteor/the-meteor-30-migration-a-space-exploration-mission-3gb5) — Collection2, collection-hooks, SCSS, Cordova migration experience
 - Dev Diary series by Harry Adel: [#24](https://harryadel.com/dev-diary-24/) (package audit & strategy), [#25](https://harryadel.com/dev-diary-25/) (auth packages & Fibers removal), [#26](https://harryadel.com/dev-diary-26/) (app restructuring & final migration)
 - [WeKan Meteor 3 Migration PR](https://github.com/wekan/wekan/pull/6205) — large Blaze app migration with 23 model files
