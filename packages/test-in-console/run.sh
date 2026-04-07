@@ -18,71 +18,27 @@ fi
 
 export PATH=$METEOR_HOME:$PATH
 
-# Pick a port that is unique per concurrent runner on the same host so that
-# multiple matrix jobs running simultaneously on one machine do not collide.
-# We derive an offset from the runner name (e.g. "actions-runner20" → 20) and
-# multiply by 2 so that each runner gets two consecutive ports: one for the
-# Meteor HTTP server and one for the MongoDB instance that Meteor spawns on
-# PORT+1.  Without this gap, runner N's Mongo (PORT+1) would collide with
-# runner N+1's HTTP port.  When no runner number is present (local runs)
-# the offset is 0, so the default 4096 is used unchanged.
-_RUNNER_NUM=$(echo "${RUNNER_NAME:-}" | tr -dc '0-9' | sed 's/^0*//')
-_PORT=$(( 4096 + ${_RUNNER_NUM:-0} * 2 ))
-export URL="http://127.0.0.1:$_PORT/"
+export URL='http://127.0.0.1:4096/'
 export METEOR_PACKAGE_DIRS='packages/deprecated'
 
-# --- Hosted CI mode ---
-# Set METEOR_HOSTED_CI=true to automatically apply CI environment settings and
-# exclude Blaze packages (maintained separately at github.com/meteor/blaze)
-# and all packages under packages/deprecated/.
-if [ "${METEOR_HOSTED_CI:-}" = "true" ]; then
-  echo "running in hosted CI mode: excluding Blaze and deprecated packages from test run"
-  export METEOR_MODERN="${METEOR_MODERN:-true}"
-  export NODE_ENV="${NODE_ENV:-CI}"
-  export METEOR_HEADLESS="${METEOR_HEADLESS:-true}"
-
-  # Blaze packages — maintained at github.com/meteor/blaze
-  _BLAZE="blaze,blaze-hot,blaze-html-templates,blaze-tools,caching-html-compiler,html-tools,htmljs,observe-sequence,spacebars,spacebars-compiler,spacebars-tests,templating,templating-compiler,templating-runtime,templating-tools,ui"
-  # Packages in packages/deprecated/ — kept for backwards compatibility only
-  _DEPRECATED="amplify,appcache,backbone,code-prettify,context,d3,deps,facebook,facts,fastclick,github,google,handlebars,http,jquery-history,jquery-layout,jquery-waypoints,jsparse,jshint,livedata,markdown,meetup,meteor-developer,meteor-platform,meyerweb-reset,npm-bcrypt,preserve-inputs,showdown,spiderable,srp,standard-app-packages,startup,stylus,twitter,underscore,underscore-tests,weibo"
-
-  export TEST_PACKAGES_EXCLUDE="${TEST_PACKAGES_EXCLUDE:+${TEST_PACKAGES_EXCLUDE},}${_BLAZE},${_DEPRECATED}"
-fi
-
-# Merge stderr into stdout so all Meteor output is captured on fd3.
-# This ensures crash messages (which go to stderr) are visible when sed
-# exits on EOF, rather than being silently discarded.
-exec 3< <(./meteor test-packages --driver-package test-in-console -p "$_PORT" --exclude ${TEST_PACKAGES_EXCLUDE:-''} "$@" 2>&1)
+exec 3< <(./meteor test-packages --driver-package test-in-console -p 4096 --exclude ${TEST_PACKAGES_EXCLUDE:-''} $1)
 EXEC_PID=$!
 trap "pkill -TERM -P $EXEC_PID; exit 1" SIGINT
 
-# Print everything Meteor outputs until it signals it is ready.
-# If Meteor crashes before printing "test-in-console listening", sed exits on
-# EOF.  We then check whether the process is still alive and fail loudly so
-# the CI log shows the actual crash output rather than a misleading
-# ERR_CONNECTION_REFUSED from Puppeteer.
 sed '/test-in-console listening$/q' <&3
 
-# Drain remaining Meteor output so the process is never blocked on a full pipe.
-# Without this, Meteor's write() calls stall once the kernel pipe buffer fills
-# (e.g. from npm-dep update lines), which freezes its HTTP server and causes
-# Puppeteer's navigation to time out.
-cat <&3 >/dev/null &
-_DRAIN_PID=$!
-
-if ! kill -0 "$EXEC_PID" 2>/dev/null; then
-  echo "" >&2
-  echo "error: meteor test-packages exited before the server started listening on port $_PORT." >&2
-  echo "Check the output above for the actual crash reason." >&2
-  kill $_DRAIN_PID 2>/dev/null || true
-  pkill -TERM -P $EXEC_PID 2>/dev/null || true
-  exit 1
-fi
+# Wait until the HTTP server is actually accepting connections before launching
+# Puppeteer. 'test-in-console listening' is emitted by the test driver before
+# the HTTP port is fully bound, so a bare goto() would time out on slow starts.
+echo "Waiting for test server at $URL..."
+until curl --silent --output /dev/null --fail "$URL"; do
+  sleep 1
+done
+echo "Test server is ready."
 
 node --trace-warnings "$METEOR_HOME/packages/test-in-console/puppeteer_runner.js"
 
 STATUS=$?
 
-kill $_DRAIN_PID 2>/dev/null || true
 pkill -TERM -P $EXEC_PID
 exit $STATUS
