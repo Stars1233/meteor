@@ -57,10 +57,10 @@ jobs:
           path: |
             /root/.npm
             /root/.cache/ms-playwright
-            /github/workspace/dev_bundle
-            /github/workspace/.babel-cache
-            /github/workspace/.meteor
-            /github/workspace/node_modules
+            dev_bundle
+            .babel-cache
+            .meteor
+            node_modules
           key: e2e-${{ runner.os }}-${{ hashFiles('package-lock.json', 'meteor', 'tools/modern-tests/package.json') }}
           restore-keys: |
             e2e-${{ runner.os }}-
