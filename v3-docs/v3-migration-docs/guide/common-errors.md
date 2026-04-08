@@ -125,7 +125,7 @@ WebApp.handlers.use('/webhook', (req, res) => {
 });
 
 // Solution — wrap with bindEnvironment
-WebApp.handlers.use('/webhook', Meteor.bindEnvironment((req, res) => { // [!code highlight]
+WebApp.handlers.use('/webhook', Meteor.bindEnvironment(async (req, res) => { // [!code highlight]
   const user = await Meteor.userAsync(); // [!code highlight] works
   res.send('OK');
 })); // [!code highlight]
