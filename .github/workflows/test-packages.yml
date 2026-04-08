@@ -18,11 +18,6 @@ jobs:
       CXX: g++-12
 
     steps:
-      - name: Fix workspace permissions
-        # Self-hosted runners may leave files owned by root from previous runs.
-        run: sudo chown -R "$(id -un):$(id -gn)" "$GITHUB_WORKSPACE" || true
-        working-directory: /tmp
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
