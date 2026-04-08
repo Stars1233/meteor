@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_OPTIONS: "--max_old_space_size=12288"
+  NODE_OPTIONS: "--max_old_space_size=16384"
 
 jobs:
   test:
@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 60
     container:
       image: node:22-bookworm
-      options: --cpus 4 --memory 12g --security-opt seccomp=unconfined
+      options: --cpus 6 --memory 16g --security-opt seccomp=unconfined
 
     strategy:
       fail-fast: false
