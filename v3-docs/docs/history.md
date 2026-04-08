@@ -10,22 +10,24 @@ This is a complete history of changes for Meteor releases.
 
 [//]: # (go to meteor/docs/generators/changelog/docs)
 
+
+
 ## v3.4.0, 30-01-2026
 
 ### Highlights
 
 - **Meteor-Rspack Integration**, [PR#13910](https://github.com/meteor/meteor/pull/13910)
   - ⚡ New `rspack` atmosphere package (requires at least rspack@1.7.1)
-    Orchestrates the full Rspack setup, including the development server and production builds.
+  Orchestrates the full Rspack setup, including the development server and production builds.
   - 📦 New `@meteorjs/rspack` npm package
-    Provides a default rspack.config.js. Applications can extend or override this configuration with their own.
+  Provides a default rspack.config.js. Applications can extend or override this configuration with their own.
   - 🛠️ New `tools-core` package
-    Supplies runtime utilities for Meteor, designed to support this integration and future tool integrations.
+  Supplies runtime utilities for Meteor, designed to support this integration and future tool integrations.
   - 🔑 Core updates
-    Enhanced Meteor’s core to support the Rspack integration.
+  Enhanced Meteor’s core to support the Rspack integration.
   - ✅ Test suite additions
-    Introduced tests for app skeletons and Meteor-Rspack features to ensure quality and reliability.
-  - 📃 [Documentation](https://deploy-preview-13915.docs-online.meteor.com/about/modern-build-stack/rspack-bundler-integration.html)
+  Introduced tests for app skeletons and Meteor-Rspack features to ensure quality and reliability.
+  - 📃 [Documentation](https://docs.meteor.com/about/modern-build-stack/rspack-bundler-integration.html)
     Complete documentation section covering all details of the Meteor-Rspack integration, including migration guides, configuration helpers and more.
   - Adopting Rspack gives you a faster build experience
   - Adopting Rspack produces smaller bundle sizes through advanced tree shaking
@@ -66,7 +68,7 @@ N/A
 Please run the following command to update your project:
 
 ```bash
-meteor update --release 3.4-rc.3
+meteor update --release 3.4
 ```
 
 To apply `react-meteor-data` changes:
@@ -85,7 +87,7 @@ meteor add react-meteor-data@4.0.1
 }
 ```
 
-Check out [the requirements for Meteor Bundler optimizations](https://deploy-preview-13915.docs-online.meteor.com/about/modern-build-stack/meteor-bundler-optimizations.html#requirements) on existing apps.
+Check out [the requirements for Meteor Bundler optimizations](https://docs.meteor.com/about/modern-build-stack/meteor-bundler-optimizations.html#requirements) on existing apps.
 
 **Add `rspack` package to enable the Rspack Bundler integration:**
 
@@ -95,13 +97,13 @@ meteor add rspack
 
 > This package is added by default for new apps.
 
-Check out [the requirements for Rspack Bundler integration](https://deploy-preview-13915.docs-online.meteor.com/about/modern-build-stack/rspack-bundler-integration.html#requirements) on existing apps.
+Check out [the requirements for Rspack Bundler integration](https://docs.meteor.com/about/modern-build-stack/rspack-bundler-integration.html#requirements) on existing apps.
 
-### [📃 Modern Build Stack docs](https://deploy-preview-13915.docs-online.meteor.com/about/modern-build-stack.html)
+### 📃 [Modern Build Stack docs](https://docs.meteor.com/about/modern-build-stack.html)
 
-### [☄️ Meteor Bundler optimizations docs](https://deploy-preview-13915.docs-online.meteor.com/about/modern-build-stack/meteor-bundler-optimizations.html)
+### ☄️ [Meteor Bundler optimizations docs](https://docs.meteor.com/about/modern-build-stack/meteor-bundler-optimizations.html)
 
-### [⚡ Rspack Bundler integration docs](https://deploy-preview-13915.docs-online.meteor.com/about/modern-build-stack/rspack-bundler-integration.html)
+### ⚡ [Rspack Bundler integration docs](https://docs.meteor.com/about/modern-build-stack/rspack-bundler-integration.html)
 
 If you find any issues, please report them to the [Meteor issues tracker](https://github.com/meteor/meteor).
 
@@ -155,8 +157,7 @@ If you find any issues, please report them to the [Meteor issues tracker](https:
 - [@jeetburman](https://github.com/jeetburman)
 - [@copleykj](https://github.com/copleykj)
 
-  ✨✨✨
-
+  ✨✨✨ 
 ## v3.3.2, 01-09-2025
 
 ### Highlights
@@ -226,7 +227,6 @@ If you find any issues, please report them to the [Meteor issues tracker](https:
 - [@copleykj](https://github.com/copleykj)
 
 ✨✨✨
-
 ## v3.3.1, 05-08-2025
 
 ### Highlights
