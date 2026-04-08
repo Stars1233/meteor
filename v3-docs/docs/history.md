@@ -12,7 +12,7 @@ This is a complete history of changes for Meteor releases.
 
 
 
-## v3.4.0, 30-01-2026
+## v3.4.0, 2026-01-30
 
 ### Highlights
 
@@ -158,7 +158,7 @@ If you find any issues, please report them to the [Meteor issues tracker](https:
 - [@copleykj](https://github.com/copleykj)
 
   ✨✨✨ 
-## v3.3.2, 01-09-2025
+## v3.3.2, 2025-09-01
 
 ### Highlights
 
@@ -227,7 +227,7 @@ If you find any issues, please report them to the [Meteor issues tracker](https:
 - [@copleykj](https://github.com/copleykj)
 
 ✨✨✨
-## v3.3.1, 05-08-2025
+## v3.3.1, 2025-08-05
 
 ### Highlights
 
