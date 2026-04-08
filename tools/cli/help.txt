@@ -199,9 +199,11 @@ Skeleton options:
 Example options:
   --example      Create from a community example (use --list to browse).
   --list         Show detailed list of available examples.
-  --from         Clone a Meteor project from a Git URL.
-  --from-branch  Branch to clone from (use with --from).
-  --from-dir     Extract only a subdirectory (use with --from).
+  --from         Clone a Meteor project from a Git URL. Accepts GitHub, GitLab,
+                 and Bitbucket tree/src URLs. branch and subdirectory are
+                 auto-detected from the URL when possible.
+  --from-branch  Branch to clone from (overrides branch parsed from URL).
+  --from-dir     Extract only a subdirectory (overrides dir parsed from URL).
 
 Other options:
   --package      Create a new meteor package instead of an app.

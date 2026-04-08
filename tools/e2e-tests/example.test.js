@@ -80,6 +80,56 @@ describe('Examples /', () => {
     }
   });
 
+  it('meteor create --from parses a GitHub tree URL (branch auto-detected)', async () => {
+    const { appName, tempDir } = tempApp('fromurl');
+    try {
+      await runMeteorCommand(
+        'create', [
+          '--from', 'https://github.com/meteor/meteor3-react/tree/3.4-rspack',
+          appName
+        ], os.tmpdir(),
+        { checkExitCode: true }
+      );
+      expect(fs.existsSync(path.join(tempDir, '.meteor'))).toBe(true);
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  });
+
+  it('meteor create --from parses a GitHub tree URL with subdirectory', async () => {
+    const { appName, tempDir } = tempApp('fromurldir');
+    try {
+      await runMeteorCommand(
+        'create', [
+          '--from', 'https://github.com/meteor/examples/tree/migrate-examples/parties',
+          appName
+        ], os.tmpdir(),
+        { checkExitCode: true }
+      );
+      expect(fs.existsSync(path.join(tempDir, '.meteor'))).toBe(true);
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  });
+
+  it('meteor create --from with explicit --from-branch overrides parsed branch', async () => {
+    const { appName, tempDir } = tempApp('fromoverride');
+    try {
+      // The URL points to tree/3.4-rspack, but --from-branch overrides it
+      await runMeteorCommand(
+        'create', [
+          '--from', 'https://github.com/meteor/meteor3-react/tree/3.4-rspack',
+          '--from-branch', '3.4-rspack',
+          appName
+        ], os.tmpdir(),
+        { checkExitCode: true }
+      );
+      expect(fs.existsSync(path.join(tempDir, '.meteor'))).toBe(true);
+    } finally {
+      await cleanupTempDir(tempDir);
+    }
+  });
+
   it('meteor create --from fails for a non-Meteor repository', async () => {
     const { appName, tempDir } = tempApp('nonmeteor');
     try {
