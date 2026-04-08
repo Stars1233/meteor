@@ -1183,7 +1183,12 @@ main.registerCommand({
       if (example.isInternal) {
         await cloneSubdirectory(EXAMPLES_REPO, EXAMPLES_BRANCH, example.internalPath, appPath);
       } else {
-        await cloneRepo(example.repositoryUrl, appPath);
+        const parsed = parseGitUrl(example.repositoryUrl);
+        if (parsed.dir) {
+          await cloneSubdirectory(parsed.repoUrl, parsed.branch, parsed.dir, appPath);
+        } else {
+          await cloneRepo(parsed.repoUrl, appPath, { branch: parsed.branch });
+        }
       }
 
       await setupMessages();
