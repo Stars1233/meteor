@@ -40,6 +40,18 @@ const getCurrentGroupName = () => {
   }
 };
 
+const getGroupToUse = () => {
+  if (isMacOS()) {
+    return 'staff';
+  }
+
+  if (process.env.TRAVIS) {
+    return 'travis';
+  }
+
+  return getCurrentGroupName() || 'root';
+};
+
 const removeTestSocketFile = () => {
   try {
     unlinkSync(testSocketFile);
@@ -147,7 +159,7 @@ testAsyncMulti(
       // use UNIX_SOCKET_PATH and UNIX_SOCKET_GROUP
       const { httpServer, server } = prepareServer();
 
-      const groupToUse = isMacOS() ? 'staff' : (getCurrentGroupName() || 'root');
+      const groupToUse = getGroupToUse();
       process.env.UNIX_SOCKET_PATH = testSocketFile;
       process.env.UNIX_SOCKET_GROUP = groupToUse;
       process.env.UNIX_SOCKET_PERMISSIONS = '777';
