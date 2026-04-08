@@ -50,8 +50,7 @@ selftest.define("create main", async function () {
   await run.expectExit(0);
 });
 
-// TODO: Enable once rspack is published for the first time
-// Also, the new modern test suite covers more than this test.
+// The new modern test suite covers more than this test.
 // This test may not work, as rspack relies on project npm dependencies
 // being installed, and this suite apparently does not install them.
 /* AVAILABLE_SKELETONS.forEach(template => {
