@@ -127,7 +127,7 @@ import { ensureDevBundleDependencies } from '../cordova/index.js';
 import { CordovaRunner } from '../cordova/runner.js';
 import { iOSRunTarget, AndroidRunTarget } from '../cordova/run-targets.js';
 
-import { getExamples, findExample, cloneRepo, cloneSubdirectory, validateMeteorApp, EXAMPLES_REPO, EXAMPLES_BRANCH } from './examples.js';
+import { getExamples, findExample, cloneRepo, cloneSubdirectory, parseGitUrl, validateMeteorApp, EXAMPLES_REPO, EXAMPLES_BRANCH } from './examples.js';
 
 // The architecture used by Meteor Software's hosted servers; it's the
 // architecture used by 'meteor deploy'.
@@ -1183,7 +1183,12 @@ main.registerCommand({
       if (example.isInternal) {
         await cloneSubdirectory(EXAMPLES_REPO, EXAMPLES_BRANCH, example.internalPath, appPath);
       } else {
-        await cloneRepo(example.repositoryUrl, appPath);
+        const parsed = parseGitUrl(example.repositoryUrl);
+        if (parsed.dir) {
+          await cloneSubdirectory(parsed.repoUrl, parsed.branch, parsed.dir, appPath);
+        } else {
+          await cloneRepo(parsed.repoUrl, appPath, { branch: parsed.branch });
+        }
       }
 
       await setupMessages();
@@ -1200,10 +1205,14 @@ main.registerCommand({
   }
 
   if (options.from) {
-    const branch = options['from-branch'] || null;
+    // Smart-parse the URL to extract repo, branch, and dir when possible.
+    // Explicit --from-branch / --from-dir always take precedence.
+    const parsed = parseGitUrl(options.from);
+    const branch = options['from-branch'] || parsed.branch || null;
+    const subdir = options['from-dir'] || parsed.dir || null;
     try {
-      if (options['from-dir']) {
-        let repoUrl = options.from;
+      if (subdir) {
+        let repoUrl = parsed.repoUrl;
         try {
           const examples = await getExamples();
           const example = findExample(examples, options.from);
@@ -1214,10 +1223,10 @@ main.registerCommand({
           // If examples fetch fails, treat --from as a URL
         }
 
-        await cloneSubdirectory(repoUrl, branch, options['from-dir'], appPath);
+        await cloneSubdirectory(repoUrl, branch, subdir, appPath);
         validateMeteorApp(appPath);
       } else {
-        await cloneRepo(options.from, appPath, { branch });
+        await cloneRepo(parsed.repoUrl, appPath, { branch });
         validateMeteorApp(appPath);
       }
 
