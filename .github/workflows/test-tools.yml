@@ -294,6 +294,11 @@ jobs:
       - name: Expose globally-installed puppeteer to Node.js
         run: echo "NODE_PATH=$(npm root -g)" >> "$GITHUB_ENV"
 
+      - name: Add Gradle to PATH
+        # Gradle is installed via sdkman in the meteor/circleci image but not on PATH by default.
+        # This mirrors what CircleCI does: export PATH="/home/circleci/.sdkman/candidates/gradle/8.7/bin:${PATH}"
+        run: echo "/home/circleci/.sdkman/candidates/gradle/8.7/bin" >> "$GITHUB_PATH"
+
       - name: Restore caches
         uses: actions/cache/restore@v4
         with:
