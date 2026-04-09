@@ -4,11 +4,13 @@
 # Lists folders changed inside /package for every open PR
 #
 # Usage:
-#   ./list_package_changes.sh [--output file.json]
+#   ./list_package_changes.sh [--output file.json] [--exclude-author author1,author2,...]
 #
 # Examples:
 #   ./list_package_changes.sh
 #   ./list_package_changes.sh --output packages_by_pr.json
+#   ./list_package_changes.sh --exclude-author dependabot,renovate
+#   ./list_package_changes.sh --output packages_by_pr.json --exclude-author dependabot
 #
 # Requirements:
 #   - gh CLI installed and authenticated (gh auth login)
@@ -17,9 +19,24 @@
 set -euo pipefail
 
 OUTPUT_FILE=""
-if [[ "${1:-}" == "--output" && -n "${2:-}" ]]; then
-  OUTPUT_FILE="$2"
-fi
+EXCLUDE_AUTHORS=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output)
+      OUTPUT_FILE="$2"
+      shift 2
+      ;;
+    --exclude-author)
+      EXCLUDE_AUTHORS="$2"
+      shift 2
+      ;;
+    *)
+      echo "❌  Unknown option: $1"
+      exit 1
+      ;;
+  esac
+done
 
 # --- Check gh CLI is available and authenticated ---
 if ! command -v gh &>/dev/null; then
@@ -63,6 +80,21 @@ while IFS= read -r pr; do
   PR_BRANCH=$(echo "$pr" | jq -r '.headRefName')
   PR_AUTHOR=$(echo "$pr" | jq -r '.author.login')
   PR_URL=$(echo "$pr"    | jq -r '.url')
+
+  # Skip excluded authors
+  if [[ -n "$EXCLUDE_AUTHORS" ]]; then
+    IFS=',' read -ra EXCLUDED <<< "$EXCLUDE_AUTHORS"
+    SKIP=false
+    for excluded in "${EXCLUDED[@]}"; do
+      if [[ "$PR_AUTHOR" == "$excluded" ]]; then
+        SKIP=true
+        break
+      fi
+    done
+    if [[ "$SKIP" == true ]]; then
+      continue
+    fi
+  fi
 
   # Fetch changed files for this PR
   PR_FILES=$(gh pr view "$PR_NUM" \
