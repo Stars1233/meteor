@@ -554,6 +554,10 @@ module.exports = defineConfig(Meteor => ({
 
 For more details, check [the official Rspack and SCSS guide](https://rspack.rs/guide/tech/css#sass).
 
+:::tip
+Starting with Meteor 3.4.1, the `meteor create --full` skeleton ships with this exact SCSS + Rspack delegation setup out of the box, so you can use it as a working reference.
+:::
+
 ### Tailwind & PostCSS
 
 Meteor-Rspack supports Tailwind projects out of the box. For details, check [the official Rspack and Tailwind guide](https://tailwindcss.com/docs/installation/framework-guides/rspack/react).
