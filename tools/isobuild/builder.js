@@ -538,21 +538,28 @@ Previous builder: ${previousBuilder.outputPath}, this builder: ${outputPath}`
     // assert.strictEqual(files.pathBasename(options.from), "node_modules");
     assert.strictEqual(files.pathBasename(options.to), "node_modules");
 
-    if (options.symlink) {
+    // Exclude node_modules/.cache: transient bundler scratch space that
+    // races with readdir (ENOENT) and doesn't belong in the bundle.
+    const optionsWithCacheIgnored = {
+      ...options,
+      ignore: [/^\.cache\/$/, ...(options.ignore || [])],
+    };
+
+    if (optionsWithCacheIgnored.symlink) {
       // If we're going to use symlinks to speed up this copy, then we
       // need to make sure we've reserved all directories that are not
       // package directories, such as the node_modules directory itself,
       // as well as node_modules/meteor and the parent directories of any
       // scoped npm packages.
       this._ensureAllNonPackageDirectories(
-        realpath(options.from),
-        options.to
+        realpath(optionsWithCacheIgnored.from),
+        optionsWithCacheIgnored.to
       );
     }
 
     // Call this._copyDirectory rather than this.copyDirectory so that the
     // subBuilder hacks from Builder#enter won't apply a second time.
-    return this._copyDirectory(options);
+    return this._copyDirectory(optionsWithCacheIgnored);
   }
 
   _ensureAllNonPackageDirectories(absFromDir, relToDir) {
@@ -575,6 +582,8 @@ Previous builder: ${previousBuilder.outputPath}, this builder: ${outputPath}`
     this._ensureDirectory(relToDir);
 
     optimisticReaddir(absFromDir).forEach(item => {
+      // Skip node_modules/.cache (see copyNodeModulesDirectory).
+      if (item === ".cache") return;
       this._ensureAllNonPackageDirectories(
         files.pathJoin(absFromDir, item),
         files.pathJoin(relToDir, item)
