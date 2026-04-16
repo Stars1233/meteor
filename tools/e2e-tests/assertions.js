@@ -618,6 +618,52 @@ export async function assertFileUnchanged(basePath, relPath, previousMtime) {
 }
 
 /**
+ * Helper function to assert that a file HAS been modified since a previous snapshot.
+ * Compares the current mtime against a previously captured mtime.
+ * @param {string} basePath - Base directory path
+ * @param {string} relPath - Relative path from basePath to the file
+ * @param {number} previousMtime - The previously captured mtime (from captureFileMtime)
+ * @param {Object} options - Additional options
+ * @param {number} options.timeout - Maximum time to wait in milliseconds (default: 10000)
+ * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 500)
+ * @returns {Promise<void>}
+ */
+export async function assertFileChanged(basePath, relPath, previousMtime, options = {}) {
+  const { timeout = 10000, checkInterval = 500 } = options;
+  const fullPath = path.join(basePath, relPath);
+  const startTime = Date.now();
+
+  const check = async () => {
+    const exists = await fs.pathExists(fullPath);
+    if (!exists) {
+      if (Date.now() - startTime < timeout) {
+        await new Promise(r => setTimeout(r, checkInterval));
+        return check();
+      }
+      throw new Error(`File not found for changed check: ${fullPath}`);
+    }
+
+    const stat = await fs.stat(fullPath);
+    if (stat.mtimeMs !== previousMtime) {
+      console.log(`✅ File changed: ${relPath}`);
+      return;
+    }
+
+    if (Date.now() - startTime < timeout) {
+      await new Promise(r => setTimeout(r, checkInterval));
+      return check();
+    }
+
+    throw new Error(
+      `assertFileChanged FAILED: ${relPath} was not modified ` +
+      `(mtime still ${previousMtime})`
+    );
+  };
+
+  await check();
+}
+
+/**
  * Helper function to assert that meta tags have the expected content
  * @param {Object} expectedMetaTags - Expected meta tag properties and values as key-value pairs
  * @param {Object} options - Additional options for assertConsoleEval

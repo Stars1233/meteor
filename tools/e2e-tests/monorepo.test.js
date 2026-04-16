@@ -2,6 +2,7 @@ import {
   waitForMeteorOutput,
 } from "./helpers";
 import {
+  assertFileChanged,
   assertFileUnchanged,
   assertManifest,
   assertMetaTags,
@@ -90,6 +91,11 @@ describe('Monorepo App Bundling /', () => {
         // Assert sw.js was NOT re-written during server rebuild
         const appDir = path.join(tempDir, 'app');
         await assertFileUnchanged(appDir, 'public/sw.js', swJsMtime);
+      },
+      afterRunProduction: async ({ tempDir }) => {
+        // Assert sw.js was regenerated on restart (different run = fresh sw.js)
+        const appDir = path.join(tempDir, 'app');
+        await assertFileChanged(appDir, 'public/sw.js', swJsMtime);
       },
       afterRunProductionRebuildClient: async ({ allConsoleLogs }) => {
         // Check for HMR to not be enabled in production-like mode
