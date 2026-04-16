@@ -110,3 +110,9 @@ jobs:
           echo "::warning::First attempt failed, retrying..."
           sleep 90
           METEOR_ALLOW_SUPERUSER=1 npm run test:e2e -- -t="${{ matrix.category }}"
+
+      - name: Fail if all attempts failed
+        if: steps.test-run.outcome == 'failure' && steps.test-retry-1.outcome != 'success'
+        run: |
+          echo "::error::All test attempts failed for ${{ matrix.category }}"
+          exit 1
