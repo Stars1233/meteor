@@ -820,19 +820,19 @@ This helper provide a shortcut to apply the needed Rspack configuration and safe
 Starting with Meteor 3.4.1
 :::
 
-Rspack lets you use standard plugins to manage Service Workers, such as Workbox, so you don’t need to maintain your own setup. You can follow the Webpack guide for integrating Workbox with [`workbox-webpack-plugin`](https://developer.chrome.com/docs/workbox/modules/workbox-webpack-plugin).
+Rspack lets you use standard plugins to manage Service Workers, such as Workbox, so you don't need to maintain your own setup. You can follow the Webpack guide for integrating Workbox with [`workbox-webpack-plugin`](https://developer.chrome.com/docs/workbox/modules/workbox-webpack-plugin).
 
-Here is a recommended `GenerateSW` configuration that works with Meteor’s build pipeline:
+Here is a recommended `GenerateSW` configuration that works with Meteor's build pipeline:
 
 ```js
-const { defineConfig } = require(‘@meteorjs/rspack’);
-const { GenerateSW } = require(‘workbox-webpack-plugin’);
+const { defineConfig } = require('@meteorjs/rspack');
+const { GenerateSW } = require('workbox-webpack-plugin');
 
 module.exports = defineConfig(Meteor => ({
   plugins: [
     Meteor.isClient &&
       new GenerateSW({
-        swDest: ‘sw.js’,
+        swDest: 'sw.js',
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
@@ -847,14 +847,14 @@ module.exports = defineConfig(Meteor => ({
           // Never cache HMR hot-update files
           {
             urlPattern: /\.hot-update\./,
-            handler: ‘NetworkOnly’,
+            handler: 'NetworkOnly',
           },
           // Navigation requests: network-first with fallback
           {
-            urlPattern: ({ request }) => request.mode === ‘navigate’,
-            handler: ‘NetworkFirst’,
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
             options: {
-              cacheName: ‘pages’,
+              cacheName: 'pages',
               networkTimeoutSeconds: 15,
             },
           },
@@ -863,9 +863,9 @@ module.exports = defineConfig(Meteor => ({
             urlPattern: new RegExp(
               `(/__rspack__/|/${Meteor.assetsContext}/|/${Meteor.chunksContext}/|[?&](hash|meteor_css_resource|meteor_js_resource)=)`
             ),
-            handler: ‘StaleWhileRevalidate’,
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: ‘bundles’,
+              cacheName: 'bundles',
               // Meteor serves assets with Vary headers that can cause cache misses
               matchOptions: { ignoreVary: true },
             },
@@ -873,18 +873,18 @@ module.exports = defineConfig(Meteor => ({
           // Static assets: scripts, styles, workers
           {
             urlPattern: ({ request }) =>
-              request.destination === ‘style’ ||
-              request.destination === ‘script’ ||
-              request.destination === ‘worker’,
-            handler: ‘StaleWhileRevalidate’,
-            options: { cacheName: ‘assets’ },
+              request.destination === 'style' ||
+              request.destination === 'script' ||
+              request.destination === 'worker',
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'assets' },
           },
           // Images: cache-first for fast repeat loads
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|ico|webp)$/,
-            handler: ‘CacheFirst’,
+            handler: 'CacheFirst',
             options: {
-              cacheName: ‘images’,
+              cacheName: 'images',
               expiration: { maxEntries: 60 },
               matchOptions: { ignoreVary: true },
             },
@@ -906,7 +906,7 @@ Key points:
 If you use a custom `sw.js` instead of Workbox, ensure your fetch handler applies the same principles:
 
 ```js
-self.addEventListener(‘fetch’, (event) => {
+self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   const sameOrigin = url.origin === self.location.origin;
@@ -918,10 +918,10 @@ self.addEventListener(‘fetch’, (event) => {
 
   // Skip Meteor build-asset and chunk contexts, always fetch fresh
   if (sameOrigin && (
-    url.pathname.includes(‘/build-assets/’) ||
-    url.pathname.includes(‘/build-chunks/’)
+    url.pathname.includes('/build-assets/') ||
+    url.pathname.includes('/build-chunks/')
   )) {
-    event.respondWith(fetch(request, { cache: ‘no-store’ }));
+    event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
 
