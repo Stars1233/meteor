@@ -179,6 +179,7 @@ Monorepo structure with app in subdirectory, service worker, and PWA manifest.
 | Service worker runtime caching (images) | Run |
 | Service worker precaching (`/icon.png` via `additionalManifestEntries`) | Run |
 | Service worker stability (`sw.js` not rewritten on rebuild) | Run |
+| Service worker regenerated on restart (`sw.js` changed between runs) | Run, Prod |
 | PWA manifest linked and fields validated | Run |
 | Meta tags (`theme-color`) | Run |
 | HMR works in dev, disabled in prod | Run, Prod |
@@ -312,6 +313,7 @@ Where each feature is tested across apps and skeletons.
 | Worker resolution (`compileWithMeteor`) | monorepo | |
 | Service worker (Workbox GenerateSW) | monorepo | |
 | Service worker stability (no rewrite on rebuild) | monorepo | |
+| Service worker regenerated on restart | monorepo | |
 | Service worker runtime caching (images) | monorepo | |
 | Service worker precaching (`additionalManifestEntries`) | monorepo | |
 | PWA manifest | monorepo | |
