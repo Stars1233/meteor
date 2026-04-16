@@ -12,6 +12,17 @@ process.env.RSPACK_DEVSERVER_PORT = '18080';
 process.env.RSDOCTOR_CLIENT_PORT = '8888';
 process.env.RSDOCTOR_SERVER_PORT = '8889';
 
+// Client-rendered frameworks (Angular, React, Vue, etc.) may take longer to
+// hydrate on slow CI runners. Increase Playwright's default selector/action
+// timeout so waitForSelector calls don't race the framework bootstrap.
+if (process.env.CI) {
+  beforeEach(async () => {
+    if (typeof page !== 'undefined') {
+      page.setDefaultTimeout(60000);
+    }
+  });
+}
+
 // This runs before each test
 beforeEach(() => {
   const name = expect.getState().currentTestName;
