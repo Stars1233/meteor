@@ -649,8 +649,58 @@ export async function assertMetaTags(expectedMetaTags, options = {}) {
   `;
 
   // Use assertConsoleEval to evaluate the code and check the result
-  return await assertConsoleEval(code, expectedMetaTags, { 
+  return await assertConsoleEval(code, expectedMetaTags, {
     exactMatch: true,  // We want exact matches for meta tag content
     ...options
   });
+}
+
+/**
+ * Helper function to assert that a PWA manifest is linked and contains expected fields.
+ * Fetches the manifest from the <link rel="manifest"> href and checks key-value pairs.
+ * @param {number} port - Port where the app is running
+ * @param {Object} expectedFields - Expected top-level fields in the manifest (e.g. { name: 'My App', display: 'standalone' })
+ * @param {Object} options - Additional options
+ * @param {number} options.timeout - Maximum time to wait in milliseconds (default: 10000)
+ * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 500)
+ * @returns {Promise<Object>} - The parsed manifest object
+ */
+export async function assertManifest(port, expectedFields = {}, options = {}) {
+  const { timeout = 10000, checkInterval = 500 } = options;
+  const startTime = Date.now();
+
+  const check = async () => {
+    const result = await page.evaluate(async () => {
+      try {
+        const link = document.querySelector('link[rel="manifest"]');
+        if (!link) return { error: 'No <link rel="manifest"> found' };
+
+        const res = await fetch(link.href);
+        if (!res.ok) return { error: `Manifest fetch failed: ${res.status}` };
+
+        const manifest = await res.json();
+        return { manifest };
+      } catch (e) {
+        return { error: e.message };
+      }
+    });
+
+    if (result.error) {
+      if (Date.now() - startTime < timeout) {
+        await new Promise(r => setTimeout(r, checkInterval));
+        return check();
+      }
+      throw new Error(`Manifest assertion failed: ${result.error}`);
+    }
+
+    const { manifest } = result;
+    for (const [key, expected] of Object.entries(expectedFields)) {
+      expect(manifest[key]).toEqual(expected);
+    }
+
+    console.log(`✅ Manifest verified: ${Object.keys(expectedFields).join(', ')}`);
+    return manifest;
+  };
+
+  return check();
 }

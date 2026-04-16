@@ -3,6 +3,8 @@ import {
 } from "./helpers";
 import {
   assertFileUnchanged,
+  assertManifest,
+  assertMetaTags,
   assertServiceWorkerFile,
   assertServiceWorkerReady,
   assertServiceWorkerCaching,
@@ -30,16 +32,29 @@ describe('Monorepo App Bundling /', () => {
       'programs/web.browser/app/images/1x1.png',
       'programs/web.browser/app/docs/text.md',
       'programs/web.browser/app/icon.png',
+      'programs/web.browser/app/manifest.json',
       'programs/web.browser.legacy/app/1x1.png',
       'programs/web.browser.legacy/app/images/1x1.png',
       'programs/web.browser.legacy/app/docs/text.md',
       'programs/web.browser.legacy/app/icon.png',
+      'programs/web.browser.legacy/app/manifest.json',
     ],
     configFile: 'rspack.config.cjs',
     customAssertions: {
       afterRun: async ({ result, port, tempDir }) => {
         // Check custom plugin gets loaded from rspack.config.override.cjs file
         await waitForMeteorOutput(result.outputLines, /.*CustomConsoleLogPlugin.*/);
+
+        // Verify PWA manifest is linked and contains expected fields
+        await assertManifest(port, {
+          name: 'Monorepo Test App',
+          short_name: 'Monorepo',
+          display: 'standalone',
+          start_url: '/',
+        });
+
+        // Verify theme-color meta tag
+        await assertMetaTags({ 'theme-color': '#000000' });
 
         // Verify service worker file is served
         await assertServiceWorkerFile(port);
