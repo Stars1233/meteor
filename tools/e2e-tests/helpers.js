@@ -205,12 +205,12 @@ async function killSingleProcessByPort(port) {
         // lsof not available; continue to next method
       }
 
-      // 2) ss + kill — ss is from iproute2, available on virtually all Linux containers
+      // 2) ss + kill — ss is from iproute2, available on virtually all Linux containers.
+      //    Use awk instead of grep -oP to extract PIDs (grep -P needs libpcre2,
+      //    which is absent in minimal Docker images like node:22-bookworm).
       try {
-        // ss -tlnp shows listening TCP sockets with process info.
-        // Extract PIDs for the target port (matches both IPv4 and IPv6 bindings).
         const ssResult = await execa.command(
-          `ss -tlnp sport = :${port} 2>/dev/null | grep -oP 'pid=\\K[0-9]+' | grep -v ^${process.pid}$ | sort -u | xargs -r kill -9`,
+          `ss -tlnp sport = :${port} 2>/dev/null | awk '{while(match($0,/pid=[0-9]+/)){print substr($0,RSTART+4,RLENGTH-4);$0=substr($0,RSTART+RLENGTH)}}' | grep -v ^${process.pid}$ | sort -u | xargs -r kill -9`,
           { shell: true, reject: false }
         );
         if (!ssResult.failed && ssResult.stdout) {

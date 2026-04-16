@@ -113,6 +113,13 @@ export function testMeteorBundler(options) {
       await killProcessByPort([port, devServerPortStr]);
     });
 
+    afterEach(async () => {
+      if (meteorProcess) {
+        await killMeteorProcess(meteorProcess);
+        meteorProcess = null;
+      }
+    });
+
     test(`"meteor run" / should start the app`, async () => {
       // Run the Meteor app
       meteorProcess = (await runMeteorApp(tempDir, port, { env: env.meteorRun }))?.meteorProcess;
@@ -317,6 +324,13 @@ export function testMeteorRspackBundler(options) {
     beforeEach(async () => {
       // Ensure any process on the port is killed
       await killProcessByPort([port, devServerPortStr]);
+    });
+
+    afterEach(async () => {
+      if (meteorProcess) {
+        await killMeteorProcess(meteorProcess);
+        meteorProcess = null;
+      }
     });
 
     test(`"meteor run" / should run and rebuild the app with Rspack`, async () => {
@@ -952,6 +966,15 @@ export function testMeteorSkeleton(options) {
     beforeEach(async () => {
       // Ensure any process on the port is killed
       await killProcessByPort([port, devServerPortStr]);
+    });
+
+    afterEach(async () => {
+      // Kill the meteor process directly if it's still running.
+      // This prevents port leaks when a test assertion fails mid-run.
+      if (meteorProcess) {
+        await killMeteorProcess(meteorProcess);
+        meteorProcess = null;
+      }
     });
 
     test(`"meteor create --${skeletonName}" / should create a new Meteor ${skeletonName} app`, async () => {
