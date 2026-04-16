@@ -313,6 +313,311 @@ export async function assertBodyStyles(expectedStyles, options = {}) {
 }
 
 /**
+ * Helper function to assert that a service worker file is served by the app
+ * Fetches /sw.js from the browser and checks it returns a valid response
+ * @param {number} port - Port where the app is running
+ * @param {Object} options - Additional options
+ * @param {string} options.swPath - Path to the service worker file (default: '/sw.js')
+ * @param {number} options.timeout - Maximum time to wait in milliseconds (default: 10000)
+ * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 500)
+ * @returns {Promise<void>}
+ */
+export async function assertServiceWorkerFile(port, options = {}) {
+  const { swPath = '/sw.js', timeout = 10000, checkInterval = 500 } = options;
+  const url = `http://localhost:${port}${swPath}`;
+  const startTime = Date.now();
+
+  const check = async () => {
+    const result = await page.evaluate(async (fetchUrl) => {
+      try {
+        const res = await fetch(fetchUrl);
+        return { ok: res.ok, status: res.status, type: res.headers.get('content-type') };
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+    }, url);
+
+    if (result.ok) {
+      console.log(`✅ Service worker file served at ${swPath} (status: ${result.status})`);
+      return;
+    }
+
+    if (Date.now() - startTime < timeout) {
+      await new Promise(r => setTimeout(r, checkInterval));
+      return check();
+    }
+
+    throw new Error(
+      `Service worker file not served at ${url}: ${result.error || `status ${result.status}`}`
+    );
+  };
+
+  await check();
+}
+
+/**
+ * Helper function to assert that a service worker registers, activates,
+ * and still controls the page after a refresh.
+ * @param {number} port - Port where the app is running
+ * @param {Object} options - Additional options
+ * @param {string} options.swPath - Path to the service worker file (default: '/sw.js')
+ * @param {number} options.timeout - Maximum time to wait in milliseconds (default: 15000)
+ * @returns {Promise<void>}
+ */
+export async function assertServiceWorkerReady(port, options = {}) {
+  const { swPath = '/sw.js', timeout = 15000 } = options;
+  const url = `http://localhost:${port}`;
+
+  // Navigate to the app
+  await page.goto(url);
+
+  // Register the SW from the browser and wait until it is active
+  const regResult = await page.evaluate(async ({ swPath: sw, timeout: t }) => {
+    if (!('serviceWorker' in navigator)) {
+      return { error: 'Service workers not supported in this browser' };
+    }
+    try {
+      const reg = await navigator.serviceWorker.register(sw);
+      // Wait for the SW to become active
+      const worker = reg.installing || reg.waiting || reg.active;
+      if (!worker) {
+        return { error: 'No worker found after registration' };
+      }
+      if (worker.state !== 'activated') {
+        await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('SW activation timed out')), t);
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'activated') {
+              clearTimeout(timer);
+              resolve();
+            }
+          });
+          if (worker.state === 'activated') {
+            clearTimeout(timer);
+            resolve();
+          }
+        });
+      }
+      return { active: true, scope: reg.scope };
+    } catch (e) {
+      return { error: e.message };
+    }
+  }, { swPath, timeout });
+
+  if (regResult.error) {
+    throw new Error(`Service worker registration failed: ${regResult.error}`);
+  }
+  console.log(`✅ Service worker active (scope: ${regResult.scope})`);
+
+  // Reload and verify the SW still controls the page
+  await page.reload({ waitUntil: 'load' });
+
+  const controllerResult = await page.evaluate(() => {
+    if (!navigator.serviceWorker.controller) {
+      return { controlling: false };
+    }
+    return { controlling: true, scriptURL: navigator.serviceWorker.controller.scriptURL };
+  });
+
+  expect(controllerResult.controlling).toBe(true);
+  console.log(`✅ Service worker controlling page after refresh (${controllerResult.scriptURL})`);
+}
+
+/**
+ * Helper function to assert that the service worker caches specific resources.
+ * Fetches the given URLs so the SW runtime-caching rules can intercept them,
+ * then inspects the CacheStorage for matching entries.
+ * @param {number} port - Port where the app is running
+ * @param {Object} options - Additional options
+ * @param {string[]} options.urls - Resource URLs to fetch and expect cached (relative paths, e.g. ['/1x1.png'])
+ * @param {string} options.cacheName - Expected cache name (default: 'images')
+ * @param {number} options.timeout - Maximum time to wait for cache entries in milliseconds (default: 10000)
+ * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 500)
+ * @returns {Promise<void>}
+ */
+export async function assertServiceWorkerCaching(port, options = {}) {
+  const {
+    urls = [],
+    cacheName = 'images',
+    timeout = 10000,
+    checkInterval = 500,
+  } = options;
+  const origin = `http://localhost:${port}`;
+
+  // Fetch each URL so the SW can cache them via runtime caching rules
+  for (const urlPath of urls) {
+    await page.evaluate(async (fetchUrl) => {
+      await fetch(fetchUrl);
+    }, `${origin}${urlPath}`);
+  }
+
+  const startTime = Date.now();
+
+  const check = async () => {
+    const cacheResult = await page.evaluate(async ({ cacheName: cn, urls: paths, origin: o }) => {
+      try {
+        const cache = await caches.open(cn);
+        const keys = await cache.keys();
+        const cachedUrls = keys.map(r => r.url);
+        const missing = paths
+          .map(p => new URL(p, o).href)
+          .filter(u => !cachedUrls.includes(u));
+        return { cachedUrls, missing };
+      } catch (e) {
+        return { error: e.message };
+      }
+    }, { cacheName, urls, origin });
+
+    if (cacheResult.error) {
+      throw new Error(`CacheStorage check failed: ${cacheResult.error}`);
+    }
+
+    if (cacheResult.missing.length === 0) {
+      console.log(`✅ All ${urls.length} URL(s) found in "${cacheName}" cache`);
+      return;
+    }
+
+    if (Date.now() - startTime < timeout) {
+      await new Promise(r => setTimeout(r, checkInterval));
+      return check();
+    }
+
+    throw new Error(
+      `Expected URLs cached in "${cacheName}" but missing: ${cacheResult.missing.join(', ')}. ` +
+      `Found: ${cacheResult.cachedUrls.join(', ') || '(empty)'}`
+    );
+  };
+
+  await check();
+}
+
+/**
+ * Helper function to assert that specific URLs are precached by the service worker.
+ * Searches all CacheStorage caches (Workbox uses a generated precache name).
+ * Unlike assertServiceWorkerCaching, this does NOT fetch the URLs first —
+ * precached entries should already be present after SW activation.
+ * @param {number} port - Port where the app is running
+ * @param {Object} options - Additional options
+ * @param {string[]} options.urls - Resource URLs expected to be precached (relative paths, e.g. ['/icon.png'])
+ * @param {number} options.timeout - Maximum time to wait for cache entries in milliseconds (default: 10000)
+ * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 500)
+ * @returns {Promise<void>}
+ */
+export async function assertServiceWorkerPrecaching(port, options = {}) {
+  const {
+    urls = [],
+    timeout = 10000,
+    checkInterval = 500,
+  } = options;
+  const origin = `http://localhost:${port}`;
+
+  const startTime = Date.now();
+
+  const check = async () => {
+    const cacheResult = await page.evaluate(async ({ urls: paths, origin: o }) => {
+      try {
+        const cacheNames = await caches.keys();
+        const allCachedUrls = [];
+        for (const name of cacheNames) {
+          const cache = await caches.open(name);
+          const keys = await cache.keys();
+          allCachedUrls.push(...keys.map(r => r.url));
+        }
+        // Workbox precache appends revision query params, so match by pathname
+        const missing = paths.filter(p => {
+          const expected = new URL(p, o).pathname;
+          return !allCachedUrls.some(u => new URL(u).pathname === expected);
+        });
+        return { allCachedUrls, missing };
+      } catch (e) {
+        return { error: e.message };
+      }
+    }, { urls, origin });
+
+    if (cacheResult.error) {
+      throw new Error(`CacheStorage precache check failed: ${cacheResult.error}`);
+    }
+
+    if (cacheResult.missing.length === 0) {
+      console.log(`✅ All ${urls.length} URL(s) found in precache`);
+      return;
+    }
+
+    if (Date.now() - startTime < timeout) {
+      await new Promise(r => setTimeout(r, checkInterval));
+      return check();
+    }
+
+    throw new Error(
+      `Expected precached URLs but missing: ${cacheResult.missing.join(', ')}. ` +
+      `Found across all caches: ${cacheResult.allCachedUrls.join(', ') || '(empty)'}`
+    );
+  };
+
+  await check();
+}
+
+/**
+ * Helper function to capture a file's modification time for later comparison.
+ * Returns the mtime in milliseconds.
+ * @param {string} basePath - Base directory path
+ * @param {string} relPath - Relative path from basePath to the file
+ * @param {Object} options - Additional options
+ * @param {number} options.timeout - Maximum time to wait for the file in milliseconds (default: 10000)
+ * @param {number} options.checkInterval - Interval between checks in milliseconds (default: 500)
+ * @returns {Promise<number>} - The file's mtime in milliseconds
+ */
+export async function captureFileMtime(basePath, relPath, options = {}) {
+  const { timeout = 10000, checkInterval = 500 } = options;
+  const fullPath = path.join(basePath, relPath);
+  const startTime = Date.now();
+
+  const check = async () => {
+    const exists = await fs.pathExists(fullPath);
+    if (exists) {
+      const stat = await fs.stat(fullPath);
+      return stat.mtimeMs;
+    }
+    if (Date.now() - startTime < timeout) {
+      await new Promise(r => setTimeout(r, checkInterval));
+      return check();
+    }
+    throw new Error(`File not found for mtime capture: ${fullPath}`);
+  };
+
+  return check();
+}
+
+/**
+ * Helper function to assert that a file has NOT been modified since a previous snapshot.
+ * Compares the current mtime against a previously captured mtime.
+ * @param {string} basePath - Base directory path
+ * @param {string} relPath - Relative path from basePath to the file
+ * @param {number} previousMtime - The previously captured mtime (from captureFileMtime)
+ * @returns {Promise<void>}
+ */
+export async function assertFileUnchanged(basePath, relPath, previousMtime) {
+  const fullPath = path.join(basePath, relPath);
+  const exists = await fs.pathExists(fullPath);
+
+  if (!exists) {
+    throw new Error(`File not found for unchanged check: ${fullPath}`);
+  }
+
+  const stat = await fs.stat(fullPath);
+  const currentMtime = stat.mtimeMs;
+
+  if (currentMtime !== previousMtime) {
+    console.error(
+      `assertFileUnchanged FAILED: ${relPath} was modified ` +
+      `(previous mtime: ${previousMtime}, current mtime: ${currentMtime})`
+    );
+  }
+  expect(currentMtime).toBe(previousMtime);
+  console.log(`✅ File unchanged: ${relPath}`);
+}
+
+/**
  * Helper function to assert that meta tags have the expected content
  * @param {Object} expectedMetaTags - Expected meta tag properties and values as key-value pairs
  * @param {Object} options - Additional options for assertConsoleEval
