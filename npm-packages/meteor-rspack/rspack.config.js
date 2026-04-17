@@ -644,11 +644,6 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     ...(isDevEnvironment && {
       devServer: {
         ...createRemoteDevServerConfig(),
-        // Bind to the IPv4 loopback explicitly. "localhost" leaves the
-        // choice to getaddrinfo, which on some CI runners and containers
-        // returns ::1 first. If the dev server binds to a different family
-        // than the Meteor proxy connects to, we get ECONNREFUSED.
-        host: "127.0.0.1",
         static: { directory: clientOutputDir, publicPath: "/__rspack__/" },
         hot: true,
         liveReload: true,
@@ -771,14 +766,11 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     ...loggingConfig,
   };
 
-  // Establish Angular overrides to ensure proper integration.
-  // @nx/angular-rspack's createConfig() deep-merges its own devServer block
-  // (host defaults to undefined -> "localhost"). Force 127.0.0.1 here for
-  // the same IPv4/IPv6 reason noted on the clientConfig devServer above.
+  // Establish Angular overrides to ensure proper integration
   const angularExpandConfig = isAngularEnabled
     ? {
         mode: isProd ? "production" : "development",
-        devServer: { host: "127.0.0.1", port: devServerPort },
+        devServer: { port: devServerPort },
         stats: { preset: "normal" },
         infrastructureLogging: { level: "info" },
         ...(isProd && isClient && { output: { module: false } }),

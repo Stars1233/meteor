@@ -37,16 +37,13 @@ if (shouldEnableDevHMRProxy) {
   const { shuffleString } = require('meteor/tools-core/lib/string');
   const { createProxyMiddleware } = require('http-proxy-middleware');
 
-  // Target URL for the Rspack dev server. Pin to 127.0.0.1 rather than
-  // "localhost" so Node's http.request doesn't resolve to ::1 on systems
-  // (CI runners, some containers) where the dev-server child only binds
-  // to the IPv4 loopback — the mismatch surfaces as ECONNREFUSED.
-  const target = `http://127.0.0.1:${process.env.RSPACK_DEVSERVER_PORT}`;
+  // Target URL for the Rspack dev server
+  const target = `http://localhost:${process.env.RSPACK_DEVSERVER_PORT}`;
 
-  // Log upstream proxy errors so CI can tell ECONNREFUSED / ETIMEDOUT /
-  // ECONNRESET apart (all of which http-proxy-middleware maps to a 504).
-  // NB: v3 of http-proxy-middleware uses `on.error` and `logger`. The
-  // legacy `onError` / `logLevel` options are silently ignored here.
+  // Log upstream proxy errors so failures (CI or otherwise) show the actual
+  // Node error code (ECONNREFUSED / ETIMEDOUT / ECONNRESET / …) instead of
+  // only the 504 the browser sees. v3 of http-proxy-middleware expects the
+  // handler under options.on.error; the legacy onError is silently ignored.
   const makeErrorHandler = (scope) => (err, req) => {
     console.error(
       `[rspack-proxy:${scope}] upstream error ${err.code || err.message} for ${req.method} ${req.url} -> ${target}`
@@ -58,7 +55,6 @@ if (shouldEnableDevHMRProxy) {
     createProxyMiddleware({
       target,
       ws: true,
-      logger: console,
       on: { error: makeErrorHandler('ws') },
     })
   );
@@ -68,16 +64,11 @@ if (shouldEnableDevHMRProxy) {
   // root-relative paths (e.g. /client-rspack.js). This is required because
   // some framework integrations (e.g. @nx/angular-rspack) override
   // output.publicPath, so the dev server may not serve files under /__rspack__/.
-  //
-  // ws is intentionally off here: the dedicated /ws handler above already
-  // proxies HMR upgrades, and leaving ws:true on two overlapping handlers
-  // has caused upgrade-race symptoms (Invalid frame header, hung HTTP
-  // responses surfacing as 504) under slow CI.
   WebApp.connectHandlers.use('/__rspack__',
     createProxyMiddleware({
       target,
       changeOrigin: true,
-      logger: console,
+      ws: true,
       pathRewrite: { '^/__rspack__': '' },
       on: { error: makeErrorHandler('assets') },
     })
