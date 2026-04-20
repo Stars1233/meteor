@@ -23,9 +23,15 @@ if (process.env.CI) {
   });
 }
 
-// Retries are only enabled on CI — local runs fail fast so flakes surface.
-if (process.env.CI) {
-  jest.retryTimes(2, { logErrorsBeforeRetry: true });
+// Retries are only enabled on CI by default — local runs fail fast so flakes
+// surface. Set METEOR_E2E_TEST_RETRIES to override (e.g. "0" to disable on CI,
+// "2" to allow more retries, any value forces the setting regardless of CI).
+const retryOverride = process.env.METEOR_E2E_TEST_RETRIES;
+const retryCount = retryOverride !== undefined
+  ? Number(retryOverride)
+  : (process.env.CI ? 1 : 0);
+if (retryCount > 0) {
+  jest.retryTimes(retryCount, { logErrorsBeforeRetry: true });
 }
 
 // Track attempts per test — Jest 29 doesn't expose currentTestRetryAttempt.
