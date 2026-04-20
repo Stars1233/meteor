@@ -81,7 +81,7 @@ jobs:
     runs-on: oss-vm
     container:
       image: meteor/circleci:2025.07.8-android-35-node-22
-      options: --user root --cpus 4 --memory 16g --security-opt seccomp=unconfined
+      options: --user root
     needs: setup
     timeout-minutes: 45
     steps:
@@ -149,7 +149,7 @@ jobs:
     runs-on: oss-vm
     container:
       image: meteor/circleci:2025.07.8-android-35-node-22
-      options: --user root
+      options: --user root --cpus 4 --memory 16g --security-opt seccomp=unconfined
     needs: setup
     timeout-minutes: 35
     env:
@@ -482,7 +482,7 @@ jobs:
     runs-on: oss-vm
     container:
       image: meteor/circleci:2025.07.8-android-35-node-22
-      options: --user root
+      options: --user root --cpus 4 --memory 16g --security-opt seccomp=unconfined
     needs: setup
     timeout-minutes: 25
     env:
