@@ -15,7 +15,7 @@ concurrency:
 
 env:
   # Multiplies the waitSecs for self-tests.
-  TIMEOUT_SCALE_FACTOR: 14
+  TIMEOUT_SCALE_FACTOR: 8
   # Retry failed tests additional times.
   METEOR_SELF_TEST_RETRIES: 2
   METEOR_HEADLESS: true
@@ -153,6 +153,7 @@ jobs:
     needs: setup
     timeout-minutes: 35
     env:
+      TIMEOUT_SCALE_FACTOR: 14
       TEST_GROUP: "^[a-b]|^c[a-n]|^co[a-l]|^comm"
     steps:
       - name: Checkout repository
@@ -486,6 +487,7 @@ jobs:
     needs: setup
     timeout-minutes: 25
     env:
+      TIMEOUT_SCALE_FACTOR: 14
       TEST_GROUP: "^m[a-n]|^mo[a-d]"
     steps:
       - name: Checkout repository
