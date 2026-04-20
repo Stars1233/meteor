@@ -24,6 +24,8 @@ const {
   disablePlugins,
   outputMeteorRspack,
   enablePortableBuild,
+  persistDevFiles,
+  createPersistCallback,
 } = require('./lib/meteorRspackHelpers.js');
 const { loadUserAndOverrideConfig } = require('./lib/meteorRspackConfigHelpers.js');
 const { prepareMeteorRspackConfig } = require("./lib/meteorRspackConfigFactory");
@@ -348,6 +350,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
       disablePlugins: matchers,
     });
   Meteor.enablePortableBuild = () => enablePortableBuild();
+  Meteor.persistDevFiles = (matchers) => persistDevFiles(matchers);
 
   // Add HtmlRspackPlugin function to Meteor
   Meteor.HtmlRspackPlugin = (options = {}) => {
@@ -415,6 +418,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
   // Determine output directories
   const clientOutputDir = path.resolve(projectDir, "public");
   const serverOutputDir = path.resolve(projectDir, "private");
+
 
   // Get Meteor ignore entries
   const meteorIgnoreEntries = getMeteorIgnoreEntries(projectDir);
@@ -650,8 +654,7 @@ module.exports = async function (inMeteor = {}, argv = {}) {
         ...(Meteor.isBlazeEnabled && { hot: false }),
         port: devServerPort,
         devMiddleware: {
-          writeToDisk: (filePath) =>
-            /\.(html)$/.test(filePath) || filePath.endsWith('sw.js'),
+          writeToDisk: createPersistCallback({ once: ['sw.js'], always: ['.html'] }),
         },
         onListening(devServer) {
           if (!devServer) return;
