@@ -579,24 +579,24 @@ module.exports = async function (inMeteor = {}, argv = {}) {
     // closed proxy connection sends RST, producing an unhandled
     // ECONNRESET that crashes the dev server. Unix peers send
     // FIN and never hit this.
-    if (process.platform !== "win32") return;
+    if (process.platform === "win32") {
+      const server = devServer.server;
+      if (!server || server.__meteorRspackErrorGuard) return;
+      server.__meteorRspackErrorGuard = true;
 
-    const server = devServer.server;
-    if (!server || server.__meteorRspackErrorGuard) return;
-    server.__meteorRspackErrorGuard = true;
-
-    server.on("connection", (socket) => {
-      if (!socket || socket.__meteorRspackGuarded) return;
-      socket.__meteorRspackGuarded = true;
-      socket.on("error", (err) => {
-        if (err && err.code === "ECONNRESET") return;
-        console.warn(
-          `[meteor-rspack] dev server socket error: ${
-            err && (err.code || err.message)
-          }`
-        );
+      server.on("connection", (socket) => {
+        if (!socket || socket.__meteorRspackGuarded) return;
+        socket.__meteorRspackGuarded = true;
+        socket.on("error", (err) => {
+          if (err && err.code === "ECONNRESET") return;
+          console.warn(
+            `[meteor-rspack] dev server socket error: ${
+              err && (err.code || err.message)
+            }`
+          );
+        });
       });
-    });
+    }
   };
 
   // Base client config
