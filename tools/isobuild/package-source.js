@@ -668,8 +668,7 @@ Object.assign(PackageSource.prototype, {
 
     var api = new PackageAPI({
       buildingIsopackets: !! initFromPackageDirOptions.buildingIsopackets,
-      buildingSelfTestCatalog:
-        !! initFromPackageDirOptions.buildingSelfTestCatalog,
+      buildingSelfTestCatalog: !! initFromPackageDirOptions.buildingSelfTestCatalog,
     });
 
     if (Package._fileAndDepLoader) {

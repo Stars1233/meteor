@@ -553,17 +553,16 @@ async function setUpBuiltPackageTropohouse() {
 
   const versions = {};
   for (const packageName of localCatalog.getAllNonTestPackageNames()) {
-    versions[packageName] =
-      await localCatalog.getLatestVersion(packageName).version;
+    versions[packageName] = localCatalog.getLatestVersion(packageName).version;
   }
   const packageMap = new PackageMap(versions, {
-    localCatalog: localCatalog,
+    localCatalog: localCatalog
   });
   // An isopack cache that doesn't automatically save isopacks to disk and
   // has no access to versioned packages.
   const isopackCache = new IsopackCache({
     packageMap: packageMap,
-    includeCordovaUnibuild: true,
+    includeCordovaUnibuild: true
   });
   await doOrThrow(function () {
     return enterJob("building self-test packages", () => {
