@@ -68,7 +68,7 @@ Delivered across Meteor 3.2 to 3.4.x:
 - **Phase 2 (3.3): External transpiler (SWC).** SWC integration plus bundler optimizations available to any Meteor user. 🔗 [Article](https://dev.to/meteor/faster-builds-in-meteor-33-modern-build-stack-with-swc-and-bundler-optimizations-fm2)
 - **Phase 3 (3.3.2): Bundler improvements & feedback.** Reduced build resource usage and incorporated community feedback for the SWC stack.
 - **Phase 4 (3.4): External bundler (Rspack).** Tree-shaking, code-splitting, full ESM support, and a community plugin ecosystem. 🔗 [Article](https://blog.galaxycloud.app/meteor-3-4-is-out-rspack-integration-4x-faster-builds-8x-smaller-bundles-and-extended-bundler-features)
-- **Phase 5 (3.4.1): Resource optimization & feedback.** Memory improvements on large apps and bundler stabilization based on real-world usage.
+- **Phase 5 (3.4.1): Resource optimization & feedback.** Memory improvements on large apps and bundler stabilization based on real-world usage. 🔗 [Article](https://blog.galaxycloud.app/meteor-3-4-1-is-out-rspack-consolidation-revitalized-examples-and-important-fixes/)
 
 ---
 
