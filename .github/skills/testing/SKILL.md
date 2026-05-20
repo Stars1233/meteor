@@ -45,6 +45,17 @@ Jest + Playwright suite for verifying bundler integrations (rspack). Tests cover
 
 **Test apps:** `apps/{react,vue,svelte,solid,blaze,typescript,babel,coffeescript,monorepo}`
 
+## Native mobile smoke tests (`tools/native-tests/`)
+
+Plain Node orchestrator + Maestro YAML flows. Builds a minimal Meteor app for
+Cordova, installs it on an iOS Simulator or Android emulator, asserts the app
+launches and DDP connects. Runs nightly in CI plus on PRs labeled `mobile`.
+
+**Local prerequisites:** Maestro CLI (`curl -fsSL https://get.maestro.mobile.dev | bash`),
+Xcode (iOS), Android SDK + emulator (Android).
+
+**Tests:** `flows/launch.yaml` against `apps/smoke/`.
+
 ## Test Helpers Package (`packages/test-helpers`)
 
 Comprehensive testing utilities for Meteor applications.
