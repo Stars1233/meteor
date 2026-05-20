@@ -105,6 +105,17 @@ jobs:
         timeout-minutes: 15
         run: METEOR_ALLOW_SUPERUSER=1 npm run test:e2e -- -t="${{ matrix.category }}"
 
+      - name: Clean up stray processes before retry
+        if: steps.test-run.outcome == 'failure'
+        run: |
+          # The first attempt shares this container; orphaned processes still
+          # hold ports and would fail the retry with EADDRINUSE. Matched by the
+          # "meteortest-" temp dir in their argv.
+          echo "Killing stray e2e processes left by the failed attempt..."
+          pkill -9 -f 'meteortest-' || true
+          sleep 3
+          echo "Stray process cleanup done."
+
       - name: Retry failed tests for ${{ matrix.category }}
         if: steps.test-run.outcome == 'failure'
         timeout-minutes: 20
