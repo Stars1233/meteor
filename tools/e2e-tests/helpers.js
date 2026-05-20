@@ -644,11 +644,25 @@ export async function waitForMeteorOutput(outputLines, pattern, options = {}) {
       });
     }
 
+    const lineMatches = (line) =>
+      (typeof pattern === 'string' && line.includes(pattern)) ||
+      (pattern instanceof RegExp && pattern.test(line));
+
     // Function to check for the pattern in the output lines
     const checkForPattern = () => {
       // Check if we've exceeded the timeout
       if (Date.now() - startTime > timeout) {
-        reject(new Error(`Timeout waiting for output ${negate ? 'NOT ' : ''}matching: ${pattern}`));
+        // In negate mode the wait can only fail because some line matched.
+        // Surface those lines so the failure is diagnosable instead of a
+        // bare timeout.
+        let detail = '';
+        if (negate) {
+          const offending = outputLines.filter(lineMatches);
+          detail = `\nOffending line(s):\n${offending.slice(-20).join('\n')}`;
+        }
+        reject(new Error(
+          `Timeout waiting for output ${negate ? 'NOT ' : ''}matching: ${pattern}${detail}`
+        ));
         return;
       }
 
@@ -656,16 +670,7 @@ export async function waitForMeteorOutput(outputLines, pattern, options = {}) {
         // In negation mode, we need to check all lines and make sure none match
         // If we've processed all lines and none match, we can resolve
         if (outputLines.length > 0) {
-          let allLinesPass = true;
-          for (const line of outputLines) {
-            const matches = (typeof pattern === 'string' && line.includes(pattern)) ||
-                           (pattern instanceof RegExp && pattern.test(line));
-            if (matches) {
-              allLinesPass = false;
-              break;
-            }
-          }
-          if (allLinesPass) {
+          if (!outputLines.some(lineMatches)) {
             console.log(`Confirmed no output matching: ${pattern}`);
             resolve(null);
             return;
