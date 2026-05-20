@@ -35,8 +35,8 @@ npm run test:e2e -- -t="React"               # Run specific test
 
 # Native mobile smoke tests (Maestro)
 npm run install:native                       # Install deps, verify Maestro CLI on PATH
-npm run test:native -- --platform=android    # Run Android smoke flow
-npm run test:native -- --platform=ios        # Run iOS smoke flow
+npm run test:native:android                  # Run Android smoke flow
+npm run test:native:ios                       # Run iOS smoke flow
 ```
 
 ## E2E Tests (`tools/e2e-tests/`)
