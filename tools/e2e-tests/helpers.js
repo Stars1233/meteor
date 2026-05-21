@@ -142,6 +142,45 @@ export async function setupMeteorApp(appName, options = {}) {
 }
 
 /**
+ * Waits for `pattern`, but fails fast (~90s) if MongoDB never starts: a hung
+ * `mongod` otherwise burns the full 240s output wait silently. Skipped when an
+ * external Mongo is set, since Meteor starts no local instance then.
+ * @private
+ */
+async function waitForOutputWithMongoWatchdog(outputLines, pattern, options, meteorProcess, env) {
+  const mainWait = waitForMeteorOutput(
+    outputLines,
+    pattern,
+    { ...options, meteorProcess }
+  );
+
+  const usesExternalMongo = !!(env.MONGO_URL || process.env.MONGO_URL);
+  if (options.mongoWatchdog === false || usesExternalMongo) {
+    return mainWait;
+  }
+
+  const mongoTimeout = options.mongoTimeout || (process.env.CI ? 90000 : 45000);
+  const mongoWait = waitForMeteorOutput(
+    outputLines,
+    '=> Started MongoDB.',
+    { timeout: mongoTimeout, meteorProcess }
+  ).catch((err) => {
+    // A process exit isn't a Mongo fault; reframe only a genuine timeout.
+    if (/process exited/i.test(err.message)) throw err;
+    throw new Error(
+      `MongoDB did not start within ${mongoTimeout}ms; likely a stale ` +
+      `mongod or lock file on the (reused) CI container. (${err.message})`
+    );
+  });
+
+  // Mark both handled so the race's loser can't reject unhandled later.
+  mainWait.catch(() => {});
+  mongoWait.catch(() => {});
+  await Promise.race([mainWait, mongoWait]);
+  return mainWait;
+}
+
+/**
  * Helper function to run a Meteor app
  * @param {string} tempDir - Path to the directory containing the app
  * @param {number} port - Port to run the app on
@@ -183,10 +222,12 @@ export async function runMeteorApp(tempDir, port, options = {}) {
 
   // If a specific output pattern is requested, wait for it
   if (options.waitForOutput) {
-    await waitForMeteorOutput(
+    await waitForOutputWithMongoWatchdog(
       outputLines,
       options.waitForOutput,
-      { ...options, meteorProcess }
+      options,
+      meteorProcess,
+      env
     );
   }
 
@@ -855,10 +896,12 @@ export async function runMeteorTests(tempDir, port, options = {}) {
 
   // If a specific output pattern is requested, wait for it
   if (options.waitForOutput) {
-    await waitForMeteorOutput(
+    await waitForOutputWithMongoWatchdog(
       outputLines,
       options.waitForOutput,
-      { ...options, meteorProcess }
+      options,
+      meteorProcess,
+      env
     );
   }
 
