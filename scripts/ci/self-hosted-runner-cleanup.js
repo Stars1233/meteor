@@ -186,6 +186,7 @@ async function cleanupSelfHostedRunner(
     `Cleanup is scoped to the current job workspace under ${resolvedRunnerWorkspace}`
   );
   run("df", ["-h", diskTarget], { execFileSyncImpl, logger });
+  run("docker", ["system", "df"], { execFileSyncImpl, logger });
   removeContents(resolvedWorkspace, { fsImpl });
 
   const freeAfterWorkspaceCleanup = getFreeGiB(diskTarget, {
@@ -201,7 +202,6 @@ async function cleanupSelfHostedRunner(
     logger.log(
       `Free space is below ${resolvedThresholdGiB} GiB; pruning Docker state.`
     );
-    run("docker", ["system", "df"], { execFileSyncImpl, logger });
     run("docker", ["system", "prune", "-af", "--volumes"], {
       execFileSyncImpl,
       logger,

@@ -30,32 +30,20 @@ env:
   CXX: g++-12
   METEOR_ALLOW_SUPERUSER: 1
   SELF_HOSTED_MIN_FREE_GB: "20"
-  SELF_HOSTED_RUNNER_CLEANUP_PATH: scripts/ci/self-hosted-runner-cleanup.js
-  # This runs before checkout, so fetch the script from the current ref instead
-  # of relying on whatever the runner workspace happens to contain.
+  # actions/github-script is a JavaScript action, so this loader runs on the
+  # runner host even when the job later uses a container.
   SELF_HOSTED_RUNNER_CLEANUP_LOADER: |
-    const fs = require("node:fs");
-    const os = require("node:os");
-    const path = require("node:path");
-    const { owner, repo } = context.repo;
-    const scriptPath = process.env.SELF_HOSTED_RUNNER_CLEANUP_PATH;
     const { data } = await github.rest.repos.getContent({
-      owner,
-      repo,
-      path: scriptPath,
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      path: ".github/scripts/run-self-hosted-runner-cleanup.js",
       ref: context.sha,
     });
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "self-hosted-runner-cleanup-"));
-    const tempFile = path.join(tempDir, path.basename(scriptPath));
-
-    fs.writeFileSync(tempFile, Buffer.from(data.content, "base64"));
-
-    try {
-      const cleanup = require(tempFile);
-      await cleanup();
-    } finally {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
+    const loaderSource = data.content.replace(/\n/g, "");
+    await (await import(`data:text/javascript;base64,${loaderSource}`)).default({
+      github,
+      context,
+    });
 
 jobs:
   # ─── Setup ────────────────────────────────────────────────────────────────────

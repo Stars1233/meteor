@@ -52,13 +52,29 @@ function createExecStub({ availableKiB = 30 * 1024 * 1024 } = {}) {
   return { calls, execFileSyncImpl };
 }
 
+function createEnv({ workspace, runnerWorkspace }) {
+  return {
+    GITHUB_WORKSPACE: workspace,
+    RUNNER_WORKSPACE: runnerWorkspace,
+  };
+}
+
+function isDockerPruneCall(call) {
+  return (
+    call[0] === "docker" &&
+    ((call[1] === "system" && call[2] === "prune") ||
+      (call[1] === "builder" && call[2] === "prune"))
+  );
+}
+
 test("removes all contents from GITHUB_WORKSPACE and leaves sibling workspaces untouched", async (t) => {
   const { runnerWorkspace, workspace, siblingWorkspace } = createFixture(t);
   const { calls, execFileSyncImpl } = createExecStub();
+  const env = createEnv({ workspace, runnerWorkspace });
 
   await cleanup(
     { workspace, runnerWorkspace, thresholdGiB: 0 },
-    { execFileSyncImpl, logger: { log() {} } }
+    { env, execFileSyncImpl, logger: { log() {} } }
   );
 
   assert.deepEqual(fs.readdirSync(workspace), []);
@@ -67,20 +83,21 @@ test("removes all contents from GITHUB_WORKSPACE and leaves sibling workspaces u
     "keep"
   );
   assert.deepEqual(
-    calls.filter(([command]) => command === "docker"),
+    calls.filter(isDockerPruneCall),
     [],
-    "docker should not be pruned when free space is above the threshold"
+    "docker prune commands should not run when free space is above the threshold"
   );
 });
 
 test("rejects cleaning RUNNER_WORKSPACE itself", async (t) => {
   const { runnerWorkspace } = createFixture(t);
   const { execFileSyncImpl } = createExecStub();
+  const env = createEnv({ workspace: runnerWorkspace, runnerWorkspace });
 
   await assert.rejects(
     cleanup(
       { workspace: runnerWorkspace, runnerWorkspace, thresholdGiB: 0 },
-      { execFileSyncImpl, logger: { log() {} } }
+      { env, execFileSyncImpl, logger: { log() {} } }
     ),
     /outside RUNNER_WORKSPACE|unsafe path/
   );
@@ -91,10 +108,11 @@ test("prunes docker only when free space is below the threshold", async (t) => {
   const { calls, execFileSyncImpl } = createExecStub({
     availableKiB: 5 * 1024 * 1024,
   });
+  const env = createEnv({ workspace, runnerWorkspace });
 
   await cleanup(
     { workspace, runnerWorkspace, thresholdGiB: 20 },
-    { execFileSyncImpl, logger: { log() {} } }
+    { env, execFileSyncImpl, logger: { log() {} } }
   );
 
   assert.ok(
@@ -131,8 +149,8 @@ test("falls back to GITHUB_WORKSPACE when RUNNER_WORKSPACE is not set", async (t
 
   assert.deepEqual(fs.readdirSync(workspace), []);
   assert.deepEqual(
-    calls.filter(([command]) => command === "docker"),
+    calls.filter(isDockerPruneCall),
     [],
-    "docker should not be pruned when free space is above the threshold"
+    "docker prune commands should not run when free space is above the threshold"
   );
 });
