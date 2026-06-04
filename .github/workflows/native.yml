@@ -50,7 +50,7 @@ jobs:
           script: npm run test:native -- --platform=android
       - name: Upload JUnit and device logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-android-${{ github.run_id }}
           path: tools/native-tests/junit/
@@ -81,7 +81,7 @@ jobs:
         run: npm run test:native -- --platform=ios
       - name: Upload JUnit and device logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: native-ios-${{ github.run_id }}
           path: tools/native-tests/junit/
