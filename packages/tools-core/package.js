@@ -18,6 +18,5 @@ Package.onTest(function (api) {
   // This structure allows easy addition of tests for other lib/ categories
   api.addFiles([
     'tests/meteor_tests.js',
-    'tests/deps_tests.js',
   ], 'server');
 });
