@@ -14,6 +14,9 @@ on:
         default: '20'
         type: string
 
+permissions:
+  contents: read
+
 jobs:
   cleanup:
     name: Cleanup (${{ inputs.runner_label }})
